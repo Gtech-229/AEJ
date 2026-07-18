@@ -1,99 +1,162 @@
 'use client';
-
 import { useState } from 'react';
-import { Search, Settings, KeyRound, FolderOpen, LogOut } from 'lucide-react';
+import { Search, Settings, KeyRound, FolderOpen, LogOut, User, Settings2, BriefcaseBusiness, Building2, Users, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
+  // const [searchValue, setSearchValue] = useState('');
+  const [notifications] = useState(3);
+  const PARAMETRAGE_LINKS = [
+    {
+      label: "Utilisateurs",
+      href: "/dashboard/parametrage/utilisateurs",
+      icon: Users,
+    },
+    // {
+    //   label: "Entreprises",
+    //   href: "/dashboard/parametrage/entreprises",
+    //   icon: Building2,
+    // },
+    {
+      label: "Secteurs",
+      href: "/dashboard/parametrage/secteurs",
+      icon: BriefcaseBusiness,
+    },
+    {
+      label: "Système",
+      href: "/dashboard/parametrage/systeme",
+      icon: Settings2,
+    },
+  ];
 
   const initiale = user?.name?.charAt(0).toUpperCase() ?? 'A';
 
   return (
-    <header className="bg-[#1a7a3c] px-6 py-4 flex items-center justify-between shrink-0">
-      {/* Barre de recherche */}
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={16} />
-        <input
-          type="text"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder="Rechercher..."
-          className="w-full pl-10 pr-4 py-2.5 bg-white/15 backdrop-blur-sm text-white placeholder-white/50
-                     rounded-2xl text-sm border border-white/20 focus:outline-none focus:bg-white/20 
-                     focus:border-white/40 transition-all"
-        />
-      </div>
+    <header className="flex h-16 items-center justify-end bg-[#1a7a3c] px-6 shadow-sm">
 
-      {/* Avatar + menu */}
-      <div className="relative ml-4">
+      <div className="flex items-center gap-4">
+
+        {/* Notification */}
         <button
-          onClick={() => setMenuOpen((v) => !v)}
-          className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center
-                     text-white font-bold transition-colors"
+          className="relative flex h-10 w-10 items-center justify-center rounded-full
+                 bg-white/15 text-white transition hover:bg-white/25"
         >
-          {initiale}
+          <Bell size={20} />
+
+          {notifications > 0 && (
+            <span
+              className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center
+                     rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white"
+            >
+              {notifications}
+            </span>
+          )}
         </button>
 
-        {menuOpen && (
-          <>
-            {/* Overlay invisible */}
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setMenuOpen(false)}
-            />
+        {/* Avatar */}
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center overflow-hidden
+                   rounded-full bg-white/20 font-semibold text-white
+                   transition hover:bg-white/30"
+          >
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initiale
+            )}
+          </button>
 
-            {/* Dropdown */}
-            <div className="absolute right-0 top-12 z-20 bg-white rounded-2xl shadow-xl w-56 py-2 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100">
-                <p className="font-semibold text-gray-800 text-sm">{user?.name ?? 'Admin'}</p>
-                <p className="text-gray-400 text-xs">{user?.email ?? ''}</p>
-              </div>
+          {menuOpen && (
+            <>
+              {/* Overlay invisible */}
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setMenuOpen(false)}
+              />
 
-              <nav className="py-1">
-                <Link
-                  href="/parametrage/profil"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Settings size={16} className="text-gray-400" />
-                  Paramètres
-                </Link>
-                <Link
-                  href="/parametrage/mot-de-passe"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <KeyRound size={16} className="text-gray-400" />
-                  Changer mot de passe
-                </Link>
-                <Link
-                  href="/documents"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <FolderOpen size={16} className="text-gray-400" />
-                  Mes documents
-                </Link>
+              {/* Dropdown */}
+              <div className="absolute right-0 top-14 z-20 w-72 overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-100">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="font-semibold text-gray-800 text-sm">{user?.name ?? 'Admin'}</p>
+                  <p className="text-gray-400 text-xs">{user?.email ?? ''}</p>
+                </div>
 
-                <div className="border-t border-gray-100 mt-1 pt-1">
+                <nav className="py-1">
+
+                  {/* Profil */}
+                  <Link
+                    href="/dashboard/parametrage/profil"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <User size={16} className="text-gray-400" />
+                    Mon profil
+                  </Link>
+
+                  <Link
+                    href="/dashboard/parametrage/password"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <KeyRound size={16} className="text-gray-400" />
+                    Changer le mot de passe
+                  </Link>
+
+                  <div className="border-t border-gray-100 my-1" />
+
+                  {/* Paramétrage */}
+                  <p className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700">
+                    <Settings size={16} className="text-gray-400" />
+                    Paramétrage
+                  </p>
+
+                  <div className="pl-8 pb-2">
+                    {PARAMETRAGE_LINKS.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-[#1a7a3c] transition-colors"
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                </nav>
+                <div className="border-t border-gray-100 mt-2 pt-2">
                   <button
-                    onClick={() => { setMenuOpen(false); logout(); }}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 
-                               w-full text-left transition-colors"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut size={16} />
                     Déconnexion
                   </button>
                 </div>
-              </nav>
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
+        </div>
+
       </div>
+
     </header>
   );
 }

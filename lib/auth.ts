@@ -3,9 +3,6 @@ import { User } from './types';
 const TOKEN_KEY = 'aej_token';
 const USER_KEY  = 'aej_user';
 
-// Ce module centralise la gestion de l'authentification côté client. 
-// Il fournit des fonctions pour stocker et récupérer le token JWT et les informations utilisateur dans localStorage, 
-// ainsi que pour vérifier si l'utilisateur est authentifié ou pour nettoyer la session lors du logout.
 export const authHelpers = {
   setSession(token: string, user: User) {
     localStorage.setItem(TOKEN_KEY, token);

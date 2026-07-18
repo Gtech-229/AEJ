@@ -7,7 +7,7 @@ interface KpiCardProps {
   icon: React.ElementType;
   label: string;
   value: number | string;
-  variation?: number;    
+  variation?: number;
   href?: string;
   loading?: boolean;
 }
@@ -33,15 +33,21 @@ export default function KpiCard({
       {/* Icône + lien détail */}
       <div className="flex items-start justify-between mb-4">
         <div className="w-12 h-12 bg-green-light rounded-2xl flex items-center justify-center">
-          <Icon size={22} className="text-green-primary" />
+          <Icon size={36} className="text-green-primary" />
         </div>
         {href && (
           <Link
-            href={href}
-            className="w-8 h-8 border border-gray-200 rounded-full flex items-center justify-center
-                       hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
+            href={href ?? "#"}
+            className="group w-9 h-9 rounded-full bg-[#F4FAF6]
+             border border-[#E6F3EA]
+             flex items-center justify-center
+             transition-all duration-300
+             hover:bg-[#1a7a3c]"
           >
-            <ArrowUpRight size={14} className="text-gray-400" />
+            <ArrowUpRight
+              size={15}
+              className="text-[#1a7a3c] group-hover:text-white transition-colors"
+            />
           </Link>
         )}
       </div>

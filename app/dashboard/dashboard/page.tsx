@@ -1,202 +1,235 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
-  GraduationCap,
-  Briefcase,
-  Award,
-  UserCheck,
-  TrendingUp,
+  Users, 
+  Settings,
+  Search,
+  BriefcaseBusiness,
+  Clock3,
+  CircleCheckBig,
+  ChartColumnIncreasing,
 } from 'lucide-react';
-
-import KpiCard               from '@/components/dashboard/KpiCard';
-import FinancementChart      from '@/components/dashboard/FinancementChart';
-import EvolutionChart        from '@/components/dashboard/EvolutionChart';
-import RepartitionChart      from '@/components/dashboard/RepartitionChart';
-import EntreprisesWidget     from '@/components/dashboard/EntreprisesWidget';
+import { PageHeader } from '@/components/UI/PageHeader';
+import KpiCard from '@/components/dashboard/KpiCard';
+import EvolutionChart from '@/components/dashboard/EvolutionChart';
+import FinancementChart from '@/components/dashboard/FinancementChart';
+import RepartitionChart from '@/components/dashboard/RepartitionChart';
+import EntreprisesWidget from '@/components/dashboard/EntreprisesWidget';
 import ProjetsFinancesWidget from '@/components/dashboard/ProjetsFinancesWidget';
-import api                   from '@/lib/api';
 
-interface DashboardData {
-  kpis: {
-    total_stagiaires: number; stages_en_cours: number;
-    stages_acheves: number; emplois_obtenus: number; taux_insertion: number;
-    variation_stagiaires: number; variation_stages_cours: number;
-    variation_stages_acheves: number; variation_emplois: number; variation_taux: number;
-  };
-  financement: {
-    total_budget: number; total_decaisse: number;
-    mensuel: { mois: string; financement: number; stage: number }[];
-  };
-  evolution: {
-    mensuel: { label: string; financement: number; stage: number }[];
-    hebdomadaire: { label: string; financement: number; stage: number }[];
-    journalier: { label: string; financement: number; stage: number }[];
-  };
-  repartition: { label: string; pourcentage: number; valeur: number; color: string }[];
-  entreprises: {
-    total: number;
-    data: { id: number; nom: string; secteur: string; initiales: string }[];
-  };
-  financements: {
-    total: number;
-    data: { id: number; code: string; partenaire: string; date: string; statut: 'en_cours' | 'acheve' | 'suspendu' }[];
-  };
-}
 
-const MOCK: DashboardData = {
-  kpis: {
-    total_stagiaires: 12723, stages_en_cours: 9506, stages_acheves: 2494,
-    emplois_obtenus: 5933, taux_insertion: 62.4,
-    variation_stagiaires: 69.2, variation_stages_cours: 37.2,
-    variation_stages_acheves: 9.5, variation_emplois: -20.3, variation_taux: -20.3,
+const KPI_DATA = [
+  {
+    icon: Users,
+    label: "Total Stagiaires",
+    value: 12723,
+    variation: 69.7,
+    href: "/dashboard/stagiaires",
   },
-  financement: {
-    total_budget: 41512000, total_decaisse: 25612000,
-    mensuel: [
-      { mois: 'Juin', financement: 420, stage: 650 },
-      { mois: 'Juil', financement: 320, stage: 530 },
-      { mois: 'Août', financement: 380, stage: 300 },
-      { mois: 'Sept', financement: 290, stage: 280 },
-      { mois: 'Oct',  financement: 510, stage: 320 },
-    ],
+  {
+    icon: Clock3,
+    label: "Stages en cours",
+    value: 9506,
+    variation: 37.2,
+    href: "/dashboard/offres/stages?filter=en_cours",
   },
-  evolution: {
-    mensuel: [
-      { label: 'Fév',  financement: 500, stage: 300 },
-      { label: 'Mars', financement: 200, stage: 420 },
-      { label: 'Avr',  financement: 650, stage: 800 },
-      { label: 'Mai',  financement: 720, stage: 850 },
-      { label: 'Juin', financement: 600, stage: 750 },
-      { label: 'Juil', financement: 480, stage: 750 },
-      { label: 'Août', financement: 390, stage: 440 },
-      { label: 'Sept', financement: 510, stage: 390 },
-      { label: 'Oct',  financement: 510, stage: 320 },
-      { label: 'Nov',  financement: 430, stage: 280 },
-      { label: 'Déc',  financement: 900, stage: 200 },
-    ],
-    hebdomadaire: [
-      { label: 'S1', financement: 120, stage: 80  },
-      { label: 'S2', financement: 200, stage: 150 },
-      { label: 'S3', financement: 180, stage: 210 },
-      { label: 'S4', financement: 240, stage: 170 },
-    ],
-    journalier: [
-      { label: 'Lun', financement: 40, stage: 30 },
-      { label: 'Mar', financement: 55, stage: 45 },
-      { label: 'Mer', financement: 35, stage: 60 },
-      { label: 'Jeu', financement: 70, stage: 50 },
-      { label: 'Ven', financement: 60, stage: 40 },
-    ],
+  {
+    icon: CircleCheckBig,
+    label: "Stages achevés",
+    value: 2494,
+    variation: 9.5,
+    href: "/dashboard/offres/stages?filter=acheve",
   },
-  repartition: [
-    { label: 'Stage perfectionnement', pourcentage: 24, valeur: 24, color: '#1a7a3c' },
-    { label: 'Emplois salariés',        pourcentage: 41, valeur: 41, color: '#f97316' },
-    { label: 'Auto-emplois',            pourcentage: 15, valeur: 15, color: '#2d9a52' },
-    { label: 'En recherche',            pourcentage: 20, valeur: 20, color: '#d1d5db' },
-  ],
-  entreprises: {
-    total: 249,
-    data: [
-      { id: 1, nom: 'CADO Technologies', secteur: 'Technologies',       initiales: 'CT' },
-      { id: 2, nom: 'DL Consulting',     secteur: 'Technologies',       initiales: 'DC' },
-      { id: 3, nom: 'COSIT',             secteur: 'Technologies',       initiales: 'C'  },
-      { id: 4, nom: 'Orange CI',         secteur: 'Télécommunications', initiales: 'OC' },
-      { id: 5, nom: 'SGCI',              secteur: 'Financier',          initiales: 'S'  },
-      { id: 6, nom: 'NSIA Banque',       secteur: 'Financier',          initiales: 'NB' },
-    ],
+  {
+    icon: BriefcaseBusiness,
+    label: "Emplois obtenus",
+    value: 5933,
+    variation: 20.3,
+    href: "/dashboard/offres/emplois?filter=emplois",
   },
-  financements: {
-    total: 1578,
-    data: [
-      { id: 1, code: 'FIN-2026-001', partenaire: 'Banque Mondiale',  date: '15/01/2026', statut: 'en_cours' },
-      { id: 2, code: 'FIN-2026-002', partenaire: 'BAD',              date: '01/02/2026', statut: 'en_cours' },
-      { id: 3, code: 'FIN-2025-014', partenaire: 'Union Européenne', date: '01/09/2025', statut: 'acheve'   },
-      { id: 4, code: 'FIN-2026-003', partenaire: 'ONU Femmes',       date: '10/03/2026', statut: 'en_cours' },
-      { id: 5, code: 'FIN-2026-004', partenaire: 'ONG ALLÔ MORY',   date: '20/03/2026', statut: 'en_cours' },
-      { id: 6, code: 'FIN-2026-005', partenaire: 'FIDA',             date: '01/04/2026', statut: 'en_cours' },
-    ],
+  {
+    icon: ChartColumnIncreasing,
+    label: "Taux d'insertion",
+    value: "84%",
+    variation: 3.8,
+    href: "/dashboard/stagiaires?filter=insertion",
   },
-};
+];
+
+// EvolutionChart : { label, financement, stage }
+const EVOLUTION_MENSUEL = [
+  { label: 'Jan', financement: 300, stage: 400 },
+  { label: 'Fév', financement: 450, stage: 500 },
+  { label: 'Mar', financement: 350, stage: 600 },
+  { label: 'Avr', financement: 600, stage: 700 },
+  { label: 'Mai', financement: 754, stage: 550 },
+  { label: 'Jun', financement: 500, stage: 480 },
+  { label: 'Jul', financement: 680, stage: 520 },
+  { label: 'Aoû', financement: 720, stage: 600 },
+  { label: 'Sep', financement: 580, stage: 700 },
+  { label: 'Oct', financement: 800, stage: 650 },
+  { label: 'Nov', financement: 750, stage: 800 },
+  { label: 'Déc', financement: 950, stage: 200 },
+];
+
+const EVOLUTION_HEBDO = [
+  { label: 'S1', financement: 180, stage: 210 },
+  { label: 'S2', financement: 220, stage: 190 },
+  { label: 'S3', financement: 310, stage: 280 },
+  { label: 'S4', financement: 270, stage: 330 },
+  { label: 'S5', financement: 390, stage: 300 },
+  { label: 'S6', financement: 420, stage: 370 },
+  { label: 'S7', financement: 350, stage: 410 },
+  { label: 'S8', financement: 480, stage: 440 },
+];
+
+const EVOLUTION_JOURNALIER = [
+  { label: 'Lun', financement: 80, stage: 110 },
+  { label: 'Mar', financement: 120, stage: 95 },
+  { label: 'Mer', financement: 95, stage: 130 },
+  { label: 'Jeu', financement: 140, stage: 100 },
+  { label: 'Ven', financement: 110, stage: 150 },
+];
+
+// FinancementChart : { mois, financement, stage }
+const FINANCEMENT_SERIES = [
+  { mois: '06', financement: 400, stage: 300 },
+  { mois: '07', financement: 600, stage: 200 },
+  { mois: '08', financement: 800, stage: 500 },
+  { mois: '09', financement: 350, stage: 400 },
+  { mois: '10', financement: 700, stage: 250 },
+];
+
+// EntreprisesWidget : { id, nom, secteur, initiales }
+const ENTREPRISES = [
+  { id: 1, nom: 'Banque Mondiale', secteur: 'Financier', initiales: 'BM' },
+  { id: 2, nom: 'Banque Africaine de Développement', secteur: 'Financier', initiales: 'BAD' },
+  { id: 3, nom: 'Orange Côte d\'Ivoire', secteur: 'Télécommunications', initiales: 'OCI' },
+  { id: 4, nom: 'Nestlé Abidjan', secteur: 'Agriculture', initiales: 'NA' },
+  { id: 5, nom: 'Clinique Biasa', secteur: 'Santé', initiales: 'CB' },
+  { id: 6, nom: 'MTN Côte d\'Ivoire', secteur: 'Technologies', initiales: 'MTN' },
+];
+
+// ProjetsFinancesWidget : { id, code, partenaire, date, statut }
+const PROJETS = [
+  { id: 1, code: 'INV-001-123', partenaire: 'Rob B.', date: '10 Mars 2021', statut: 'en_cours' as const },
+  { id: 2, code: 'INV-002-123', partenaire: 'Samantha W.', date: '9 Mars 2021', statut: 'acheve' as const },
+  { id: 3, code: 'INV-003-123', partenaire: 'Karen H.', date: '8 Mars 2021', statut: 'acheve' as const },
+  { id: 4, code: 'INV-004-123', partenaire: 'Johnny A.', date: '7 Mars 2021', statut: 'en_cours' as const },
+  { id: 5, code: 'INV-005-123', partenaire: 'Rob B.', date: '6 Mars 2021', statut: 'en_cours' as const },
+  { id: 6, code: 'INV-006-123', partenaire: 'Marie T.', date: '5 Mars 2021', statut: 'suspendu' as const },
+];
+
+// RepartitionChart : { label, pourcentage, valeur, color }
+const REPARTITION = [
+  { label: 'Stage perfectionnement', pourcentage: 24, valeur: 25, color: '#1A7A3C' },
+  { label: 'Emplois salariés', pourcentage: 41, valeur: 60, color: '#F7941D' },
+  { label: 'Auto-emplois', pourcentage: 15, valeur: 7, color: '#27AE60' },
+  { label: 'Autres', pourcentage: 20, valeur: 8, color: '#E0E6EA' },
+];
+
+const PARAMETRES_HREF = '/dashboard/parametrage';
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [data, setData]       = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Les hooks doivent être appelés ici, à l'intérieur du composant.
+  const pathname = usePathname();
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await api.get<DashboardData>('/dashboard');
-        setData(res.data);
-      } catch {
-        setData(MOCK);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+  function isActive(href: string) {
+    return pathname === href || pathname.startsWith(href + '/');
+  }
 
-  const d = data ?? MOCK;
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // TODO: brancher la recherche sur une vraie logique (filtrage, navigation, appel API...)
+    console.log('Recherche :', search);
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Vue d'ensemble — Programme Social du Gouvernement</p>
-      </div>
+    <div className="min-h-screen bg-[#F5F6F8] flex flex-col px-6 py-6 max-w-6xl mx-auto">
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard icon={GraduationCap} label="Total Stagiaires"
-          value={d.kpis.total_stagiaires} variation={d.kpis.variation_stagiaires}
-          href="/offres/stagiaires" loading={loading} />
-        <KpiCard icon={Briefcase} label="Stages en cours"
-          value={d.kpis.stages_en_cours} variation={d.kpis.variation_stages_cours}
-          href="/offres/stages" loading={loading} />
-        <KpiCard icon={Award} label="Stages achevés"
-          value={d.kpis.stages_acheves} variation={d.kpis.variation_stages_acheves}
-          loading={loading} />
-        <KpiCard icon={UserCheck} label="Emplois obtenus"
-          value={d.kpis.emplois_obtenus} variation={d.kpis.variation_emplois}
-          href="/offres/emplois" loading={loading} />
-      </div>
+      {/* Partie verte */}
+      
+      <section className="bg-[#1a7a3c] h-40 px-6 pt-6">
+        <PageHeader
+          title="Tableau de bord"
+          subtitle="Bienvenue — Agence Emploi Jeunes"
+          variant="dark"
+          actions={
+            <div className="flex items-center gap-3">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
 
-      {/* Taux insertion + Financement chart */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-        <KpiCard icon={TrendingUp} label="Taux d'insertion"
-          value={`${d.kpis.taux_insertion}%`} variation={d.kpis.variation_taux}
-          loading={loading} />
-        <div className="xl:col-span-3">
-          <FinancementChart
-            totalBudget={d.financement.total_budget}
-            totalDecaisse={d.financement.total_decaisse}
-            data={d.financement.mensuel}
-          />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher..."
+                  className="w-48 md:w-64 pl-9 pr-3 py-2 rounded-full bg-white"
+                />
+              </form>
+
+              <Link
+                href={PARAMETRES_HREF}
+                className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center"
+              >
+                <Settings className="text-white" size={18} />
+              </Link>
+            </div>
+          }
+        />
+      </section>
+
+      {/* Partie blanche qui remonte */}
+      <section className="-mt-16 px-6 pb-6 relative z-10">
+
+        {/* Cartes KPI */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+          {KPI_DATA.map((item, i) => (
+            <KpiCard key={i} {...item} />
+          ))}
         </div>
-      </div>
 
-      {/* Entreprises + Projets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <EntreprisesWidget total={d.entreprises.total} entreprises={d.entreprises.data} />
-        <ProjetsFinancesWidget total={d.financements.total} financements={d.financements.data} />
-      </div>
+        {/* Contenu */}
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_2fr_1.2fr] gap-4">
+            <EntreprisesWidget
+              total={249}
+              entreprises={ENTREPRISES}
+            />
 
-      {/* Évolution + Répartition */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <EvolutionChart
-            mensuel={d.evolution.mensuel}
-            hebdomadaire={d.evolution.hebdomadaire}
-            journalier={d.evolution.journalier}
-          />
+            <ProjetsFinancesWidget
+              total={1578}
+              financements={PROJETS}
+            />
+
+            <FinancementChart
+              totalBudget={41512000}
+              totalDecaisse={25612000}
+              data={FINANCEMENT_SERIES}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-4">
+            <EvolutionChart
+              mensuel={EVOLUTION_MENSUEL}
+              hebdomadaire={EVOLUTION_HEBDO}
+              journalier={EVOLUTION_JOURNALIER}
+            />
+
+            <RepartitionChart data={REPARTITION} />
+          </div>
         </div>
-        <RepartitionChart data={d.repartition} />
-      </div>
 
-      <p className="text-center text-gray-300 text-xs pb-4">
-        © 2026 Agence Emploi Jeunes | Financement BAD - Projet PS Gouv | Version 1.0
-      </p>
+      </section>
     </div>
   );
 }

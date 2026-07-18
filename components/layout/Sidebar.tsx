@@ -13,6 +13,8 @@ import {
   Bot,
   ChevronDown,
   ChevronRight,
+  Users,
+  Building2,
 } from 'lucide-react';
 
 interface NavItem {
@@ -22,56 +24,63 @@ interface NavItem {
   children?: { label: string; href: string }[];
 }
 
+// ── Routes alignées sur app/dashboard/... ────────────────────────────────────
 const NAV_ITEMS: NavItem[] = [
   {
     label: 'Tableau de bord',
     icon: LayoutDashboard,
-    href: '/dashboard',
+    href: '/dashboard/dashboard',
   },
   {
-    label: 'Paramétrage',
-    icon: Settings,
-    children: [
-      { label: 'Utilisateurs',  href: '/parametrage/utilisateurs' },
-      { label: 'Entreprises',   href: '/parametrage/entreprises' },
-      { label: 'Secteurs',      href: '/parametrage/secteurs' },
-    ],
+    label: 'Stagiaires',
+    icon: Users,
+    href: '/dashboard/stagiares',
   },
   {
     label: 'Offres & Matching',
     icon: Briefcase,
     children: [
-      { label: 'Offres de stage',  href: '/offres/stages' },
-      { label: "Offres d'emploi", href: '/offres/emplois' },
-      { label: 'Stagiaires',       href: '/offres/stagiaires' },
-      { label: 'Matching',         href: '/offres/matching' },
+      { label: 'Offres de stage', href: '/dashboard/offres/stages' },
+      { label: "Offres d'emploi", href: '/dashboard/offres/emplois' },
+      { label: 'Matching', href: '/dashboard/offres/matching' },
     ],
   },
   {
     label: 'Financements',
     icon: Wallet,
     children: [
-      { label: 'Projets financés', href: '/financements/projets' },
-      { label: 'Partenaires',      href: '/financements/partenaires' },
+      { label: 'Projets financés', href: '/dashboard/financements/projets' },
+      { label: 'Partenaires', href: '/dashboard/financements/partenaires' },
     ],
   },
   {
     label: 'Évaluations',
     icon: ClipboardCheck,
     children: [
-      { label: 'Formulaires',  href: '/evaluations/formulaires' },
-      { label: 'Résultats',    href: '/evaluations/resultats' },
+      { label: 'Formulaires', href: '/dashboard/evaluations/formulaires' },
+      { label: 'Résultats', href: '/dashboard/evaluations/resultats' },
     ],
   },
   {
-    label: 'Rapports',
-    icon: BarChart2,
-    href: '/rapports',
+    label: 'Entreprises',
+    icon: Building2,
+    href: '/dashboard/parametrage/entreprises',
   },
+  // {
+  //   label: 'Paramétrage',
+  //   icon: Settings,
+  //   children: [
+  //     { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs' },
+  //     { label: 'Entreprises', href: '/dashboard/parametrage/entreprises' },
+  //     { label: 'Secteurs', href: '/dashboard/parametrage/secteurs' },
+  //     { label: 'Système', href: '/dashboard/parametrage/systeme' },
+  //     { label: 'Profil', href: '/dashboard/parametrage/profil' },
+  //   ],
+  // },
   {
     label: 'Assistant IA',
     icon: Bot,
-    href: '/chatbot',
+    href: '/dashboard/chatbot',
   },
 ];
 

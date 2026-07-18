@@ -12,23 +12,23 @@ import api from '@/lib/api';
 type Statut = 'en_cours' | 'acheve' | 'suspendu';
 
 interface Financement {
-  id:              number;
-  code:            string;
-  partenaire:      string;
-  date_debut:      string;
-  montant_total:   number;
-  montant_decaisse:number;
-  statut:          Statut;
-  description?:    string;
+  id: number;
+  code: string;
+  partenaire: string;
+  date_debut: string;
+  montant_total: number;
+  montant_decaisse: number;
+  statut: Statut;
+  description?: string;
 }
 
 interface FormData {
-  partenaire:       string;
-  date_debut:       string;
-  montant_total:    string;
+  partenaire: string;
+  date_debut: string;
+  montant_total: string;
   montant_decaisse: string;
-  statut:           Statut;
-  description:      string;
+  statut: Statut;
+  description: string;
 }
 
 const EMPTY_FORM: FormData = {
@@ -39,14 +39,14 @@ const EMPTY_FORM: FormData = {
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 const MOCK: Financement[] = [
-  { id:1, code:'FIN-2026-001', partenaire:'Banque Mondiale',  date_debut:'15/01/2026', montant_total:12000000, montant_decaisse:8000000,  statut:'en_cours' },
-  { id:2, code:'FIN-2026-002', partenaire:'BAD',              date_debut:'01/02/2026', montant_total:9500000,  montant_decaisse:4200000,  statut:'en_cours' },
-  { id:3, code:'FIN-2025-014', partenaire:'Union Européenne', date_debut:'01/09/2025', montant_total:7800000,  montant_decaisse:7800000,  statut:'acheve'   },
-  { id:4, code:'FIN-2026-003', partenaire:'ONU Femmes',       date_debut:'10/03/2026', montant_total:5200000,  montant_decaisse:1800000,  statut:'en_cours' },
-  { id:5, code:'FIN-2026-004', partenaire:'ONG ALLÔ MORY',   date_debut:'20/03/2026', montant_total:3100000,  montant_decaisse:900000,   statut:'en_cours' },
-  { id:6, code:'FIN-2026-005', partenaire:'FIDA',             date_debut:'01/04/2026', montant_total:3912000,  montant_decaisse:2912000,  statut:'en_cours' },
-  { id:7, code:'FIN-2025-010', partenaire:'USAID',            date_debut:'10/06/2025', montant_total:6400000,  montant_decaisse:6400000,  statut:'acheve'   },
-  { id:8, code:'FIN-2025-011', partenaire:'GIZ',              date_debut:'01/07/2025', montant_total:4100000,  montant_decaisse:2050000,  statut:'suspendu' },
+  { id: 1, code: 'FIN-2026-001', partenaire: 'Banque Mondiale', date_debut: '15/01/2026', montant_total: 12000000, montant_decaisse: 8000000, statut: 'en_cours' },
+  { id: 2, code: 'FIN-2026-002', partenaire: 'BAD', date_debut: '01/02/2026', montant_total: 9500000, montant_decaisse: 4200000, statut: 'en_cours' },
+  { id: 3, code: 'FIN-2025-014', partenaire: 'Union Européenne', date_debut: '01/09/2025', montant_total: 7800000, montant_decaisse: 7800000, statut: 'acheve' },
+  { id: 4, code: 'FIN-2026-003', partenaire: 'ONU Femmes', date_debut: '10/03/2026', montant_total: 5200000, montant_decaisse: 1800000, statut: 'en_cours' },
+  { id: 5, code: 'FIN-2026-004', partenaire: 'ONG ALLÔ MORY', date_debut: '20/03/2026', montant_total: 3100000, montant_decaisse: 900000, statut: 'en_cours' },
+  { id: 6, code: 'FIN-2026-005', partenaire: 'FIDA', date_debut: '01/04/2026', montant_total: 3912000, montant_decaisse: 2912000, statut: 'en_cours' },
+  { id: 7, code: 'FIN-2025-010', partenaire: 'USAID', date_debut: '10/06/2025', montant_total: 6400000, montant_decaisse: 6400000, statut: 'acheve' },
+  { id: 8, code: 'FIN-2025-011', partenaire: 'GIZ', date_debut: '01/07/2025', montant_total: 4100000, montant_decaisse: 2050000, statut: 'suspendu' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -62,9 +62,9 @@ function pct(decaisse: number, total: number) {
 
 function StatutBadge({ statut }: { statut: Statut }) {
   const cfg = {
-    en_cours:  { cls: 'bg-green-50 text-green-700',  dot: 'bg-green-500',  label: 'En cours'  },
-    acheve:    { cls: 'bg-orange-50 text-orange-500', dot: 'bg-orange-400', label: 'Achevé'    },
-    suspendu:  { cls: 'bg-gray-100 text-gray-500',    dot: 'bg-gray-400',   label: 'Suspendu'  },
+    en_cours: { cls: 'bg-green-50 text-green-700', dot: 'bg-green-500', label: 'En cours' },
+    acheve: { cls: 'bg-orange-50 text-orange-500', dot: 'bg-orange-400', label: 'Achevé' },
+    suspendu: { cls: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400', label: 'Suspendu' },
   }[statut];
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${cfg.cls}`}>
@@ -85,20 +85,20 @@ function FinancementModal({
   onClose: () => void;
   onSave: (data: FormData) => Promise<void>;
 }) {
-  const [form, setForm]       = useState<FormData>(
+  const [form, setForm] = useState<FormData>(
     financement
       ? {
-          partenaire:       financement.partenaire,
-          date_debut:       financement.date_debut,
-          montant_total:    String(financement.montant_total),
-          montant_decaisse: String(financement.montant_decaisse),
-          statut:           financement.statut,
-          description:      financement.description ?? '',
-        }
+        partenaire: financement.partenaire,
+        date_debut: financement.date_debut,
+        montant_total: String(financement.montant_total),
+        montant_decaisse: String(financement.montant_decaisse),
+        statut: financement.statut,
+        description: financement.description ?? '',
+      }
       : EMPTY_FORM
   );
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   function set(k: keyof FormData, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -304,23 +304,21 @@ function DeleteModal({
 const PAGE_SIZE = 6;
 
 export default function FinancementsProjetsPage() {
-  const [items, setItems]         = useState<Financement[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
+  const [items, setItems] = useState<Financement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [filterStatut, setFilter] = useState<Statut | 'tous'>('tous');
-  const [page, setPage]           = useState(0);
+  const [page, setPage] = useState(0);
 
-  const [showCreate, setShowCreate]       = useState(false);
-  const [editItem, setEditItem]           = useState<Financement | undefined>();
-  const [deleteItem, setDeleteItem]       = useState<Financement | undefined>();
-  const [viewItem, setViewItem]           = useState<Financement | undefined>();
+  const [showCreate, setShowCreate] = useState(false);
+  const [editItem, setEditItem] = useState<Financement | undefined>();
+  const [deleteItem, setDeleteItem] = useState<Financement | undefined>();
+  const [viewItem, setViewItem] = useState<Financement | undefined>();
 
   // Chargement
   useEffect(() => {
-    api.get<Financement[]>('/financements')
-      .then((r) => setItems(r.data))
-      .catch(() => setItems(MOCK))
-      .finally(() => setLoading(false));
+    setItems(MOCK);
+    setLoading(false);
   }, []);
 
   // Filtrage
@@ -333,13 +331,13 @@ export default function FinancementsProjetsPage() {
   });
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // CRUD handlers
   async function handleCreate(form: FormData) {
     const res = await api.post<Financement>('/financements', {
       ...form,
-      montant_total:    Number(form.montant_total),
+      montant_total: Number(form.montant_total),
       montant_decaisse: Number(form.montant_decaisse),
     });
     setItems((prev) => [res.data, ...prev]);
@@ -348,7 +346,7 @@ export default function FinancementsProjetsPage() {
   async function handleEdit(form: FormData) {
     const res = await api.put<Financement>(`/financements/${editItem!.id}`, {
       ...form,
-      montant_total:    Number(form.montant_total),
+      montant_total: Number(form.montant_total),
       montant_decaisse: Number(form.montant_decaisse),
     });
     setItems((prev) => prev.map((f) => (f.id === editItem!.id ? res.data : f)));
@@ -361,7 +359,7 @@ export default function FinancementsProjetsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-6 py-6 max-w-6xl mx-auto">
       {/* En-tête */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
