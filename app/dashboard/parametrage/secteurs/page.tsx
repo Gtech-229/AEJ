@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Check, Tag } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 interface Secteur { id: number; nom: string; description?: string; couleur: string; entreprises_count: number; stagiaires_count: number; }
 interface FormData { nom: string; description: string; couleur: string; }
@@ -83,8 +83,8 @@ export default function SecteursPage() {
     setLoading(false);
   }, []);
 
-  async function handleCreate(form: FormData) { const res = await api.post<Secteur>('/secteurs', form); setItems(p => [res.data, ...p]); }
-  async function handleEdit(form: FormData) { const res = await api.put<Secteur>(`/secteurs/${editItem!.id}`, form); setItems(p => p.map(s => s.id === editItem!.id ? res.data : s)); }
+  async function handleCreate(form: FormData) { const res = await api.post<Secteur>('/secteurs', form); setItems(p => [res, ...p]); }
+  async function handleEdit(form: FormData) { const res = await api.put<Secteur>(`/secteurs/${editItem!.id}`, form); setItems(p => p.map(s => s.id === editItem!.id ? res : s)); }
   async function handleDelete() { await api.delete(`/secteurs/${deleteItem!.id}`); setItems(p => p.filter(s => s.id !== deleteItem!.id)); setDeleteItem(undefined); }
 
   return (

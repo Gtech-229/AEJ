@@ -5,7 +5,7 @@ import {
   Plus, Search, Filter, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, X, Check, AlertTriangle,
 } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -340,7 +340,7 @@ export default function FinancementsProjetsPage() {
       montant_total: Number(form.montant_total),
       montant_decaisse: Number(form.montant_decaisse),
     });
-    setItems((prev) => [res.data, ...prev]);
+    setItems((prev) => [res, ...prev]);
   }
 
   async function handleEdit(form: FormData) {
@@ -349,7 +349,7 @@ export default function FinancementsProjetsPage() {
       montant_total: Number(form.montant_total),
       montant_decaisse: Number(form.montant_decaisse),
     });
-    setItems((prev) => prev.map((f) => (f.id === editItem!.id ? res.data : f)));
+    setItems((prev) => prev.map((f) => (f.id === editItem!.id ? res : f)));
   }
 
   async function handleDelete() {

@@ -4,7 +4,7 @@ import {
     Plus, Search, Pencil, Trash2, X, Check,
     AlertTriangle, MapPin, Phone, Mail, Building2,
 } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -223,7 +223,7 @@ export default function EntreprisesPage() {
     async function handleCreate(form: FormData) {
         try {
             const res = await api.post<Entreprise>('/entreprises', form);
-            setItems(p => [res.data, ...p]);
+            setItems(p => [res, ...p]);
             setShowCreate(false);
         }
         catch (error) {
@@ -241,7 +241,7 @@ export default function EntreprisesPage() {
 
             setItems(prev =>
                 prev.map(e =>
-                    e.id === editItem.id ? res.data : e
+                    e.id === editItem.id ? res : e
                 )
             );
 

@@ -5,7 +5,6 @@ import {
     BarChart, Bar, XAxis, YAxis, Tooltip,
     ResponsiveContainer,
 } from 'recharts';
-import api from '@/lib/api';
 
 interface Resultat {
     id: number;

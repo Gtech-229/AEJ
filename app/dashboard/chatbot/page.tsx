@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 import { PageHeader } from '@/components/UI/PageHeader';
 
 interface Message { id: number; role: 'user' | 'assistant'; content: string; time: string; }
@@ -30,7 +30,7 @@ export default function ChatbotPage() {
         setInput(''); setLoading(true);
         try {
             const res = await api.post<{ response: string }>('/chatbot', { message: text });
-            setMessages(p => [...p, { id: seq++, role: 'assistant', content: res.data.response, time: now() }]);
+            setMessages(p => [...p, { id: seq++, role: 'assistant', content: res.response, time: now() }]);
         } catch {
             setMessages(p => [...p, { id: seq++, role: 'assistant', content: "Désolé, je n'ai pas pu traiter votre demande.", time: now() }]);
         } finally { setLoading(false); }

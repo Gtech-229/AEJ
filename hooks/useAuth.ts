@@ -1,123 +1,113 @@
-// 'use client';
-
-// import { useState, useEffect, useCallback } from 'react';
-// import { useRouter } from 'next/navigation';
-// import Cookies from 'js-cookie';
-// import api from '@/lib/api';
-// import { authHelpers } from '@/lib/auth';
-// import { User, AuthResponse } from '@/lib/types';
-
-// export function useAuth() {
-//   const router = useRouter();
-//   const [user, setUser] = useState<User | null>(null);
-//   const [loading, setLoading] = useState(true);
-
-//   // Vérification de la session au chargement initial (côté client uniquement)
-//   useEffect(() => {
-//     try {
-//       const stored = authHelpers.getUser();
-//       if (stored) {
-//         setUser(stored);
-//       }
-//     } catch (error) {
-//       console.error("Erreur lors de la récupération de l'utilisateur:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   // Connexion de l'utilisateur
-//   const login = useCallback(async (email: string, password: string) => {
-//     setLoading(true); // Optionnel: pour passer en état de chargement pendant la requête
-//     try {
-//       const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
-
-//       // Stockage des jetons et de l'utilisateur
-//       authHelpers.setSession(data.token, data.user);
-//       Cookies.set('aej_token', data.token, { expires: 7, sameSite: 'strict', secure: true });
-
-//       setUser(data.user);
-//       router.push('/dashboard');
-//     } catch (error) {
-//       // Gérer les erreurs de connexion 
-//       throw error; 
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [router]);
-
-//   // Déconnexion de l'utilisateur
-//   const logout = useCallback(async () => {
-//     setLoading(true);
-//     try {
-//       await api.post('/auth/logout');
-//     } catch (_) {
-//       // Même en cas d'erreur, on veut quand même nettoyer la session côté client
-//     } finally {
-//       authHelpers.clearSession();
-//       Cookies.remove('aej_token');
-//       setUser(null);
-//       router.push('/login');
-//       setLoading(false);
-//     }
-//   }, [router]);
-
-//   // Changement de mot de passe
-//   const changePassword = useCallback(async (
-//     current_password: string,
-//     new_password: string,
-//     new_password_confirmation: string
-//   ) => {
-//     // 
-//     await api.post('/auth/change-password', {
-//       current_password,
-//       new_password,
-//       new_password_confirmation,
-//     });
-//   }, []);
-
-//   return { user, loading, login, logout, changePassword };
-// }
-
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import apiClient, { ApiError } from '@/lib/api/client';
 
-const FAKE_USER = {
-  id: 1,
-  name: "Développeur Test",
-  email: "test@emploi-jeune.ci",
-  password: "password",
-  role: "admin"
+/**
+ * Cookie-only auth. The access/refresh tokens are httpOnly cookies set by the
+ * backend — JS never reads or writes a token, and there is no localStorage
+ * involved. The current user is resolved from the API (`GET /auth/me`), not
+ * from a decoded token, and login/logout go through the cookie endpoints.
+ */
+export interface CurrentUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+}
+
+export const authKeys = {
+  me: ['auth', 'me'] as const,
 };
+
+// ---------------------------------------------------------------------------
+// TODO(backend): remove this dev bypass once /auth/* endpoints exist.
+// Until the backend is live, a login can't obtain a real httpOnly cookie, so we
+// drop a temporary NON-httpOnly marker cookie purely so the route-guard
+// middleware (proxy.ts) lets us into the prototype. This is NOT a token store.
+// ---------------------------------------------------------------------------
+const GUARD_COOKIE = 'aej_token';
+
+function setDevGuardCookie() {
+  document.cookie = `${GUARD_COOKIE}=dev; path=/; max-age=604800; samesite=strict`;
+}
+
+function clearDevGuardCookie() {
+  document.cookie = `${GUARD_COOKIE}=; path=/; max-age=0`;
+}
+
+/** Backend not built yet: connection refused surfaces as a TypeError from
+ * fetch, and a 404 means the route isn't implemented. Either way it's "not
+ * built", not "bad credentials". */
+function isBackendAbsent(err: unknown): boolean {
+  return err instanceof TypeError || (err instanceof ApiError && err.status === 404);
+}
 
 export function useAuth() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [user, setUser] = useState<any | null>(FAKE_USER);
-  const [loading, setLoading] = useState(false);
+  const userQuery = useQuery({
+    queryKey: authKeys.me,
+    queryFn: () => apiClient.get<CurrentUser>('/auth/me'),
+    retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  const loginMutation = useMutation({
+    mutationFn: (creds: { email: string; password: string }) =>
+      apiClient.post<void>('/auth/login', creds),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: authKeys.me });
+    },
+  });
 
-  const login = useCallback(async () => {
-    Cookies.set("aej_token", "fake-token");
-    setUser(FAKE_USER);
-    router.push("/dashboard/dashboard");
-  }, [router]);
+  const logoutMutation = useMutation({
+    mutationFn: () => apiClient.post<void>('/auth/logout'),
+    // Clear client cache + redirect regardless of whether the call succeeded.
+    onSettled: () => {
+      clearDevGuardCookie();
+      queryClient.clear();
+      router.push('/auth/login');
+    },
+  });
 
-  const logout = useCallback(async () => {
-    Cookies.remove("aej_token");
-    setUser(null);
-    router.push('/auth/login');
-  }, [router]);
+  async function login(email: string, password: string) {
+    try {
+      await loginMutation.mutateAsync({ email, password });
+      router.push('/dashboard/dashboard');
+    } catch (err) {
+      // DEV fallback: let the prototype through while the backend is absent.
+      // Remove together with GUARD_COOKIE once /auth/login is live.
+      if (isBackendAbsent(err)) {
+        setDevGuardCookie();
+        router.push('/dashboard/dashboard');
+        return;
+      }
+      throw err;
+    }
+  }
 
-  const changePassword = useCallback(async () => {
-    console.log("Mot de passe changé (simulation)");
-  }, []);
+  function changePassword(
+    current_password: string,
+    new_password: string,
+    new_password_confirmation: string,
+  ) {
+    return apiClient.post<void>('/auth/change-password', {
+      current_password,
+      new_password,
+      new_password_confirmation,
+    });
+  }
 
-  return { user, loading, login, logout, changePassword };
+  return {
+    user: userQuery.data ?? null,
+    loading: userQuery.isLoading,
+    login,
+    logout: () => logoutMutation.mutateAsync().catch(() => {}),
+    changePassword,
+  };
 }

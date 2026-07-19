@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, X, Check, AlertTriangle, UserCheck } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 type TypeContrat = 'CDI' | 'CDD' | 'Stage' | 'Freelance';
 type StatutEmploi = 'active' | 'pourvue' | 'expiree';
@@ -152,8 +152,8 @@ export default function OffresEmploisPage() {
             && (filterStatut === 'tous' || o.statut === filterStatut);
     });
 
-    async function handleCreate(form: FormData) { const res = await api.post<OffreEmploi>('/offres/emplois', form); setItems(p => [res.data, ...p]); }
-    async function handleEdit(form: FormData) { const res = await api.put<OffreEmploi>(`/offres/emplois/${editItem!.id}`, form); setItems(p => p.map(o => o.id === editItem!.id ? res.data : o)); }
+    async function handleCreate(form: FormData) { const res = await api.post<OffreEmploi>('/offres/emplois', form); setItems(p => [res, ...p]); }
+    async function handleEdit(form: FormData) { const res = await api.put<OffreEmploi>(`/offres/emplois/${editItem!.id}`, form); setItems(p => p.map(o => o.id === editItem!.id ? res : o)); }
     async function handleDelete() { await api.delete(`/offres/emplois/${deleteItem!.id}`); setItems(p => p.filter(o => o.id !== deleteItem!.id)); setDeleteItem(undefined); }
 
     return (

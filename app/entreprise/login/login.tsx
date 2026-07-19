@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Building2 } from 'lucide-react';
+import { apiClient, ApiError } from '@/lib/api/client';
 
 export default function EntrepriseLoginPage() {
     const [email, setEmail] = useState('');
@@ -11,19 +12,11 @@ export default function EntrepriseLoginPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setError(''); setLoading(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/entreprise/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Identifiants incorrects');
-            localStorage.setItem('entreprise_token', data.token);
-            localStorage.setItem('entreprise_data', JSON.stringify(data.entreprise));
-            document.cookie = `entreprise_token=${data.token}; path=/entreprise; max-age=604800`;
+            // Cookie-only: the backend sets an httpOnly entreprise session cookie.
+            await apiClient.post('/entreprise/auth/login', { email, password });
             window.location.href = '/entreprise/dashboard';
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : 'Identifiants incorrects');
         } finally {
             setLoading(false);
         }

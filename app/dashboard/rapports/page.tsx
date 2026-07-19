@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Download, FileText, BarChart2, Users, Wallet, Calendar } from 'lucide-react';
-import api from '@/lib/api';
+import { apiDownload } from '@/lib/api/client';
 import { PageHeader } from '@/components/UI/PageHeader';
 import { Input } from '@/components/UI/Input';
 
@@ -26,8 +26,9 @@ export default function RapportsPage() {
         const key = `${r.id}-${fmt}`; setLoading(key); setSuccess(null);
         try {
             const d = getDate(r.id);
-            const res = await api.get(r.endpoint, { params: { format: fmt, date_debut: d.debut, date_fin: d.fin }, responseType: 'blob' });
-            const url = URL.createObjectURL(res.data);
+            const query = new URLSearchParams({ format: fmt, date_debut: d.debut, date_fin: d.fin }).toString();
+            const blob = await apiDownload(`${r.endpoint}?${query}`);
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = `${r.id}_${new Date().toISOString().slice(0, 10)}.${fmt.toLowerCase()}`; a.click();
             URL.revokeObjectURL(url); setSuccess(key); setTimeout(() => setSuccess(null), 3000);
         } catch { setSuccess(key); setTimeout(() => setSuccess(null), 3000); }

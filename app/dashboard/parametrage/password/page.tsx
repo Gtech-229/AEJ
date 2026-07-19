@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Check, Eye, EyeOff } from 'lucide-react';
-import api from '@/lib/api';
+import { apiClient, ApiError } from '@/lib/api/client';
 
 export default function MotDePassePage() {
     const [form, setForm] = useState({ current: '', new: '', confirm: '' });
@@ -18,11 +18,11 @@ export default function MotDePassePage() {
         if (form.new.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères'); return; }
         setSaving(true);
         try {
-            await api.post('/auth/change-password', { current_password: form.current, new_password: form.new, new_password_confirmation: form.confirm });
+            await apiClient.post('/auth/change-password', { current_password: form.current, new_password: form.new, new_password_confirmation: form.confirm });
             setSuccess(true);
             setForm({ current: '', new: '', confirm: '' });
             setTimeout(() => setSuccess(false), 4000);
-        } catch (err: any) { setError(err?.response?.data?.message ?? 'Erreur lors du changement de mot de passe'); }
+        } catch (err) { setError(err instanceof ApiError ? err.message : 'Erreur lors du changement de mot de passe'); }
         finally { setSaving(false); }
     }
 

@@ -1,24 +1,30 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Check, User } from 'lucide-react';
-import api from '@/lib/api';
-import { authHelpers } from '@/lib/auth';
+import { apiClient, ApiError } from '@/lib/api/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProfilPage() {
-    const user = authHelpers.getUser();
+    const { user } = useAuth();
     const [form, setForm] = useState({ nom: user?.name ?? '', email: user?.email ?? '' });
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+    // `user` is resolved asynchronously from /auth/me now, so seed the form
+    // once it arrives.
+    useEffect(() => {
+        if (user) setForm({ nom: user.name ?? '', email: user.email ?? '' });
+    }, [user]);
+
     async function submit(e: React.FormEvent) {
         e.preventDefault(); setError(''); setSaving(true); setSuccess(false);
         try {
-            await api.put('/auth/profil', form);
+            await apiClient.put('/auth/profil', form);
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err: any) { setError(err?.response?.data?.message ?? 'Erreur'); }
+        } catch (err) { setError(err instanceof ApiError ? err.message : 'Erreur'); }
         finally { setSaving(false); }
     }
 

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { UserCheck, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 interface DashboardEntreprise {
     total_embauches: number;
@@ -16,7 +16,7 @@ export default function EntrepriseDashboard() {
     const [data, setData] = useState(MOCK);
 
     useEffect(() => {
-        api.get('/entreprise/dashboard').then(r => setData(r.data)).catch(() => { });
+        api.get<DashboardEntreprise>('/entreprise/dashboard').then(setData).catch(() => { });
     }, []);
 
     const kpis = [

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Bell, Check, Trash2, AlertTriangle, Info, CheckCircle } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 import { PageHeader } from '@/components/UI/PageHeader';
 import { Button } from '@/components/UI/Button';
 import { Badge } from '@/components/UI/Badge';

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Save, RefreshCw, Eye, EyeOff, Upload, AlertTriangle, Check } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

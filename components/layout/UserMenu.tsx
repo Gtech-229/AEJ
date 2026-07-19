@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Settings,
@@ -10,7 +9,7 @@ import {
     LogOut,
     ChevronDown,
 } from 'lucide-react';
-import { authHelpers } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserMenuProps {
     /** Afficher le chevron à côté de l'initiale */
@@ -18,22 +17,12 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ showChevron = false }: UserMenuProps) {
-    const router = useRouter();
+    const { user, logout } = useAuth();
     const [open, setOpen] = useState(false);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [role, setRole] = useState('');
+    const name = user?.name ?? '';
+    const email = user?.email ?? '';
+    const role = user?.role ?? '';
     const menuRef = useRef<HTMLDivElement>(null);
-
-    /* Charger les infos utilisateur */
-    useEffect(() => {
-        const user = authHelpers.getUser();
-        if (user) {
-            setName(user.name ?? '');
-            setEmail(user.email ?? '');
-            setRole(user.role ?? '');
-        }
-    }, []);
 
     /* Fermer en cliquant en dehors */
     useEffect(() => {
@@ -54,19 +43,6 @@ export default function UserMenu({ showChevron = false }: UserMenuProps) {
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
     }, []);
-
-    async function logout() {
-        try {
-            // Appel API logout si disponible
-            const { default: api } = await import('@/lib/api');
-            await api.post('/auth/logout').catch(() => { });
-        } finally {
-            authHelpers.clearSession();
-            // Supprimer le cookie middleware
-            document.cookie = 'aej_token=; max-age=0; path=/';
-            router.push('/auth/login');
-        }
-    }
 
     const initiale = name ? name.charAt(0).toUpperCase() : 'A';
 

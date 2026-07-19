@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Search, Eye, Pencil, Trash2 } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 import { Badge } from '@/components/UI/Badge';
 import { Button } from '@/components/UI/Button';
 import { Input, Select } from '@/components/UI/Input';
@@ -79,10 +79,10 @@ export default function StagiairesPage() {
         try {
             if (editTarget) {
                 const r = await api.put<Stagiaire>(`/stagiaires/${editTarget.id}`, form);
-                setItems(p => p.map(s => s.id === editTarget.id ? r.data : s));
+                setItems(p => p.map(s => s.id === editTarget.id ? r : s));
             } else {
                 const r = await api.post<Stagiaire>('/stagiaires', form);
-                setItems(p => [r.data, ...p]);
+                setItems(p => [r, ...p]);
             }
             setModalOpen(false);
         } catch (e: any) { setError(e?.response?.data?.message ?? 'Erreur'); }

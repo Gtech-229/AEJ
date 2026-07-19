@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Search, Zap, ChevronDown, CheckCircle, XCircle } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 interface Match {
     id: number;
@@ -57,7 +57,7 @@ export default function MatchingPage() {
         setGenerating(true);
         try {
             const res = await api.post<Match[]>('/offres/matching/generer');
-            setItems(res.data);
+            setItems(res);
         } catch {
             // En dev : simuler
             await new Promise(r => setTimeout(r, 1500));

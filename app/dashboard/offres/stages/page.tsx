@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, X, Check, AlertTriangle, ChevronLeft, ChevronRight, Briefcase } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 type StatutOffre = 'active' | 'pourvue' | 'expiree';
 
@@ -180,11 +180,11 @@ export default function OffresStagesPage() {
 
     async function handleCreate(form: FormData) {
         const res = await api.post<OffreStage>('/offres/stages', form);
-        setItems(p => [res.data, ...p]);
+        setItems(p => [res, ...p]);
     }
     async function handleEdit(form: FormData) {
         const res = await api.put<OffreStage>(`/offres/stages/${editItem!.id}`, form);
-        setItems(p => p.map(o => o.id === editItem!.id ? res.data : o));
+        setItems(p => p.map(o => o.id === editItem!.id ? res : o));
     }
     async function handleDelete() {
         await api.delete(`/offres/stages/${deleteItem!.id}`);

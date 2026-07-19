@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, Building2 } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 import { Badge } from '@/components/UI/Badge';
 import { Button } from '@/components/UI/Button';
 import { Input, Select } from '@/components/UI/Input';
@@ -53,8 +53,8 @@ export default function PartenairesPage() {
   async function handleSave() {
     setSaving(true); setError('');
     try {
-      if (editTarget) { const r = await api.put<Partenaire>(`/financements/partenaires/${editTarget.id}`, form); setItems(p => p.map(x => x.id === editTarget.id ? r.data : x)); }
-      else { const r = await api.post<Partenaire>('/financements/partenaires', form); setItems(p => [r.data, ...p]); }
+      if (editTarget) { const r = await api.put<Partenaire>(`/financements/partenaires/${editTarget.id}`, form); setItems(p => p.map(x => x.id === editTarget.id ? r : x)); }
+      else { const r = await api.post<Partenaire>('/financements/partenaires', form); setItems(p => [r, ...p]); }
       setModalOpen(false);
     } catch (e: any) { setError(e?.response?.data?.message ?? 'Erreur'); }
     finally { setSaving(false); }

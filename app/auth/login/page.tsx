@@ -126,8 +126,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { ApiError } from '@/lib/api/client';
 
 export default function LoginPage() {
+  const { login } = useAuth();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
@@ -137,47 +140,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
-      /* -----------------------------------------------------------
-         TEMPORAIREMENT COMMENTÉ EN ATTENDANT LE BACKEND LARAVEL
-         -----------------------------------------------------------
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Identifiants incorrects');
-      ----------------------------------------------------------- */
-
-      // 1. On simule un temps d'attente réseau pour l'effet visuel du bouton
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // 2. On crée de fausses données de réponse qui imitent Laravel
-      const fakeData = {
-        token: "fake-jwt-token-agence-emploi-jeunes-2026",
-        user: {
-          id: 1,
-          name: "Développeur Test",
-          email: "email@domaine.com",
-          role: "admin",
-          password: "password123" 
-        }
-      };  
-
-      // 3. Stocker les fausses données exactement comme prévu à l'origine
-      localStorage.setItem('aej_token', fakeData.token);
-      localStorage.setItem('aej_user', JSON.stringify(fakeData.user));
-      
-      // Cookie pour le middleware ou proxy
-      document.cookie = `aej_token=${fakeData.token}; path=/; max-age=604800`;
-
-      // 4. Redirection vers ton tableau de bord
-      window.location.href = '/dashboard/dashboard';
-
-    } catch (err: any) {
-      setError(err.message || 'Identifiants incorrects');
+      // Cookie-only login: the backend sets httpOnly cookies and `useAuth`
+      // handles the redirect. While the backend is absent, `login` falls back
+      // to a dev bypass so the prototype stays navigable (see hooks/useAuth.ts).
+      await login(email, password);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Identifiants incorrects');
     } finally {
       setLoading(false);
     }

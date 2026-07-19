@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Check, ClipboardList, Eye } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/api/client';
 
 type TypeEval = 'stagiaire' | 'entreprise' | 'formation';
 type StatutForm = 'actif' | 'inactif' | 'brouillon';
@@ -107,8 +107,8 @@ export default function FormulaireEvalPage() {
         setLoading(false);
     }, []);
 
-    async function handleCreate(form: FormData) { const res = await api.post<Formulaire>('/evaluations/formulaires', form); setItems(p => [res.data, ...p]); }
-    async function handleEdit(form: FormData) { const res = await api.put<Formulaire>(`/evaluations/formulaires/${editItem!.id}`, form); setItems(p => p.map(f => f.id === editItem!.id ? res.data : f)); }
+    async function handleCreate(form: FormData) { const res = await api.post<Formulaire>('/evaluations/formulaires', form); setItems(p => [res, ...p]); }
+    async function handleEdit(form: FormData) { const res = await api.put<Formulaire>(`/evaluations/formulaires/${editItem!.id}`, form); setItems(p => p.map(f => f.id === editItem!.id ? res : f)); }
     async function handleDelete() { await api.delete(`/evaluations/formulaires/${deleteItem!.id}`); setItems(p => p.filter(f => f.id !== deleteItem!.id)); setDeleteItem(undefined); }
 
     return (
