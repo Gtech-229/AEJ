@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Tableau de bord',
     icon: LayoutDashboard,
-    href: '/dashboard/dashboard',
+    href: '/dashboard',
   },
   {
     label: 'Stagiaires',

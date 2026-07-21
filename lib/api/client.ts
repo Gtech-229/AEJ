@@ -13,7 +13,8 @@
  * the auth hook own the redirect to /login.
  */
 import { ApiError, AuthError } from './errors';
-import type { ApiFetch } from './types';
+import { toRequestInit } from './serialize';
+import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
@@ -27,12 +28,15 @@ const API_BASE_URL =
 let refreshPromise: Promise<void> | null = null;
 
 function buildRequest(path: string, options?: RequestInit): Promise<Response> {
+  // For FormData, let the browser set `Content-Type` (with the multipart
+  // boundary) — forcing application/json would corrupt the upload.
+  const isFormData = options?.body instanceof FormData;
   return fetch(`${API_BASE_URL}${path}`, {
     // credentials: 'include' → httpOnly cookies ride along automatically.
     credentials: 'include',
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options?.headers,
     },
   });
@@ -147,14 +151,26 @@ function withJsonBody(
   body?: unknown,
   options?: RequestInit,
 ): RequestInit {
-  return {
-    ...options,
-    method,
-    body: body !== undefined ? JSON.stringify(body) : options?.body,
-  };
+  // FormData / raw bodies pass through untouched; plain objects are JSON-encoded.
+  const encoded =
+    body === undefined
+      ? options?.body
+      : body instanceof FormData
+        ? (body as BodyInit)
+        : JSON.stringify(body);
+  return { ...options, method, body: encoded };
 }
 
-export const apiClient = {
+export const apiClient: ApiClient & {
+  get: <T>(path: string, options?: RequestInit) => Promise<T>;
+  post: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  put: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  patch: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  delete: <T = void>(path: string, options?: RequestInit) => Promise<T>;
+} = {
+  // Primary, service-facing entry point. Handles JSON + multipart bodies.
+  request: <T>(path: string, options?: ApiRequestOptions): Promise<T> =>
+    apiFetch<T>(path, toRequestInit(options)),
   get: <T>(path: string, options?: RequestInit): Promise<T> =>
     apiFetch<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> =>

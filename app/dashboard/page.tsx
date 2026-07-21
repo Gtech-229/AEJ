@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Users, 
+  Users,
   Settings,
   Search,
   BriefcaseBusiness,
@@ -12,7 +12,7 @@ import {
   CircleCheckBig,
   ChartColumnIncreasing,
 } from 'lucide-react';
-import { PageHeader } from '@/components/UI/PageHeader';
+import { PageHeader } from '@/components/legacy-ui/PageHeader';
 import KpiCard from '@/components/dashboard/KpiCard';
 import EvolutionChart from '@/components/dashboard/EvolutionChart';
 import FinancementChart from '@/components/dashboard/FinancementChart';
@@ -147,14 +147,14 @@ export default function DashboardPage() {
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     // TODO: brancher la recherche sur une vraie logique (filtrage, navigation, appel API...)
-    console.log('Recherche :', search);
+    console.log('Recherche :', search, isActive(PARAMETRES_HREF));
   }
 
   return (
     <div className="min-h-screen bg-[#F5F6F8] flex flex-col px-6 py-6 max-w-6xl mx-auto">
 
       {/* Partie verte */}
-      
+
       <section className="bg-[#1a7a3c] h-40 px-6 pt-6">
         <PageHeader
           title="Tableau de bord"
