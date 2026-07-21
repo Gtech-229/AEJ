@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import api from '@/lib/api/client';
-import { PageHeader } from '@/components/UI/PageHeader';
+import { PageHeader } from '@/components/legacy-ui/PageHeader';
 
 interface Message { id: number; role: 'user' | 'assistant'; content: string; time: string; }
 

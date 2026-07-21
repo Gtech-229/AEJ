@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { Bell, Check, Trash2, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import api from '@/lib/api/client';
-import { PageHeader } from '@/components/UI/PageHeader';
-import { Button } from '@/components/UI/Button';
-import { Badge } from '@/components/UI/Badge';
+import { PageHeader } from '@/components/legacy-ui/PageHeader';
+import { Button } from '@/components/legacy-ui/Button';
+import { Badge } from '@/components/legacy-ui/Badge';
 
 type TypeNotif = 'alerte' | 'info' | 'succes' | 'avertissement';
 interface Notification { id: number; titre: string; message: string; type: TypeNotif; categorie: string; lue: boolean; date: string; lien?: string; }

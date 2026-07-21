@@ -15,7 +15,8 @@
  */
 import { cookies } from 'next/headers';
 import { ApiError, AuthError } from './errors';
-import type { ApiFetch } from './types';
+import { toRequestInit } from './serialize';
+import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
@@ -36,12 +37,13 @@ export const serverApiFetch: ApiFetch = async <T>(
   // Serialized "name=value; name2=value2" — forwarded verbatim, never logged.
   const cookieHeader = cookieStore.toString();
 
+  const isFormData = options?.body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     // Server render data should not be implicitly cached unless a caller opts in.
     cache: 'no-store',
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
       ...options?.headers,
     },
@@ -59,6 +61,16 @@ export const serverApiFetch: ApiFetch = async <T>(
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
+};
+
+/**
+ * High-level server API surface (same shape as the browser `apiClient`).
+ * Inject this into a feature service during a server prefetch so it forwards
+ * the request's cookies. Handles JSON + multipart bodies.
+ */
+export const serverApiClient: ApiClient = {
+  request: <T>(path: string, options?: ApiRequestOptions): Promise<T> =>
+    serverApiFetch<T>(path, toRequestInit(options)),
 };
 
 export { ApiError, AuthError } from './errors';

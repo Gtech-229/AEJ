@@ -78,13 +78,13 @@ export function useAuth() {
   async function login(email: string, password: string) {
     try {
       await loginMutation.mutateAsync({ email, password });
-      router.push('/dashboard/dashboard');
+      router.push('/dashboard');
     } catch (err) {
       // DEV fallback: let the prototype through while the backend is absent.
       // Remove together with GUARD_COOKIE once /auth/login is live.
       if (isBackendAbsent(err)) {
         setDevGuardCookie();
-        router.push('/dashboard/dashboard');
+        router.push('/dashboard');
         return;
       }
       throw err;
