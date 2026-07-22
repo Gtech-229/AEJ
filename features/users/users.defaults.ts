@@ -1,14 +1,27 @@
 import type { User } from './users.dto';
-import type { UserInput } from './users.schema';
+import type { CreateUserInput, UpdateUserInput } from './users.schema';
 
-/** Default form values — from an existing user (edit) or blanks (create). */
-export function getUserDefaults(user?: User): UserInput {
+export function getCreateUserDefaults(): CreateUserInput {
   return {
-    nom: user?.nom ?? '',
-    prenom: user?.prenom ?? '',
-    email: user?.email ?? '',
-    telephone: user?.telephone ?? '',
-    role: user?.role ?? 'consultant',
-    statut: user?.statut ?? 'actif',
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    adresse: '',
+    mot_de_passe: '',
+    role_id: 0,
+    fonction_id: 0,
+  };
+}
+
+export function getUpdateUserDefaults(user: User): UpdateUserInput {
+  return {
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+    telephone: user.telephone,
+    adresse: user.adresse,
+    role_id: user.role_id,
+    fonction_id: user.fonction_id,
   };
 }
