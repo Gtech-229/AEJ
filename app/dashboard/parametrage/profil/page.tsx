@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Check, User } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
 
 export default function ProfilPage() {
     const { user } = useAuth();

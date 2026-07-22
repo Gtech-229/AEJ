@@ -25,7 +25,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
 import { ThemeSwitch } from '@/components/theme/theme-switch';
 import { AccentSwitch } from '@/components/theme/accent-switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
