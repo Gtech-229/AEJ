@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { CreateUserPayload, User } from './users.dto';
+import type { CreateUserPayload, UpdateUserPayload } from './users.dto';
 import { usersKeys } from './users.keys';
 import { usersService } from './users.service';
 
@@ -28,7 +28,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: User) => usersService.update(payload),
+    mutationFn: (payload: UpdateUserPayload) => usersService.update(payload),
     onSuccess: () => {
       toast.success('Utilisateur mis à jour');
       queryClient.invalidateQueries({ queryKey: usersKeys.all });

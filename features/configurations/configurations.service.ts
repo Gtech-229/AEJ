@@ -111,7 +111,7 @@ export const configurationsService = {
       body: toApi(payload),
     });
 
-   console.log("Res", res)
+  
     // The backend echoes the saved record (wrapped); fall back to the payload.
     return res?.data ? fromApi(res.data) : payload;
   },

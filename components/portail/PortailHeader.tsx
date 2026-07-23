@@ -13,10 +13,12 @@ import {
   FolderKanban,
   GraduationCap,
   Handshake,
+  IdCard,        // ← nouveau
   KeyRound,
   Landmark,
   LayoutDashboard,
   LogOut,
+  MapPin,         // ← nouveau
   Settings,
   Shuffle,
   SlidersHorizontal,
@@ -93,6 +95,8 @@ const NAV: NavItem[] = [
     icon: Settings,
     children: [
       { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs', icon: Users },
+      { label: 'Fonctions', href: '/dashboard/parametrage/fonctions', icon: IdCard },
+      { label: 'Localités', href: '/dashboard/parametrage/localites', icon: MapPin },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
     ],
   },

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import type { Configuration } from './configurations.dto';
 import { configurationsKeys } from './configurations.keys';
 import { configurationsService } from './configurations.service';
+import apiClient from '@/lib/api/client';
 
 /** Reads the full configuration object. */
 export function useConfigurations() {
@@ -51,4 +52,26 @@ export function useUpdateConfigurations() {
       toast.success('Configuration enregistrée');
     },
   });
+}
+
+
+export function useUploadStructureLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData()
+      formData.append('structure_logo', file)
+      return apiClient.request<Configuration>('/configurations/1', {
+        method:  'PATCH',
+        body:    formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: configurationsKeys.detail() })
+      toast.success('Logo mis à jour')
+    },
+    onError: () => toast.error('Échec de la mise à jour du logo'),
+  })
 }

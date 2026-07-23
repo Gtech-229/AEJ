@@ -36,6 +36,7 @@ export function ConfigurationsClient() {
    
   function handleSave(section: Partial<Configuration>) {
     if (!config) return;
+    
     patch.mutate({ ...config, ...section });
   }
 
