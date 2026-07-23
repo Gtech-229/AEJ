@@ -66,19 +66,23 @@ function ConfigSectionForm<T extends FieldValues>({
   const [resetKey, setResetKey] = useState(0);
 
   return (
-    <div className="space-y-6">
-      {children}
-      <DynamicForm<T>
-        key={resetKey}
-        formId={formId}
-        hideFormFooter
-        config={config}
-        schema={schema}
-        defaultValues={defaultValues}
-        onSubmit={onSave}
-        isLoading={isSaving}
-      />
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+    <div className="flex h-full flex-col">
+      {/* Scrollable body */}
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
+        {children}
+        <DynamicForm<T>
+          key={resetKey}
+          formId={formId}
+          hideFormFooter
+          config={config}
+          schema={schema}
+          defaultValues={defaultValues}
+          onSubmit={onSave}
+          isLoading={isSaving}
+        />
+      </div>
+      {/* Pinned footer */}
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border bg-card p-4">
         <Button
           type="button"
           variant="outline"
@@ -87,10 +91,11 @@ function ConfigSectionForm<T extends FieldValues>({
             onReset?.();
             setResetKey((k) => k + 1);
           }}
+          className='cursor-pointer hover:bg-background hover:text-foreground/50'
         >
           Restaurer
         </Button>
-        <Button type="submit" form={formId} disabled={isSaving}>
+        <Button type="submit" form={formId} disabled={isSaving} className='cursor-pointer'>
           {isSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
           Enregistrer
         </Button>
@@ -128,21 +133,26 @@ function LogoUploader({
         type="button"
         onClick={() => inputRef.current?.click()}
         aria-label="Changer le logo"
-        className="group cursor-pointer relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className="group relative shrink-0 cursor-pointer rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="Logo" className="size-full object-contain" />
-        ) : (
-          <ImageIcon className="size-6 text-muted-foreground" />
-        )}
-
-        {/* Hover overlay */}
-        <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-          <Camera className="size-5 text-white" />
+        {/* Circular clip (overflow-hidden lives here so the badge below isn't cut off) */}
+        <span className="relative flex size-20 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+          {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview} alt="Logo" className="size-full object-contain" />
+          ) : (
+            <ImageIcon className="size-6 text-muted-foreground" />
+          )}
+          {/* Hover overlay */}
+          <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+            <Camera className="size-5 text-white" />
+          </span>
         </span>
 
-      
+        {/* Change badge on the bottom-right edge of the logo */}
+        <span className="absolute right-0 bottom-0 flex size-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm">
+          <Camera className="size-3" />
+        </span>
       </button>
 
       <div className="space-y-0.5">
@@ -160,6 +170,7 @@ function LogoUploader({
 // ── Sections ──────────────────────────────────────────────────────────────────
 
 export function IdentiteSection({ params, isSaving, onSave }: SectionProps) {
+ 
   const [logo, setLogo] = useState(params.logo_structure ?? '');
   return (
     <ConfigSectionForm

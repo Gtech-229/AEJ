@@ -15,6 +15,7 @@ import {
   type SectionProps,
 } from './configurations.sections';
 
+
 const TABS: {
   value: string;
   label: string;
@@ -32,11 +33,16 @@ const TABS: {
 export function ConfigurationsClient() {
   const { data: config, isLoading } = useConfigurations();
   const patch = useUpdateConfigurations();
-
+   
   function handleSave(section: Partial<Configuration>) {
     if (!config) return;
+    
     patch.mutate({ ...config, ...section });
   }
+
+
+ 
+    
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-6">
@@ -52,10 +58,14 @@ export function ConfigurationsClient() {
       ) : !config ? (
         <p className="text-sm text-muted-foreground">Aucune configuration disponible.</p>
       ) : (
-        <Tabs defaultValue="identite" orientation="vertical" className="items-start gap-6">
+        <Tabs
+          defaultValue="identite"
+          orientation="vertical"
+          className="h-[40vh] min-h-[400px] gap-6"
+        >
           <TabsList
             variant="solid"
-            className="sticky top-6 w-56 shrink-0 border border-border bg-card p-1"
+            className="w-56 shrink-0 border border-border bg-card p-1 group-data-[orientation=vertical]/tabs:h-full"
           >
             {TABS.map(({ value, label, icon: Icon }) => (
               <TabsTrigger key={value} value={value} className="w-full justify-start gap-2">
@@ -65,9 +75,9 @@ export function ConfigurationsClient() {
             ))}
           </TabsList>
 
-          <div className="min-w-0 flex-1 rounded-xl border border-border bg-card p-6">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
             {TABS.map(({ value, Section }) => (
-              <TabsContent key={value} value={value}>
+              <TabsContent key={value} value={value} className="mt-0 min-h-0 flex-1">
                 <Section params={config} isSaving={patch.isPending} onSave={handleSave} />
               </TabsContent>
             ))}
