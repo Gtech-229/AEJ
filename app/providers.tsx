@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AccentProvider } from '@/components/theme/accent-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/features/auth/auth.context';
 
 /**
  * Client boundary wiring TanStack Query + theming into the tree.
@@ -20,7 +21,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AccentProvider>
-          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+          </AuthProvider>
         </AccentProvider>
         <Toaster richColors position="top-right" />
       </ThemeProvider>

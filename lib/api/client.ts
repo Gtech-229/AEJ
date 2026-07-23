@@ -12,12 +12,13 @@
  * wrapper — instead we throw `AuthError` and let a top-level error boundary /
  * the auth hook own the redirect to /login.
  */
+import { env } from '@/env';
+import { signalActivity } from '@/lib/activity';
 import { ApiError, AuthError } from './errors';
 import { toRequestInit } from './serialize';
 import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
 
 /**
  * Holds the in-flight refresh call, if any. This is the "single flight" latch:
@@ -33,7 +34,7 @@ function buildRequest(path: string, options?: RequestInit): Promise<Response> {
   const isFormData = options?.body instanceof FormData;
   return fetch(`${API_BASE_URL}${path}`, {
     // credentials: 'include' → httpOnly cookies ride along automatically.
-    credentials: 'include',
+    // credentials: 'include',
     ...options,
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -108,13 +109,31 @@ function handleRefresh(): Promise<void> {
   return refreshPromise;
 }
 
+/**
+ * Endpoints where a 401 means "bad credentials" / "session gone", NOT "access
+ * token expired" — they must not trigger the refresh-and-retry flow.
+ */
+const NO_REFRESH_PREFIXES = [
+  '/personnels/login',
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/verify-otp',
+  '/auth/2fa',
+  '/auth/me',
+];
+
+function shouldAttemptRefresh(path: string): boolean {
+  return !NO_REFRESH_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 export const apiFetch: ApiFetch = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> => {
   const res = await buildRequest(path, options);
 
-  if (res.status === 401) {
+  if (res.status === 401 && shouldAttemptRefresh(path)) {
     // Await the shared refresh (starts one if none in flight). If it rejects
     // (AuthError / dev-stub ApiError) the error propagates to the caller — we
     // do NOT redirect here.
@@ -129,6 +148,7 @@ export const apiFetch: ApiFetch = async <T>(
     if (!retry.ok) {
       throw new ApiError(retry.status, await readText(retry));
     }
+    signalActivity(); // successful response = user activity
     return parseBody<T>(retry);
   }
 
@@ -136,6 +156,7 @@ export const apiFetch: ApiFetch = async <T>(
     throw new ApiError(res.status, await readText(res));
   }
 
+  signalActivity(); // successful response = user activity
   return parseBody<T>(res);
 };
 
