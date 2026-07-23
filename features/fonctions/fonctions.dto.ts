@@ -10,5 +10,10 @@ export interface Fonction {
   service_id: number;
 }
 
-export type CreateFonctionPayload = Omit<Fonction, 'id'>;
+export type CreateFonctionPayload = {
+  nom: string;
+  code?: string | null;
+  description?: string | null;
+  service_id: number;
+};
 export type UpdateFonctionPayload = Fonction;

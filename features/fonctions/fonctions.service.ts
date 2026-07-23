@@ -47,7 +47,12 @@ export const fonctionsService = {
       return await client.request<Fonction>(BASE_URL, { method: 'POST', body: payload });
     } catch (err) {
       if (isDev) {
-        const created: Fonction = { ...payload, id: Date.now() };
+        const created: Fonction = {
+          ...payload,
+          code: payload.code ?? null,
+          description: payload.description ?? null,
+          id: Date.now(),
+        };
         store().unshift(created);
         return created;
       }

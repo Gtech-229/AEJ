@@ -10,5 +10,10 @@ export interface Localite {
   niveau_localite_id: number;
 }
 
-export type CreateLocalitePayload = Omit<Localite, 'id'>;
+export type CreateLocalitePayload = {
+  nom: string;
+  code?: string | null;
+  couche_cartographique?: string | null;
+  niveau_localite_id: number;
+};
 export type UpdateLocalitePayload = Localite;

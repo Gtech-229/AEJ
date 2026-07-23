@@ -46,7 +46,12 @@ export const localitesService = {
       return await client.request<Localite>(BASE_URL, { method: 'POST', body: payload });
     } catch (err) {
       if (isDev) {
-        const created: Localite = { ...payload, id: Date.now() };
+        const created: Localite = {
+          ...payload,
+          code: payload.code ?? null,
+          couche_cartographique: payload.couche_cartographique ?? null,
+          id: Date.now(),
+        };
         store().unshift(created);
         return created;
       }
