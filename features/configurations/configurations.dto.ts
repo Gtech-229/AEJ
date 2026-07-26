@@ -32,3 +32,24 @@ export interface Configuration {
 
 /** Body accepted by `POST /configurations` — the whole config object. */
 export type UpdateConfigurationPayload = Configuration;
+
+/**
+ * Raw record as returned by the backend (Laravel): decimals come as strings,
+ * booleans as 0/1, plus `id` and timestamps. It's mapped to/from the clean
+ * `Configuration` in the service (`fromApi` / `toApi`). Responses are wrapped
+ * in `{ Message, data }`.
+ */
+export interface ConfigurationApi
+  extends Omit<Configuration, 'taux_devise_principale' | 'mise_en_maintenance'> {
+  id: number;
+  taux_devise_principale: string;
+  mise_en_maintenance: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Envelope the backend wraps single-resource responses in. */
+export interface ConfigurationEnvelope {
+  Message: string;
+  data: ConfigurationApi;
+}

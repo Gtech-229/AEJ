@@ -18,6 +18,7 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
+  MapPin,         // ← nouveau
   Settings,
   Shuffle,
   SlidersHorizontal,
@@ -26,7 +27,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
 import { ThemeSwitch } from '@/components/theme/theme-switch';
 import { AccentSwitch } from '@/components/theme/accent-switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -99,6 +100,8 @@ const NAV: NavItem[] = [
     icon: Settings,
     children: [
       { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs', icon: Users },
+      { label: 'Fonctions', href: '/dashboard/parametrage/fonctions', icon: IdCard },
+      { label: 'Localités', href: '/dashboard/parametrage/localites', icon: MapPin },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
     ],
   },

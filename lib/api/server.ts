@@ -14,12 +14,12 @@
  * service can be called with either instance interchangeably.
  */
 import { cookies } from 'next/headers';
+import { env } from '@/env';
 import { ApiError, AuthError } from './errors';
 import { toRequestInit } from './serialize';
 import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
 
 async function readText(res: Response): Promise<string> {
   try {
