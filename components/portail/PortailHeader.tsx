@@ -13,6 +13,7 @@ import {
   FolderKanban,
   GraduationCap,
   Handshake,
+  IdCard,
   KeyRound,
   Landmark,
   LayoutDashboard,
@@ -87,6 +88,11 @@ const NAV: NavItem[] = [
       { label: 'Projets financés', href: '/dashboard/financements/projets', icon: FolderKanban },
       { label: 'Partenaires', href: '/dashboard/financements/partenaires', icon: Handshake },
     ],
+  },
+  {
+    label: 'Personnel',
+    href: '/dashboard/personnel',
+    icon: IdCard,
   },
   {
     label: 'Paramétrage',

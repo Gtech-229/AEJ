@@ -24,6 +24,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning className={`${jakarta.variable} h-full antialiased`}>
       <body className="min-h-full bg-gray-50">
         <Providers>{children}</Providers>
+        
       </body>
     </html>
   );

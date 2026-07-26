@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import apiClient, { ApiError } from '@/lib/api/client';
+import apiClient, { ApiError, AuthError } from '@/lib/api/client';
+import { findMockAccount, setMockSession, clearMockSession, readMockSession } from '../lib/api/mock-auth';
 
 /**
  * Cookie-only auth. The access/refresh tokens are httpOnly cookies set by the
@@ -23,10 +24,11 @@ export const authKeys = {
 };
 
 // ---------------------------------------------------------------------------
-// TODO(backend): remove this dev bypass once /auth/* endpoints exist.
-// Until the backend is live, a login can't obtain a real httpOnly cookie, so we
-// drop a temporary NON-httpOnly marker cookie purely so the route-guard
-// middleware (proxy.ts) lets us into the prototype. This is NOT a token store.
+// TODO(backend): remove this whole dev bypass once /auth/* endpoints exist.
+// Until the backend is live, login/me are served from an in-memory mock
+// account directory (see mock-auth.ts) instead of real httpOnly cookies —
+// GUARD_COOKIE / mock-session below are NOT a token store, just a way to
+// remember which mock user is "logged in" across a page refresh.
 // ---------------------------------------------------------------------------
 const GUARD_COOKIE = 'aej_token';
 
@@ -51,7 +53,18 @@ export function useAuth() {
 
   const userQuery = useQuery({
     queryKey: authKeys.me,
-    queryFn: () => apiClient.get<CurrentUser>('/auth/me'),
+    queryFn: async (): Promise<CurrentUser | null> => {
+      try {
+        return await apiClient.get<CurrentUser>('/auth/me');
+      } catch (err) {
+        if (isBackendAbsent(err)) {
+          // Backend absent → fall back to whichever mock account "logged in".
+          // No mock session cookie means nobody is logged in (not an error).
+          return readMockSession();
+        }
+        throw err;
+      }
+    },
     retry: false,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
@@ -70,6 +83,7 @@ export function useAuth() {
     // Clear client cache + redirect regardless of whether the call succeeded.
     onSettled: () => {
       clearDevGuardCookie();
+      clearMockSession();
       queryClient.clear();
       router.push('/auth/login');
     },
@@ -80,10 +94,17 @@ export function useAuth() {
       await loginMutation.mutateAsync({ email, password });
       router.push('/dashboard');
     } catch (err) {
-      // DEV fallback: let the prototype through while the backend is absent.
-      // Remove together with GUARD_COOKIE once /auth/login is live.
+      // DEV fallback: while the backend is absent, check the mock account
+      // directory instead of trusting any credentials.
+      // Remove together with mock-auth.ts once /auth/login is live.
       if (isBackendAbsent(err)) {
+        const mockUser = findMockAccount(email, password);
+        if (!mockUser) {
+          throw new AuthError('Identifiants invalides (mode démo — backend indisponible).');
+        }
         setDevGuardCookie();
+        setMockSession(mockUser);
+        await queryClient.invalidateQueries({ queryKey: authKeys.me });
         router.push('/dashboard');
         return;
       }
@@ -107,7 +128,7 @@ export function useAuth() {
     user: userQuery.data ?? null,
     loading: userQuery.isLoading,
     login,
-    logout: () => logoutMutation.mutateAsync().catch(() => {}),
+    logout: () => logoutMutation.mutateAsync().catch(() => { }),
     changePassword,
   };
 }

@@ -14,12 +14,18 @@ export function ThemeSwitch({ className }: { className?: string }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <button
       type="button"
-      aria-label={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+      aria-label={
+        !mounted
+          ? 'Changer de thème'
+          : isDark
+            ? 'Passer en mode clair'
+            : 'Passer en mode sombre'
+      }
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className={cn(
         'inline-flex size-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
@@ -27,7 +33,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
       )}
     >
       {/* Render a stable icon until mounted to avoid SSR/client mismatch. */}
-      {mounted && isDark ? <Sun size={18} /> : <Moon size={18} />}
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
 }

@@ -3,42 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import {
-  LayoutDashboard,
-  Settings,
-  Briefcase,
-  Wallet,
-  ClipboardCheck,
-  BarChart2,
-  Bot,
-  ChevronDown,
-  ChevronRight,
-  Users,
-  Building2,
-} from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface NavItem {
   label: string;
-  icon: React.ElementType;
   href?: string;
   children?: { label: string; href: string }[];
 }
 
-// ── Routes alignées sur app/dashboard/... ────────────────────────────────────
-const NAV_ITEMS: NavItem[] = [
+const NAV: NavItem[] = [
+  { label: 'Tableau de bord', href: '/dashboard' },
+  { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs' },
   {
-    label: 'Tableau de bord',
-    icon: LayoutDashboard,
-    href: '/dashboard',
-  },
-  {
-    label: 'Stagiaires',
-    icon: Users,
-    href: '/dashboard/stagiares',
-  },
-  {
-    label: 'Offres & Matching',
-    icon: Briefcase,
+    label: 'Offres & Demandes',
     children: [
       { label: 'Offres de stage', href: '/dashboard/offres/stages' },
       { label: "Offres d'emploi", href: '/dashboard/offres/emplois' },
@@ -46,42 +23,34 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: 'Financements',
-    icon: Wallet,
-    children: [
-      { label: 'Projets financés', href: '/dashboard/financements/projets' },
-      { label: 'Partenaires', href: '/dashboard/financements/partenaires' },
-    ],
-  },
-  {
     label: 'Évaluations',
-    icon: ClipboardCheck,
     children: [
-      { label: 'Formulaires', href: '/dashboard/evaluations/formulaires' },
-      { label: 'Résultats', href: '/dashboard/evaluations/resultats' },
+      { label: "Formulaires d'évaluation", href: '/dashboard/evaluations/formulaires' },
+      { label: "Résultats d'évaluation", href: '/dashboard/evaluations/resultats' },
     ],
   },
+  { label: 'Stagiaires', href: '/dashboard/stagiaires' },
+  { label: 'Entreprises', href: '/dashboard/parametrage/entreprises' },
   {
-    label: 'Entreprises',
-    icon: Building2,
-    href: '/dashboard/parametrage/entreprises',
+    label: 'Financements',
+    children: [
+      { label: 'Parténaires financiers', href: '/dashboard/financements/partenaires' },
+      { label: 'Projets financé', href: '/dashboard/financements/projets' },
+    ],
   },
-  // {
-  //   label: 'Paramétrage',
-  //   icon: Settings,
-  //   children: [
-  //     { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs' },
-  //     { label: 'Entreprises', href: '/dashboard/parametrage/entreprises' },
-  //     { label: 'Secteurs', href: '/dashboard/parametrage/secteurs' },
-  //     { label: 'Système', href: '/dashboard/parametrage/systeme' },
-  //     { label: 'Profil', href: '/dashboard/parametrage/profil' },
-  //   ],
-  // },
+  { label: 'Rapports & Statistiques', href: '/dashboard/rapports' },
+  { label: 'Personnels', href: '/dashboard/personnel' },
   {
-    label: 'Assistant IA',
-    icon: Bot,
-    href: '/dashboard/chatbot',
+    label: 'Paramétrage',
+    children: [
+      { label: 'Rôles & permissions', href: '/dashboard/parametrage/roles' },
+      { label: 'Secteurs', href: '/dashboard/parametrage/secteurs' },
+      { label: "Journal d'activité", href: '/dashboard/parametrage/journal' },
+      { label: 'Système', href: '/dashboard/parametrage/systeme' },
+      { label: 'Profil', href: '/dashboard/parametrage/profil' },
+    ],
   },
+  { label: 'Notifications', href: '/dashboard/notifications' },
 ];
 
 export default function Sidebar() {
@@ -94,7 +63,8 @@ export default function Sidebar() {
 
   function isActive(href?: string) {
     if (!href) return false;
-    return pathname === href || pathname.startsWith(href + '/');
+    if (href === '/dashboard') return pathname === '/dashboard';
+    return pathname.startsWith(href);
   }
 
   function isGroupActive(children?: { href: string }[]) {
@@ -102,81 +72,88 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-[#1a7a3c] flex flex-col h-full shrink-0">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <div className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#1a7a3c] rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-bold">AEJ</span>
-          </div>
-          <div>
-            <p className="text-[#1a7a3c] font-bold text-sm leading-tight">Agence Emploi</p>
-            <p className="text-orange-500 font-bold text-sm leading-tight">Jeunes</p>
-          </div>
-        </div>
-      </div>
+    <aside className="w-44 shrink-0 flex flex-col h-full bg-white border-r border-gray-200">
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const hasChildren = !!item.children?.length;
-          const groupActive = isGroupActive(item.children);
-          const isOpen = openMenus[item.label] ?? groupActive;
+      <nav className="flex-1 py-4 overflow-y-auto">
+        <ul className="space-y-0.5 px-3">
+          {NAV.map((item) => {
+            const hasChildren = !!item.children?.length;
+            const groupActive = isGroupActive(item.children);
+            const active = hasChildren ? groupActive : isActive(item.href);
+            const isOpen = openMenus[item.label] ?? groupActive;
 
-          if (!hasChildren) {
+            if (!hasChildren) {
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={item.href!}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${active
+                        ? 'font-semibold text-green-700 bg-green-50'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-green-600' : 'bg-gray-300'}`} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            }
+
             return (
-              <Link
-                key={item.label}
-                href={item.href!}
-                className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
-              >
-                <Icon size={18} />
-                {item.label}
-              </Link>
+              <li key={item.label}>
+                <button
+                  onClick={() => toggle(item.label)}
+                  className={`w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${active
+                      ? 'font-semibold text-green-700 bg-green-50'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-green-600' : 'bg-gray-300'}`} />
+                    {item.label}
+                  </span>
+                  {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
+
+                {isOpen && (
+                  <ul className="ml-5 mt-0.5 space-y-0.5 border-l border-gray-100 pl-3">
+                    {item.children!.map((child) => {
+                      const childActive = isActive(child.href);
+                      return (
+                        <li key={child.href}>
+                          <Link
+                            href={child.href}
+                            className={`block px-3 py-1.5 rounded-lg text-xs transition-all ${childActive
+                                ? 'font-semibold text-green-700 bg-green-50'
+                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                              }`}
+                          >
+                            {child.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
             );
-          }
-
-          return (
-            <div key={item.label}>
-              <button
-                onClick={() => toggle(item.label)}
-                className={`nav-item w-full justify-between ${groupActive ? 'bg-white/10 text-white' : ''}`}
-              >
-                <span className="flex items-center gap-3">
-                  <Icon size={18} />
-                  {item.label}
-                </span>
-                {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              </button>
-
-              {isOpen && (
-                <div className="ml-8 mt-0.5 space-y-0.5">
-                  {item.children!.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className={`block px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150
-                        ${isActive(child.href)
-                          ? 'bg-white text-[#1a7a3c]'
-                          : 'text-white/70 hover:text-white hover:bg-white/10'
-                        }`}
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+          })}
+        </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t border-white/10">
-        <p className="text-white/40 text-xs text-center">
-          © 2026 AEJ | Version 1.0
-        </p>
+      {/* Besoin d'aide */}
+      <div className="m-3 p-3 rounded-xl bg-green-50 border border-green-100">
+        <p className="text-xs font-bold text-gray-800 mb-0.5">Besoin d'aide ?</p>
+        <p className="text-xs text-gray-500 mb-2">Consultez notre guide</p>
+        <Link
+          href="/dashboard/aide"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors"
+          style={{ backgroundColor: '#1a7a3c' }}
+        >
+          Voir le guide
+          <ExternalLink size={11} />
+        </Link>
       </div>
     </aside>
   );

@@ -1,85 +1,52 @@
-'use client';
+import type { LucideIcon } from 'lucide-react';
+import { ACCENTS, type AccentName } from '@/lib/design/tokens';
 
-import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
-import Link from 'next/link';
-
-interface KpiCardProps {
-  icon: React.ElementType;
+interface KpiCardV2Props {
+  icon: LucideIcon;
   label: string;
-  value: number | string;
+  value: string | number;
   variation?: number;
+  accent?: AccentName;
   href?: string;
-  loading?: boolean;
 }
 
-
-function formatValue(val: number | string): string {
-  if (typeof val === 'string') return val;
-  return val.toLocaleString('fr-FR');
+function formatValue(value: string | number): string {
+  if (typeof value === 'number') return value.toLocaleString('fr-FR');
+  return value;
 }
 
-export default function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  variation,
-  href,
-  loading,
-}: KpiCardProps) {
-  const isPositive = (variation ?? 0) >= 0;
+export default function KpiCardV2({ icon: Icon, label, value, variation, accent = 'green', href }: KpiCardV2Props) {
+  const { bg, fg } = ACCENTS[accent];
 
-  return (
-    <div className="kpi-card relative group">
-      {/* Icône + lien détail */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-green-light rounded-2xl flex items-center justify-center">
-          <Icon size={36} className="text-green-primary" />
-        </div>
-        {href && (
-          <Link
-            href={href ?? "#"}
-            className="group w-9 h-9 rounded-full bg-[#F4FAF6]
-             border border-[#E6F3EA]
-             flex items-center justify-center
-             transition-all duration-300
-             hover:bg-[#1a7a3c]"
-          >
-            <ArrowUpRight
-              size={15}
-              className="text-[#1a7a3c] group-hover:text-white transition-colors"
-            />
-          </Link>
-        )}
+  const content = (
+    <div className="bg-white rounded-2xl p-5 shadow-sm h-full">
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+        style={{ backgroundColor: bg }}
+      >
+        <Icon size={18} style={{ color: fg }} />
       </div>
-
-      {/* Valeur + badge variation */}
-      <div className="flex items-end gap-3">
-        {loading ? (
-          <div className="h-9 w-28 bg-gray-100 rounded-xl animate-pulse" />
-        ) : (
-          <span className="text-3xl font-bold text-gray-900 tracking-tight">
-            {formatValue(value)}
-          </span>
-        )}
-
-        {variation !== undefined && !loading && (
-          <span className={`mb-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold
-            ${isPositive
-              ? 'bg-green-primary text-white'
-              : 'bg-orange-primary text-white'
-            }`}
-          >
-            {isPositive
-              ? <TrendingUp size={11} />
-              : <TrendingDown size={11} />
-            }
-            {isPositive ? '+' : ''}{variation}%
-          </span>
-        )}
-      </div>
-
-      {/* Label */}
-      <p className="mt-1.5 text-sm font-medium text-gray-500">{label}</p>
+      <p className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+        {formatValue(value)}
+      </p>
+      <p className="text-sm text-gray-500 mt-0.5">{label}</p>
+      {variation !== undefined && (
+        <p
+          className="text-xs font-semibold mt-2 flex items-center gap-0.5"
+          style={{ color: variation >= 0 ? '#167C3B' : '#DC2626' }}
+        >
+          {variation >= 0 ? '↑' : '↓'} {Math.abs(variation)}%
+        </p>
+      )}
     </div>
   );
+
+  if (href) {
+    return (
+      <a href={href} className="block hover:shadow-md transition-shadow rounded-2xl">
+        {content}
+      </a>
+    );
+  }
+  return content;
 }
