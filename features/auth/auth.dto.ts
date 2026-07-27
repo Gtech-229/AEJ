@@ -3,13 +3,42 @@
  * httpOnly cookie; JS never reads/stores a token.
  */
 
-/** The authenticated user, resolved from `GET /auth/me`. */
+/**
+ * The authenticated personnel, resolved from `GET /personnel/me`.
+ * Confirmed against the real payload.
+ */
 export interface User {
   id: number;
-  name: string;
+  nom: string;
+  prenom: string;
   email: string;
-  role: string;
-  avatar?: string;
+  telephone: string;
+  adresse: string;
+  role_id: number;
+  fonction_id: number;
+  /** NB: the API returns 0/1, not a boolean. */
+  is_active: number;
+  /**
+   * Resolved server-side decision: may this user use the app during
+   * maintenance? Optional until the backend ships it — see
+   * `canBypassMaintenance`, which falls back to a local role allow-list.
+   */
+  can_bypass_maintenance?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** `/personnel/me` is enveloped: `{ message, data }`. */
+export interface MeResponse {
+  message: string;
+  data: User;
+}
+
+/** "Prénom Nom" for display, falling back to the email, then a generic label. */
+export function getUserDisplayName(user: User | null | undefined): string {
+  if (!user) return 'Admin';
+  const full = [user.prenom, user.nom].filter(Boolean).join(' ').trim();
+  return full || user.email || 'Admin';
 }
 
 /** Login step 1 — `POST /personnels/login`. */
@@ -19,28 +48,33 @@ export interface LoginPayload {
 }
 
 /**
- * Login response. When 2FA is enabled the backend returns `otp_required` (and a
- * pending personnel id) WITHOUT setting a session cookie. Otherwise it sets the
- * cookie and this carries no `otp_required`.
+ * Login response — FLAT, not enveloped (unlike `/configurations`).
+ * Confirmed shape: `{ "message": "Authentification réussie", "user_id": 3 }`.
  *
- * TODO(backend): OTP isn't wired yet — `otp_required` is currently absent, so
- * login goes straight in. Fields marked optional so the flow activates the
- * moment the backend starts returning them.
+ * TODO(backend): 2FA isn't wired yet, so `otp_required` is absent and login goes
+ * straight in. When it lands, `otp_required: true` gates the OTP step and
+ * `user_id` is the pending id the code is paired with — the flow activates with
+ * no code change.
  */
 export interface LoginResponse {
+  message: string;
+  user_id: number;
   otp_required?: boolean;
-  personnel?: { id_personnel_perso: number };
 }
 
-/** OTP verification step 2 — `POST /auth/verify-otp`. */
+/**
+ * OTP verification step 2 — `POST /auth/verify-otp`.
+ * TODO(backend): field name unconfirmed; `user_id` mirrors the login response
+ * (and the API's snake_case convention).
+ */
 export interface VerifyOtpPayload {
   code: string;
-  id_personnel_perso: number;
+  user_id: number;
 }
 
-/** Resend the emailed code — `POST /auth/2fa/send-otp`. */
+/** Resend the emailed code — `POST /auth/2fa/send-otp`. TODO(backend): confirm. */
 export interface ResendOtpPayload {
-  userId: number;
+  user_id: number;
 }
 
 /** Request a password-reset link — `POST /password/reset`. */
@@ -55,3 +89,4 @@ export interface PasswordSetPayload {
   token: string;
   uid: string;
 }
+

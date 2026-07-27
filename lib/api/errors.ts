@@ -40,3 +40,27 @@ export class AuthError extends Error {
     Object.setPrototypeOf(this, AuthError.prototype);
   }
 }
+
+/**
+ * Human-readable message from an API error.
+ *
+ * `ApiError.message` holds the raw response body, and Laravel answers with JSON
+ * like `{"message":"..."}` (or `{"Message":"..."}`), so showing it as-is would
+ * surface raw JSON to the user. This digs out the message, falling back to a
+ * caller-provided default.
+ */
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    try {
+      const body = JSON.parse(err.message) as {
+        message?: string;
+        Message?: string;
+        error?: string;
+      };
+      return body.message ?? body.Message ?? body.error ?? fallback;
+    } catch {
+      return err.message?.trim() || fallback;
+    }
+  }
+  return fallback;
+}

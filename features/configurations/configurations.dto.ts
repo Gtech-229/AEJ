@@ -6,6 +6,8 @@
 export interface Configuration {
   sigle_systeme: string;
   intitule_systeme: string;
+  /** System logo path (distinct from the structure logo). */
+  logo_systeme: string;
   sigle_structure: string;
   intitule_structure: string;
   logo_structure: string;
@@ -24,10 +26,22 @@ export interface Configuration {
   delai_changement_mdp_mois: number;
   delai_suppression_secondes: number;
   code_instance_whatsapp: string;
+  token_instance_whatsapp: string;
   email_notifications: string;
   mot_de_passe_email_notifications: string;
+  /**
+   * ⚠️ Historically the form's "Serveur SMTP" field, but the API value is an
+   * EMAIL (e.g. notifications@structure.com). The actual SMTP host lives in
+   * `smtp_host_notifications`. See the Notifications section — the form mapping
+   * needs correcting.
+   */
   smtp_email_notifications: string;
-  lien_api_parent: string;
+  smtp_host_notifications: string;
+  smtp_port_notifications: number;
+  /** Encryption, e.g. "tls" / "ssl". */
+  smtp_encrypt_notifications: string;
+  /** Not returned by the current API — kept optional until confirmed. */
+  lien_api_parent?: string;
 }
 
 /** Body accepted by `POST /configurations` — the whole config object. */

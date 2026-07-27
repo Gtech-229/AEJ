@@ -16,7 +16,8 @@ export interface User {
   adresse: string;
   role_id: number;
   fonction_id: number;
-  is_active?: boolean;
+  /** NB: the API returns 0/1, not a boolean (confirmed on /personnel/me). */
+  is_active?: number;
 }
 
 export type CreateUserPayload = {
