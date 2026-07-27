@@ -38,7 +38,6 @@ export function useSession(): SessionContextValue {
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
   const { data: config } = useConfigurations();
-
   const [remainingSeconds, setRemaining] = useState(0);
   const [warningVisible, setWarningVisible] = useState(false);
 

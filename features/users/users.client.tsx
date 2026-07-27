@@ -25,9 +25,11 @@ const FACETS: FacetedFilter[] = [
   {
     columnId: 'is_active',
     title: 'Statut',
+    // Values must match the column's accessor output ("1"/"0" — the API returns
+    // 0/1, not booleans), otherwise the filter silently matches nothing.
     options: [
-      { label: 'Actif', value: 'true' },
-      { label: 'Inactif', value: 'false' },
+      { label: 'Actif', value: '1' },
+      { label: 'Inactif', value: '0' },
     ],
   },
 ];
@@ -82,7 +84,8 @@ export function UsersClient() {
       },
       {
         id: 'is_active',
-        accessorFn: (u) => String(u.is_active ?? false),
+        // Normalize to "1"/"0" so it works whether the value is 1/0 or true/false.
+        accessorFn: (u) => String(Number(u.is_active ?? 0)),
         meta: { label: 'Statut' },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Statut" />,
         cell: ({ row }) => {

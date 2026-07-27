@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/auth.context';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
 import { ThemeSwitch } from '@/components/theme/theme-switch';
 import { AccentSwitch } from '@/components/theme/accent-switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -113,7 +114,8 @@ export function PortailHeader() {
   // The section whose sub-nav (third row) is shown, driven by the current route.
   const activeSection = NAV.find((item) => item.children && isSectionActive(item));
 
-  const initiale = user?.name?.charAt(0).toUpperCase() ?? 'A';
+  const displayName = getUserDisplayName(user);
+  const initiale = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="shrink-0">
@@ -182,7 +184,7 @@ export function PortailHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="flex flex-col gap-0.5">
-                <span className="text-sm font-semibold">{user?.name ?? 'Admin'}</span>
+                <span className="text-sm font-semibold">{displayName}</span>
                 {user?.email && (
                   <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 )}

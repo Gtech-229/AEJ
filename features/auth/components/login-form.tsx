@@ -1,24 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ApiError } from '@/lib/api/client';
+import { getApiErrorMessage } from '@/lib/api/errors';
 import { useLogin } from '../auth.hooks';
-import { useAuth } from '../auth.context';
 import { loginSchema, type LoginInput } from '../auth.schema';
 
+/**
+ * Presentational only — feedback, error handling and the post-login redirect
+ * (including the 2FA branch) all live in `useLogin`.
+ */
 export function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const login = useLogin();
-  const { setPending, markSignedIn, refreshMe } = useAuth();
-  const [error, setError] = useState('');
   const [showPwd, setShowPwd] = useState(false);
 
   const {
@@ -30,32 +28,18 @@ export function LoginForm() {
     defaultValues: { email: '', mot_de_passe: '' },
   });
 
-  const redirect = searchParams.get('redirect') || '/dashboard';
-
-  async function onSubmit(data: LoginInput) {
-    setError('');
-    try {
-      const res = await login.mutateAsync(data);
-      // 2FA pending → stash the id and go to the OTP screen (no session yet).
-      if (res?.otp_required && res.personnel) {
-        setPending(res.personnel.id_personnel_perso);
-        router.push('/auth/otp');
-        return;
-      }
-      // No 2FA → session granted (or bridge cookie) → in.
-      markSignedIn();
-      await refreshMe();
-      router.replace(redirect);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Identifiants incorrects');
-    }
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
+    <form
+      onSubmit={handleSubmit((data) => login.mutate(data))}
+      className="space-y-4"
+      noValidate
+    >
+      {login.error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {getApiErrorMessage(login.error, 'Identifiants incorrects')}
         </div>
       )}
 

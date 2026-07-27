@@ -3,6 +3,7 @@ import type { ApiClient } from '@/lib/api/types';
 import type {
   LoginPayload,
   LoginResponse,
+  MeResponse,
   PasswordResetPayload,
   PasswordSetPayload,
   ResendOtpPayload,
@@ -21,7 +22,7 @@ const ENDPOINTS = {
   login: '/personnels/login',
   verifyOtp: '/auth/verify-otp',
   resendOtp: '/auth/2fa/send-otp',
-  me: '/auth/me',
+  me: '/personnel/me',
   logout: '/auth/logout',
   passwordReset: '/password/reset',
   passwordSet: '/password/set',
@@ -45,8 +46,14 @@ export const authService = {
   resendOtp: (payload: ResendOtpPayload): Promise<void> =>
     apiClient.request<void>(ENDPOINTS.resendOtp, { method: 'POST', body: payload }),
 
-  /** The single source of truth for auth state: 200 → authenticated, 401 → not. */
-  me: (client: ApiClient = apiClient): Promise<User> => client.request<User>(ENDPOINTS.me),
+  /**
+   * The single source of truth for auth state: 200 → authenticated, 401 → not.
+   * The response is enveloped (`{ message, data }`), unlike login which is flat.
+   */
+  me: async (client: ApiClient = apiClient): Promise<User> => {
+    const res = await client.request<MeResponse>(ENDPOINTS.me);
+    return res.data;
+  },
 
   /** Server clears the session cookie. */
   logout: (): Promise<void> =>

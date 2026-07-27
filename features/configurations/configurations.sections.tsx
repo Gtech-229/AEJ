@@ -4,9 +4,12 @@ import { useRef, useState } from 'react';
 import type { FieldValues, DefaultValues } from 'react-hook-form';
 import type { ZodType } from 'zod';
 import { Camera, ImageIcon, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { DynamicForm, type FormConfig } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useUploadStructureLogo } from './configurations.hooks';
 import type { Configuration } from './configurations.dto';
 import {
   identiteSchema,
@@ -32,6 +35,7 @@ import {
   getNotificationsDefaults,
   getIntegrationsDefaults,
 } from './configurations.defaults';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export interface SectionProps {
   params: Configuration;
@@ -104,65 +108,94 @@ function ConfigSectionForm<T extends FieldValues>({
   );
 }
 
+const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+const MAX_MB = 2;
+
+/** Only render an <img> for something the browser can actually load. */
+function isDisplayableSrc(src: string): boolean {
+  return /^(https?:\/\/|blob:|data:|\/)/.test(src);
+}
+
 /**
- * Logo picker — the image box itself is the trigger (click it to change the
- * logo). Update-only for now. TODO(backend): upload the file and store the
- * returned path.
+ * Logo picker — the image box is the trigger. Selecting a file uploads it
+ * immediately via `useUploadStructureLogo` (its own endpoint), independent of
+ * the Identité form's save button.
  */
-function LogoUploader({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (path: string) => void;
-}) {
+function LogoUploader({ value, structureSigle }: { value: string, structureSigle : string }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string>(value);
+  // Local object-URL preview wins once a file is picked (the stored value may
+  // be a bare filename we can't render).
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const upload = useUploadStructureLogo();
+
+  const src = localPreview ?? (isDisplayableSrc(value) ? value : null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = ''; // let the same file be re-picked after an error
     if (!file) return;
-    setPreview(URL.createObjectURL(file));
-    // Placeholder path until an upload endpoint exists.
-    onChange(file.name);
+
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error('Format de fichier non pris en compte');
+      return;
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      toast.error('Seuls les fichiers de 2 Mo au plus sont pris en compte');
+      return;
+    }
+
+    setLocalPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    upload.mutate(file);
   }
 
   return (
     <div className="flex items-center gap-4">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        aria-label="Changer le logo"
-        className="group relative shrink-0 cursor-pointer rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        {/* Circular clip (overflow-hidden lives here so the badge below isn't cut off) */}
-        <span className="relative flex size-20 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Logo" className="size-full object-contain" />
-          ) : (
-            <ImageIcon className="size-6 text-muted-foreground" />
-          )}
-          {/* Hover overlay */}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-            <Camera className="size-5 text-white" />
-          </span>
-        </span>
+     
 
-        {/* Change badge on the bottom-right edge of the logo */}
-        <span className="absolute right-0 bottom-0 flex size-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm">
-          <Camera className="size-3" />
-        </span>
-      </button>
+         <div className="relative">
+        <Avatar className="size-16 rounded-full border border-border">
+          <AvatarImage
+            src={value ?? ''}
+            alt={"structure logo"}
+          />
+          <AvatarFallback className="rounded-xl bg-muted text-xs font-medium text-muted-foreground">
+            {structureSigle?.slice(0, 3).toUpperCase() ?? "AEJ"}
+          </AvatarFallback>
+        </Avatar>
+
+        <button
+          type="button"
+          disabled={upload.isPending}
+          onClick={() => inputRef.current?.click()}
+          className="
+            absolute -bottom-1 -right-1
+            flex size-6 items-center justify-center
+            rounded-full border border-border bg-background shadow-sm
+            transition hover:bg-muted disabled:opacity-50
+          "
+        >
+          {upload.isPending
+            ? <Loader2 className="size-3 animate-spin text-muted-foreground" />
+            : <Camera className="size-3 text-muted-foreground" />
+          }
+        </button>
+      </div>
 
       <div className="space-y-0.5">
         <Label>Logo de la structure</Label>
-        {/* <p className="text-xs text-muted-foreground">
-          Cliquez sur l’image pour changer le logo.
-        </p> */}
+        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP ou SVG · max {MAX_MB} Mo</p>
       </div>
 
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED.join(',')}
+        className="hidden"
+        onChange={handleFile}
+      />
     </div>
   );
 }
@@ -170,8 +203,9 @@ function LogoUploader({
 // ── Sections ──────────────────────────────────────────────────────────────────
 
 export function IdentiteSection({ params, isSaving, onSave }: SectionProps) {
- 
-  const [logo, setLogo] = useState(params.logo_structure ?? '');
+  // The logo has its own upload endpoint, so it's no longer merged into this
+  // form's payload — `handleSave` still spreads the current config, which keeps
+  // the server's `logo_structure` intact.
   return (
     <ConfigSectionForm
       formId="identite-form"
@@ -179,10 +213,9 @@ export function IdentiteSection({ params, isSaving, onSave }: SectionProps) {
       schema={identiteSchema}
       defaultValues={getIdentiteDefaults(params)}
       isSaving={isSaving}
-      onReset={() => setLogo(params.logo_structure ?? '')}
-      onSave={(data) => onSave({ ...data, logo_structure: logo })}
+      onSave={onSave}
     >
-      <LogoUploader value={logo} onChange={setLogo} />
+      <LogoUploader value={params.logo_structure ?? ''}  structureSigle={getIdentiteDefaults(params).sigle_structure}/>
     </ConfigSectionForm>
   );
 }

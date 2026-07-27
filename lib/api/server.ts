@@ -14,12 +14,17 @@
  * service can be called with either instance interchangeably.
  */
 import { cookies } from 'next/headers';
-import { env } from '@/env';
+import { getServerEnv } from '@/env';
 import { ApiError, AuthError } from './errors';
 import { toRequestInit } from './serialize';
 import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
-const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
+/**
+ * Server-side fetch can't use the browser's relative `/api` base (there is no
+ * origin to resolve it against, and the Next rewrite only applies to browser
+ * requests). So we call the backend directly and forward the cookies.
+ */
+const API_BASE_URL = `${getServerEnv().BACKEND_ORIGIN}/api`;
 
 async function readText(res: Response): Promise<string> {
   try {
