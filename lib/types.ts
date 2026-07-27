@@ -1,3 +1,5 @@
+import { Departement, Poste, Sexe, StatutPersonnel, TypeContrat } from "@/features/personnels/personnels.constants";
+
 export interface User {
   id: number;
   name: string;
@@ -81,4 +83,51 @@ export interface PaginatedResponse<T> {
   per_page: number;
   current_page: number;
   last_page: number;
+}
+
+export interface Personnel {
+  id: number;
+  matricule: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  poste: Poste;
+  departement: Departement;
+  typeContrat: TypeContrat;
+  statut: StatutPersonnel;
+  dateEmbauche: string; // ISO (yyyy-MM-dd)
+  dateNaissance?: string;
+  sexe?: Sexe;
+  adresse?: string;
+  salaire?: number;
+  superviseurId?: string | null;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+
+
+export type CreatePersonnelInput = Omit<
+  Personnel,
+  'id' | 'matricule' | 'createdAt' | 'updatedAt'
+>;
+ 
+export type UpdatePersonnelInput = Partial<CreatePersonnelInput> & { id: number };
+ 
+export interface PersonnelListParams {
+  page?: number;
+  size?: number;
+  q?: string;
+  departement?: Departement;
+  statut?: StatutPersonnel;
+  sort?: string;
+}
+ 
+export interface PersonnelListResponse {
+  data: Personnel[];
+  total: number;
+  page: number;
+  size: number;
 }

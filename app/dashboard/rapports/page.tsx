@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { Download, FileText, BarChart2, Users, Wallet, Calendar } from 'lucide-react';
 import { apiDownload } from '@/lib/api/client';
-import { PageHeader } from '@/components/UI/PageHeader';
-import { Input } from '@/components/UI/Input';
+import { PageHeader } from '@/components/legacy-ui/PageHeader';
+import { Input } from '@/components/legacy-ui/Input';
 
 const RAPPORTS = [
     { id: 'stagiaires', titre: 'Rapport stagiaires', desc: 'Liste complète avec statuts, entreprises et dates', icon: Users, formats: ['PDF', 'Excel'], endpoint: '/rapports/stagiaires' },

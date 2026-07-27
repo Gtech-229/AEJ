@@ -12,11 +12,13 @@
  * wrapper — instead we throw `AuthError` and let a top-level error boundary /
  * the auth hook own the redirect to /login.
  */
+import { env } from '@/env';
+import { signalActivity } from '@/lib/activity';
 import { ApiError, AuthError } from './errors';
-import type { ApiFetch } from './types';
+import { toRequestInit } from './serialize';
+import type { ApiClient, ApiFetch, ApiRequestOptions } from './types';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
 
 /**
  * Holds the in-flight refresh call, if any. This is the "single flight" latch:
@@ -26,13 +28,70 @@ const API_BASE_URL =
  */
 let refreshPromise: Promise<void> | null = null;
 
-function buildRequest(path: string, options?: RequestInit): Promise<Response> {
+// ---------------------------------------------------------------------------
+// Laravel Sanctum (SPA cookie mode) CSRF handshake.
+//
+// 1. `GET /sanctum/csrf-cookie` sets `laravel_session` (httpOnly) and
+//    `XSRF-TOKEN` (readable by JS, on purpose).
+// 2. Every state-changing request must echo that cookie back as the
+//    `X-XSRF-TOKEN` header, or Laravel replies 419 ("Page Expired").
+//
+// axios does step 2 automatically; native fetch does NOT — hence this code.
+// ---------------------------------------------------------------------------
+const CSRF_COOKIE = 'XSRF-TOKEN';
+const CSRF_HEADER = 'X-XSRF-TOKEN';
+const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/** Same-origin when the base is relative (proxied); derived otherwise. */
+const CSRF_ENDPOINT = API_BASE_URL.startsWith('/')
+  ? '/sanctum/csrf-cookie'
+  : `${API_BASE_URL.replace(/\/api\/?$/, '')}/sanctum/csrf-cookie`;
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  // Laravel URL-encodes the value; decode before echoing it back.
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** Single-flight: concurrent writes share one handshake instead of racing. */
+let csrfPromise: Promise<void> | null = null;
+
+async function ensureCsrfCookie(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  if (readCookie(CSRF_COOKIE)) return;
+  if (!csrfPromise) {
+    csrfPromise = fetch(CSRF_ENDPOINT, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+      .then(() => undefined)
+      .finally(() => {
+        csrfPromise = null;
+      });
+  }
+  await csrfPromise;
+}
+
+async function buildRequest(path: string, options?: RequestInit): Promise<Response> {
+  // For FormData, let the browser set `Content-Type` (with the multipart
+  // boundary) — forcing application/json would corrupt the upload.
+  const isFormData = options?.body instanceof FormData;
+  const method = (options?.method ?? 'GET').toUpperCase();
+  const needsCsrf = !CSRF_SAFE_METHODS.has(method);
+
+  if (needsCsrf) await ensureCsrfCookie();
+  const csrfToken = needsCsrf ? readCookie(CSRF_COOKIE) : null;
+
   return fetch(`${API_BASE_URL}${path}`, {
-    // credentials: 'include' → httpOnly cookies ride along automatically.
+    // Required for Sanctum: session + XSRF cookies must ride along.
     credentials: 'include',
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      // Makes Laravel answer with JSON errors instead of an HTML error page.
+      Accept: 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(csrfToken ? { [CSRF_HEADER]: csrfToken } : {}),
       ...options?.headers,
     },
   });
@@ -104,13 +163,39 @@ function handleRefresh(): Promise<void> {
   return refreshPromise;
 }
 
+/**
+ * Endpoints where a 401 means "bad credentials" / "session gone", NOT "access
+ * token expired" — they must not trigger the refresh-and-retry flow.
+ */
+const NO_REFRESH_PREFIXES = [
+  '/personnels/login',
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/verify-otp',
+  '/auth/2fa',
+  '/auth/me',
+];
+
+function shouldAttemptRefresh(path: string): boolean {
+  return !NO_REFRESH_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+/**
+ * TODO(backend): there is no refresh endpoint yet. Until one exists a 401 is a
+ * definitive auth failure — attempting a doomed `/auth/refresh` would surface a
+ * confusing 404 instead of the real error. Flip to `true` when it ships (the
+ * single-flight logic below is already written and tested).
+ */
+const REFRESH_ENABLED = false;
+
 export const apiFetch: ApiFetch = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> => {
   const res = await buildRequest(path, options);
 
-  if (res.status === 401) {
+  if (res.status === 401 && REFRESH_ENABLED && shouldAttemptRefresh(path)) {
     // Await the shared refresh (starts one if none in flight). If it rejects
     // (AuthError / dev-stub ApiError) the error propagates to the caller — we
     // do NOT redirect here.
@@ -125,6 +210,7 @@ export const apiFetch: ApiFetch = async <T>(
     if (!retry.ok) {
       throw new ApiError(retry.status, await readText(retry));
     }
+    signalActivity(); // successful response = user activity
     return parseBody<T>(retry);
   }
 
@@ -132,6 +218,7 @@ export const apiFetch: ApiFetch = async <T>(
     throw new ApiError(res.status, await readText(res));
   }
 
+  signalActivity(); // successful response = user activity
   return parseBody<T>(res);
 };
 
@@ -147,14 +234,26 @@ function withJsonBody(
   body?: unknown,
   options?: RequestInit,
 ): RequestInit {
-  return {
-    ...options,
-    method,
-    body: body !== undefined ? JSON.stringify(body) : options?.body,
-  };
+  // FormData / raw bodies pass through untouched; plain objects are JSON-encoded.
+  const encoded =
+    body === undefined
+      ? options?.body
+      : body instanceof FormData
+        ? (body as BodyInit)
+        : JSON.stringify(body);
+  return { ...options, method, body: encoded };
 }
 
-export const apiClient = {
+export const apiClient: ApiClient & {
+  get: <T>(path: string, options?: RequestInit) => Promise<T>;
+  post: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  put: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  patch: <T>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  delete: <T = void>(path: string, options?: RequestInit) => Promise<T>;
+} = {
+  // Primary, service-facing entry point. Handles JSON + multipart bodies.
+  request: <T>(path: string, options?: ApiRequestOptions): Promise<T> =>
+    apiFetch<T>(path, toRequestInit(options)),
   get: <T>(path: string, options?: RequestInit): Promise<T> =>
     apiFetch<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> =>

@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, Building2 } from 'lucide-react';
 import api from '@/lib/api/client';
-import { Badge } from '@/components/UI/Badge';
-import { Button } from '@/components/UI/Button';
-import { Input, Select } from '@/components/UI/Input';
-import { Modal } from '@/components/UI/Modal';
-import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
-import { PageHeader } from '@/components/UI/PageHeader';
+import { Badge } from '@/components/legacy-ui/Badge';
+import { Button } from '@/components/legacy-ui/Button';
+import { Input, Select } from '@/components/legacy-ui/Input';
+import { Modal } from '@/components/legacy-ui/Modal';
+import { ConfirmDialog } from '@/components/legacy-ui/ConfirmDialog';
+import { PageHeader } from '@/components/legacy-ui/PageHeader';
 
 interface Partenaire { id: number; nom: string; type: string; pays: string; contact: string; email: string; projets_count: number; }
 interface FormState { nom: string; type: string; pays: string; contact: string; email: string; }

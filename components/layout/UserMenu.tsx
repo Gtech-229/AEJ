@@ -9,7 +9,10 @@ import {
     LogOut,
     ChevronDown,
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
+import { getRoleSlug } from '@/lib/auth/acteur';
+import { ROLE_LABELS as ROLE_SLUG_LABELS, type UserRole } from '@/lib/auth/roles';
 
 interface UserMenuProps {
     /** Afficher le chevron à côté de l'initiale */
@@ -19,9 +22,9 @@ interface UserMenuProps {
 export default function UserMenu({ showChevron = false }: UserMenuProps) {
     const { user, logout } = useAuth();
     const [open, setOpen] = useState(false);
-    const name = user?.name ?? '';
+    const name = user ? getUserDisplayName(user) : '';
     const email = user?.email ?? '';
-    const role = user?.role ?? '';
+    const roleSlug = getRoleSlug(user);
     const menuRef = useRef<HTMLDivElement>(null);
 
     /* Fermer en cliquant en dehors */
@@ -45,12 +48,7 @@ export default function UserMenu({ showChevron = false }: UserMenuProps) {
     }, []);
 
     const initiale = name ? name.charAt(0).toUpperCase() : 'A';
-
-    const ROLE_LABELS: Record<string, string> = {
-        admin: 'Administrateur',
-        gestionnaire: 'Gestionnaire',
-        consultant: 'Consultant',
-    };
+    const roleLabel = roleSlug ? ROLE_SLUG_LABELS[roleSlug as UserRole] ?? roleSlug : '';
 
     const NAV_ITEMS = [
         { label: 'Paramètres', icon: Settings, href: '/dashboard/parametrage/profil' },
@@ -99,9 +97,9 @@ export default function UserMenu({ showChevron = false }: UserMenuProps) {
                             <div className="min-w-0">
                                 <p className="text-sm font-bold text-gray-800 truncate">{name || 'Admin'}</p>
                                 <p className="text-xs text-gray-400 truncate">{email}</p>
-                                {role && (
+                                {roleLabel && (
                                     <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
-                                        {ROLE_LABELS[role] ?? role}
+                                        {roleLabel}
                                     </span>
                                 )}
                             </div>
