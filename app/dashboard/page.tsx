@@ -10,6 +10,8 @@ import TableWidget from '@/components/dashboard/TableWidget';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
 import { COLORS, ACCENTS, type AccentName } from '@/lib/design/tokens';
 import { useActeurGuard } from '@/hooks/useActeurGuard';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
+import { getRoleSlug } from '@/lib/auth/acteur';
 import { getDashboardConfig, type KpiId } from '@/features/dashboard/dashboard.config';
 import type { UserRole } from '@/lib/auth/roles';
 
@@ -84,14 +86,18 @@ export default function DashboardPage() {
     );
   }
 
-  const config = getDashboardConfig(user!.role as UserRole);
+  // TODO(backend): resolve the real agence role from role_id (see
+  // lib/auth/acteur.ts). Fall back to the super-admin role so the full
+  // dashboard renders while the role_id → slug mapping is pending.
+  const roleSlug = (getRoleSlug(user) as UserRole | undefined) ?? 'admin_general';
+  const config = getDashboardConfig(roleSlug);
   const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
 
   return (
     <div className="p-6 space-y-5 max-w-[1400px]" style={{ backgroundColor: COLORS.bg }}>
       <div>
         <h1 className="text-2xl font-bold" style={{ color: COLORS.text }}>
-          Bienvenue, {user!.name}
+          Bienvenue, {getUserDisplayName(user)}
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">Vue d'ensemble de toutes les activités de l'agence</p>
       </div>

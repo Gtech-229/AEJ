@@ -10,6 +10,8 @@ import TableWidget from '@/components/dashboard/TableWidget';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
 import { COLORS, type AccentName } from '@/lib/design/tokens';
 import { useActeurGuard } from '@/hooks/useActeurGuard';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
+import { getRoleSlug } from '@/lib/auth/acteur';
 import {
     getInstitutionDashboardConfig,
     type InstitutionKpiId,
@@ -73,13 +75,17 @@ export default function InstitutionDashboardPage() {
         );
     }
 
-    const config = getInstitutionDashboardConfig(user!.role as InstitutionRole);
+    // TODO(backend): resolve the real institution role from role_id (see
+    // lib/auth/acteur.ts). Fall back to the broadest role so the dashboard
+    // renders while the role_id → slug mapping is pending.
+    const roleSlug = (getRoleSlug(user) as InstitutionRole | undefined) ?? 'gestionnaire_microfinance';
+    const config = getInstitutionDashboardConfig(roleSlug);
     const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
 
     return (
         <div className="min-h-screen px-6 py-6" style={{ backgroundColor: COLORS.bg }}>
             <PageHeader
-                title={`Bienvenue, ${user!.name}`}
+                title={`Bienvenue, ${getUserDisplayName(user)}`}
                 subtitle="Vue d'ensemble de votre portefeuille de crédits"
             />
 

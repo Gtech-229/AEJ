@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AGENCE_ROLES, ADMIN_ROLES, ROLE_LABELS, type UserRole } from '@/lib/auth/roles';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
+import { getRoleSlug } from '@/lib/auth/acteur';
 import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, type PermissionsByRole } from './roles.types';
 import { SEED_PERMISSIONS, hasPermission } from './roles.data';
 
@@ -18,7 +19,8 @@ export function RolesPermissionsPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('directeur_finances');
   const [isDirty, setIsDirty] = useState(false);
 
-  const canEdit = !!user?.role && (ADMIN_ROLES as readonly string[]).includes(user.role);
+  const roleSlug = getRoleSlug(user);
+  const canEdit = !!roleSlug && (ADMIN_ROLES as readonly string[]).includes(roleSlug);
 
   const isEditableRole = !ADMIN_ROLES.includes(selectedRole);
 
