@@ -16,6 +16,7 @@ import {
   IdCard,
   KeyRound,
   Landmark,
+  Layers,
   LayoutDashboard,
   LogOut,
   MapPin,         // ← nouveau
@@ -91,19 +92,19 @@ const NAV: NavItem[] = [
       { label: 'Partenaires', href: '/dashboard/financements/partenaires', icon: Handshake },
     ],
   },
-  {
-    label: 'Personnel',
-    href: '/dashboard/personnel',
-    icon: IdCard,
-  },
+  // {
+  //   label: 'Personnel',
+  //   href: '/dashboard/personnel',
+  //   icon: IdCard,
+  // },
   {
     label: 'Paramétrage',
     icon: Settings,
     children: [
       { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs', icon: Users },
-      { label: 'Fonctions', href: '/dashboard/parametrage/fonctions', icon: IdCard },
       { label: 'Localités', href: '/dashboard/parametrage/localites', icon: MapPin },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
+      { label: 'Autres paramètres', href: '/dashboard/parametrage/autres', icon: Layers },
     ],
   },
 ];

@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -131,6 +131,9 @@ export function UsersClient() {
           searchPlaceholder="Rechercher un utilisateur…"
           facetedFilters={FACETS}
           isLoading={isLoading}
+          emptyIcon={Users}
+          emptyTitle="Aucun utilisateur"
+          emptyDescription="Ajoutez un premier utilisateur pour lui donner accès à la plateforme."
           toolbarEndSlot={
             <Button size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />

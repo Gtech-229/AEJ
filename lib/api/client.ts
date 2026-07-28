@@ -117,25 +117,11 @@ async function parseBody<T>(res: Response): Promise<T> {
  * refresh-token cookie; on success the backend sets a fresh access-token cookie
  * and we have nothing to read from the (empty) body.
  *
- * TODO(backend): `/auth/refresh` does not exist yet. Until it lands we branch
- * on 404 explicitly so "endpoint not built" is never mistaken for "refresh
- * token expired". Remove the 404 branch once the contract is live.
+ * Routed through `buildRequest` so the Sanctum CSRF header (`X-XSRF-TOKEN`) is
+ * attached — a bare POST would be rejected with 419 ("Page Expired").
  */
 async function performRefresh(): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (res.status === 404) {
-    // Not built yet — surface a distinct, non-auth error so dev doesn't read
-    // this as a real logout.
-    throw new ApiError(
-      404,
-      '/auth/refresh is not implemented on the backend yet (dev stub).',
-    );
-  }
+  const res = await buildRequest('/auth/refresh', { method: 'POST' });
 
   if (res.status === 401) {
     // The refresh token itself is invalid/expired → hard logout.
@@ -182,12 +168,12 @@ function shouldAttemptRefresh(path: string): boolean {
 }
 
 /**
- * TODO(backend): there is no refresh endpoint yet. Until one exists a 401 is a
- * definitive auth failure — attempting a doomed `/auth/refresh` would surface a
- * confusing 404 instead of the real error. Flip to `true` when it ships (the
- * single-flight logic below is already written and tested).
+ * `/auth/refresh` is live: a 401 on a normal request triggers a single-flight
+ * refresh (see `handleRefresh`) followed by exactly one replay of the original
+ * request. Endpoints in `NO_REFRESH_PREFIXES` (login, logout, refresh itself, …)
+ * are excluded — a 401 there means "bad credentials", not "token expired".
  */
-const REFRESH_ENABLED = false;
+const REFRESH_ENABLED = true;
 
 export const apiFetch: ApiFetch = async <T>(
   path: string,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GenericTable } from '@/components/generic/generic-table';
 import { GenericDialogs, useDialogState } from '@/components/generic';
@@ -74,7 +74,9 @@ export function PersonnelPage() {
                     { columnId: 'statut', title: 'Statut', options: STATUT_FACETED_OPTIONS },
                 ]}
                 isLoading={isLoading}
-                emptyMessage="Aucun employé enregistré."
+                emptyIcon={UsersRound}
+                emptyTitle="Aucun employé enregistré"
+                emptyDescription="Les employés de l'agence apparaîtront ici une fois ajoutés."
             />
 
             <GenericDialogs<Personnel>
