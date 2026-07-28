@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Plus } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/data-table';
@@ -110,6 +110,9 @@ export function LocalitesClient() {
           searchPlaceholder="Rechercher une localité…"
           facetedFilters={FACETS}
           isLoading={isLoading}
+          emptyIcon={MapPin}
+          emptyTitle="Aucune localité"
+          emptyDescription="Ajoutez des localités pour les rendre disponibles dans les formulaires."
           toolbarEndSlot={
             <Button size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />

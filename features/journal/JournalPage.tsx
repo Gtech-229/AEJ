@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/legacy-ui/PageHeader';
+import { ScrollText } from 'lucide-react';
 import { GenericTable } from '@/components/generic/generic-table';
 import { SEED_JOURNAL } from './journal.data';
 import { JOURNAL_COLUMNS } from './journal.columns';
@@ -28,7 +29,9 @@ export function JournalPage() {
           searchKey="utilisateur"
           searchPlaceholder="Rechercher un utilisateur..."
           facetedFilters={[{ columnId: 'action', title: 'Action', options: ACTION_FILTER_OPTIONS }]}
-          emptyMessage="Aucun événement enregistré."
+          emptyIcon={ScrollText}
+          emptyTitle="Aucun événement enregistré"
+          emptyDescription="Les actions des utilisateurs (création, modification, connexion…) seront tracées ici."
           initialState={{ sorting: [{ id: 'horodatage', desc: true }] }}
         />
       </div>
