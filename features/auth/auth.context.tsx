@@ -1,29 +1,20 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ApiError, AuthError } from '@/lib/api/errors';
 import { authKeys } from './auth.keys';
 import { authService } from './auth.service';
-import { useMe } from './auth.hooks';
+import { isPublicAuthPath } from './auth.routes';
 import type { User } from './auth.dto';
-
-// ---------------------------------------------------------------------------
-// TODO(backend): the guard cookie is a temporary bridge. `/personnels/login`
-// currently returns the token in the JSON body and does NOT set a cookie, so we
-// drop a NON-httpOnly marker cookie purely so the route-guard middleware
-// (proxy.ts) lets us into the dashboard. Once the backend sets a Secure httpOnly
-// session cookie, delete this and the middleware will read the real cookie.
-// ---------------------------------------------------------------------------
-const GUARD_COOKIE = 'aej_token';
-
-function setGuardCookie() {
-  document.cookie = `${GUARD_COOKIE}=session; path=/; max-age=604800; samesite=strict`;
-}
-
-function clearGuardCookie() {
-  document.cookie = `${GUARD_COOKIE}=; path=/; max-age=0`;
-}
 
 interface AuthContextValue {
   user: User | null;
@@ -35,8 +26,6 @@ interface AuthContextValue {
   clearPending: () => void;
   /** Re-check `/auth/me` after a cookie was set (reflects the new session). */
   refreshMe: () => Promise<void>;
-  /** Bridge: drop the guard cookie so middleware lets us in (until httpOnly). */
-  markSignedIn: () => void;
   logout: () => Promise<void>;
 }
 
@@ -56,10 +45,48 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const meQuery = useMe();
+  // The `me` query lives here (not in auth.hooks) so the dependency stays
+  // one-way: hooks → context. Otherwise the two modules import each other.
+  const meQuery = useQuery({
+    queryKey: authKeys.me(),
+    queryFn: () => authService.me(),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
   const [pendingUserId, setPendingUserId] = useState<number | null>(null);
 
   const user = meQuery.data ?? null;
+
+  const pathname = usePathname();
+  const redirectedRef = useRef(false);
+
+  /**
+   * Real route protection: `GET /personnel/me` is the source of truth, so a 401
+   * means the session is gone → bounce to sign-in, preserving the destination.
+   *
+   * Two guards keep this from misfiring:
+   *  - never redirect from a public auth route (that would loop), and
+   *  - only redirect on an actual 401 — a network/500 error means the API is
+   *    down, which is not the same as being logged out.
+   */
+  useEffect(() => {
+    if (meQuery.isSuccess) {
+      redirectedRef.current = false; // allow a later 401 to redirect again
+      return;
+    }
+    if (!meQuery.isError || redirectedRef.current) return;
+    if (isPublicAuthPath(pathname)) return;
+
+    const err = meQuery.error;
+    const unauthenticated =
+      err instanceof AuthError || (err instanceof ApiError && err.status === 401);
+    if (!unauthenticated) return;
+
+    redirectedRef.current = true;
+    const target = pathname ?? '/dashboard';
+    router.replace(`/auth/login?redirect=${encodeURIComponent(target)}`);
+  }, [meQuery.isSuccess, meQuery.isError, meQuery.error, pathname, router]);
 
   const refreshMe = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: authKeys.me() });
@@ -71,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Clear locally even if the server call fails.
     }
+    // The backend clears the accessToken/refreshToken cookies on logout.
     setPendingUserId(null);
-    clearGuardCookie();
     queryClient.clear();
     router.replace('/auth/login');
   }, [queryClient, router]);
@@ -85,7 +112,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPending: setPendingUserId,
     clearPending: () => setPendingUserId(null),
     refreshMe,
-    markSignedIn: setGuardCookie,
     logout,
   };
 

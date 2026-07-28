@@ -35,9 +35,9 @@ export function ConfigurationsClient() {
   const patch = useUpdateConfigurations();
    
   function handleSave(section: Partial<Configuration>) {
-    if (!config) return;
-    
-    patch.mutate({ ...config, ...section });
+    // PATCH sends only this section's fields; the hook merges them into the
+    // cached config optimistically and reconciles via onSettled.
+    patch.mutate(section);
   }
 
 

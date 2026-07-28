@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Plus } from 'lucide-react';
+import { Briefcase, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/components/data-table';
 import {
   GenericTable,
@@ -12,6 +13,7 @@ import {
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
 import { DynamicForm } from '@/components/forms';
+import { useServices } from '@/features/services/services.hooks';
 import type { Fonction } from './fonctions.dto';
 import type { FonctionInput } from './fonctions.schema';
 import { fonctionSchema } from './fonctions.schema';
@@ -24,12 +26,24 @@ import {
   useUpdateFonction,
 } from './fonctions.hooks';
 
+/**
+ * Chrome-less (no page header/padding of its own) so it can render inside the
+ * "Autres paramètres" tab. The tab page owns the surrounding layout.
+ */
 export function FonctionsClient() {
   const { data: fonctions, isLoading } = useFonctions();
+  const { data: services } = useServices();
   const createFonction = useCreateFonction();
   const updateFonction = useUpdateFonction();
   const deleteFonction = useDeleteFonction();
   const dialog = useDialogState<Fonction>();
+
+  // Resolve service_id → name for the table column.
+  const serviceName = useMemo(() => {
+    const map = new Map<number, string>();
+    (services ?? []).forEach((s) => map.set(s.id, s.nom));
+    return (id: number) => map.get(id) ?? `#${id}`;
+  }, [services]);
 
   const columns: ColumnDef<Fonction>[] = [
     {
@@ -43,19 +57,17 @@ export function FonctionsClient() {
       meta: { label: 'Code' },
       header: ({ column }) => <DataTableColumnHeader column={column} title="Code" />,
       cell: ({ row }) => (
-        <span className="font-mono text-xs text-muted-foreground">
-          {row.original.code ?? '—'}
-        </span>
+        <span className="font-mono text-xs text-muted-foreground">{row.original.code ?? '—'}</span>
       ),
     },
     {
       accessorKey: 'service_id',
       meta: { label: 'Service' },
       header: 'Service',
-      // TODO: afficher le nom du service (relation) une fois le module
-      // Services livré — pour l'instant, juste l'ID brut.
       cell: ({ row }) => (
-        <span className="text-muted-foreground">#{row.original.service_id}</span>
+        <Badge variant="secondary" className="font-normal">
+          {serviceName(row.original.service_id)}
+        </Badge>
       ),
     },
     buildEditDeleteActionsColumn<Fonction>({
@@ -65,29 +77,23 @@ export function FonctionsClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Fonctions</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Gérez les fonctions rattachées aux services de la plateforme.
-        </p>
-      </div>
-
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
-        <GenericTable<Fonction>
-          data={fonctions ?? []}
-          columns={columns}
-          searchKey="nom"
-          searchPlaceholder="Rechercher une fonction…"
-          isLoading={isLoading}
-          toolbarEndSlot={
-            <Button size="sm" onClick={dialog.openCreate}>
-              <Plus className="size-4" />
-              Ajouter
-            </Button>
-          }
-        />
-      </Suspense>
+    <>
+      <GenericTable<Fonction>
+        data={fonctions ?? []}
+        columns={columns}
+        searchKey="nom"
+        searchPlaceholder="Rechercher une fonction…"
+        isLoading={isLoading}
+        emptyIcon={Briefcase}
+        emptyTitle="Aucune fonction"
+        emptyDescription="Créez des fonctions pour pouvoir les affecter aux employés."
+        toolbarEndSlot={
+          <Button size="sm" onClick={dialog.openCreate}>
+            <Plus className="size-4" />
+            Ajouter
+          </Button>
+        }
+      />
 
       <GenericDialogs<Fonction>
         state={dialog}
@@ -99,7 +105,7 @@ export function FonctionsClient() {
         }}
         renderForm={({ item, close }) => (
           <DynamicForm<FonctionInput>
-            config={getFonctionFormConfig()}
+            config={getFonctionFormConfig(services ?? [])}
             schema={fonctionSchema}
             defaultValues={getFonctionDefaults(item ?? undefined)}
             isLoading={createFonction.isPending || updateFonction.isPending}
@@ -120,6 +126,6 @@ export function FonctionsClient() {
           `Supprimer la fonction "${item.nom}" ? Cette action est irréversible.`
         }
       />
-    </div>
+    </>
   );
 }

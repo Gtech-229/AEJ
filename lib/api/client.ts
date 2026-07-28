@@ -28,16 +28,70 @@ const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
  */
 let refreshPromise: Promise<void> | null = null;
 
-function buildRequest(path: string, options?: RequestInit): Promise<Response> {
+// ---------------------------------------------------------------------------
+// Laravel Sanctum (SPA cookie mode) CSRF handshake.
+//
+// 1. `GET /sanctum/csrf-cookie` sets `laravel_session` (httpOnly) and
+//    `XSRF-TOKEN` (readable by JS, on purpose).
+// 2. Every state-changing request must echo that cookie back as the
+//    `X-XSRF-TOKEN` header, or Laravel replies 419 ("Page Expired").
+//
+// axios does step 2 automatically; native fetch does NOT — hence this code.
+// ---------------------------------------------------------------------------
+const CSRF_COOKIE = 'XSRF-TOKEN';
+const CSRF_HEADER = 'X-XSRF-TOKEN';
+const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/** Same-origin when the base is relative (proxied); derived otherwise. */
+const CSRF_ENDPOINT = API_BASE_URL.startsWith('/')
+  ? '/sanctum/csrf-cookie'
+  : `${API_BASE_URL.replace(/\/api\/?$/, '')}/sanctum/csrf-cookie`;
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  // Laravel URL-encodes the value; decode before echoing it back.
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** Single-flight: concurrent writes share one handshake instead of racing. */
+let csrfPromise: Promise<void> | null = null;
+
+async function ensureCsrfCookie(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  if (readCookie(CSRF_COOKIE)) return;
+  if (!csrfPromise) {
+    csrfPromise = fetch(CSRF_ENDPOINT, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+      .then(() => undefined)
+      .finally(() => {
+        csrfPromise = null;
+      });
+  }
+  await csrfPromise;
+}
+
+async function buildRequest(path: string, options?: RequestInit): Promise<Response> {
   // For FormData, let the browser set `Content-Type` (with the multipart
   // boundary) — forcing application/json would corrupt the upload.
   const isFormData = options?.body instanceof FormData;
+  const method = (options?.method ?? 'GET').toUpperCase();
+  const needsCsrf = !CSRF_SAFE_METHODS.has(method);
+
+  if (needsCsrf) await ensureCsrfCookie();
+  const csrfToken = needsCsrf ? readCookie(CSRF_COOKIE) : null;
+
   return fetch(`${API_BASE_URL}${path}`, {
-    // credentials: 'include' → httpOnly cookies ride along automatically.
-    // credentials: 'include',
+    // Required for Sanctum: session + XSRF cookies must ride along.
+    credentials: 'include',
     ...options,
     headers: {
+      // Makes Laravel answer with JSON errors instead of an HTML error page.
+      Accept: 'application/json',
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(csrfToken ? { [CSRF_HEADER]: csrfToken } : {}),
       ...options?.headers,
     },
   });
@@ -63,25 +117,11 @@ async function parseBody<T>(res: Response): Promise<T> {
  * refresh-token cookie; on success the backend sets a fresh access-token cookie
  * and we have nothing to read from the (empty) body.
  *
- * TODO(backend): `/auth/refresh` does not exist yet. Until it lands we branch
- * on 404 explicitly so "endpoint not built" is never mistaken for "refresh
- * token expired". Remove the 404 branch once the contract is live.
+ * Routed through `buildRequest` so the Sanctum CSRF header (`X-XSRF-TOKEN`) is
+ * attached — a bare POST would be rejected with 419 ("Page Expired").
  */
 async function performRefresh(): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (res.status === 404) {
-    // Not built yet — surface a distinct, non-auth error so dev doesn't read
-    // this as a real logout.
-    throw new ApiError(
-      404,
-      '/auth/refresh is not implemented on the backend yet (dev stub).',
-    );
-  }
+  const res = await buildRequest('/auth/refresh', { method: 'POST' });
 
   if (res.status === 401) {
     // The refresh token itself is invalid/expired → hard logout.
@@ -127,13 +167,21 @@ function shouldAttemptRefresh(path: string): boolean {
   return !NO_REFRESH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
+/**
+ * `/auth/refresh` is live: a 401 on a normal request triggers a single-flight
+ * refresh (see `handleRefresh`) followed by exactly one replay of the original
+ * request. Endpoints in `NO_REFRESH_PREFIXES` (login, logout, refresh itself, …)
+ * are excluded — a 401 there means "bad credentials", not "token expired".
+ */
+const REFRESH_ENABLED = true;
+
 export const apiFetch: ApiFetch = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> => {
   const res = await buildRequest(path, options);
 
-  if (res.status === 401 && shouldAttemptRefresh(path)) {
+  if (res.status === 401 && REFRESH_ENABLED && shouldAttemptRefresh(path)) {
     // Await the shared refresh (starts one if none in flight). If it rejects
     // (AuthError / dev-stub ApiError) the error propagates to the caller — we
     // do NOT redirect here.
