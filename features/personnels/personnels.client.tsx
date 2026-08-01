@@ -14,6 +14,8 @@ import {
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
 import { DynamicForm } from '@/components/forms';
+import { useRoles } from '@/features/roles/roles.hooks';
+import { useFonctions } from '@/features/fonctions/fonctions.hooks';
 import type { Personnel } from './personnels.dto';
 import { createPersonnelSchema, updatePersonnelSchema } from './personnels.schema';
 import { getPersonnelFormConfig } from './personnels.form';
@@ -27,10 +29,18 @@ import {
 
 export function PersonnelsClient() {
   const { data: personnels, isLoading } = usePersonnels();
+  const { data: roles } = useRoles();
+  const { data: fonctions } = useFonctions();
   const createPersonnel = useCreatePersonnel();
   const updatePersonnel = useUpdatePersonnel();
   const deletePersonnel = useDeletePersonnel();
   const dialog = useDialogState<Personnel>();
+
+  // Referentials backing the role/fonction selects and the table labels.
+  const formRefs = useMemo(
+    () => ({ roles: roles ?? [], fonctions: fonctions ?? [] }),
+    [roles, fonctions],
+  );
 
   const columns: ColumnDef<Personnel>[] = useMemo(
     () => [
@@ -61,16 +71,21 @@ export function PersonnelsClient() {
         accessorKey: 'role_id',
         meta: { label: 'Rôle' },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Rôle" />,
-        // TODO: afficher le libellé du rôle (relation) une fois le module
-        // Rôles livré — pour l'instant, juste l'ID brut.
-        cell: ({ row }) => <Badge variant="secondary">#{row.original.role_id}</Badge>,
+        cell: ({ row }) => {
+          const role = roles?.find((r) => r.id === row.original.role_id);
+          return <Badge variant="secondary">{role?.libelle ?? `#${row.original.role_id}`}</Badge>;
+        },
       },
       {
         accessorKey: 'fonction_id',
         meta: { label: 'Fonction' },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Fonction" />,
-        // TODO: afficher le nom de la fonction une fois son API atteignable.
-        cell: ({ row }) => <Badge variant="secondary">#{row.original.fonction_id}</Badge>,
+        cell: ({ row }) => {
+          const fonction = fonctions?.find((f) => f.id === row.original.fonction_id);
+          return (
+            <Badge variant="secondary">{fonction?.nom ?? `#${row.original.fonction_id}`}</Badge>
+          );
+        },
       },
       {
         id: 'is_active',
@@ -101,7 +116,7 @@ export function PersonnelsClient() {
         onDelete: dialog.openDelete,
       }),
     ],
-    [dialog.openEdit, dialog.openDelete],
+    [dialog.openEdit, dialog.openDelete, roles, fonctions],
   );
 
   return (
@@ -143,7 +158,7 @@ export function PersonnelsClient() {
         renderForm={({ item, close }) =>
           item ? (
             <DynamicForm
-              config={getPersonnelFormConfig('edit')}
+              config={getPersonnelFormConfig('edit', formRefs)}
               schema={updatePersonnelSchema}
               defaultValues={getUpdatePersonnelDefaults(item)}
               isLoading={updatePersonnel.isPending}
@@ -155,7 +170,7 @@ export function PersonnelsClient() {
             />
           ) : (
             <DynamicForm
-              config={getPersonnelFormConfig('create')}
+              config={getPersonnelFormConfig('create', formRefs)}
               schema={createPersonnelSchema}
               defaultValues={getCreatePersonnelDefaults()}
               isLoading={createPersonnel.isPending}
