@@ -6,7 +6,6 @@ import { MapPin, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/data-table';
-import type { FacetedFilter } from '@/components/data-table';
 import {
   GenericTable,
   GenericDialogs,
@@ -25,17 +24,6 @@ import {
   useLocalites,
   useUpdateLocalite,
 } from './localites.hooks';
-
-const FACETS: FacetedFilter[] = [
-  {
-    columnId: 'couche_cartographique',
-    title: 'Couche cartographique',
-    options: [
-      { label: 'Zone urbaine', value: 'zone_urbaine' },
-      { label: 'Zone rurale', value: 'zone_rurale' },
-    ],
-  },
-];
 
 export function LocalitesClient() {
   const { data: localites, isLoading } = useLocalites();
@@ -108,7 +96,6 @@ export function LocalitesClient() {
           columns={columns}
           searchKey="nom"
           searchPlaceholder="Rechercher une localité…"
-          facetedFilters={FACETS}
           isLoading={isLoading}
           emptyIcon={MapPin}
           emptyTitle="Aucune localité"

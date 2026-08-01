@@ -18,7 +18,7 @@ export function getFonctionFormConfig(services: Service[]): FormConfig {
         placeholder: "ex: Chef d'agence régionale",
         colSpan: 'full',
       },
-      { name: 'code', label: 'Code', type: 'text', placeholder: 'ex: CHEF_AGR' },
+      { name: 'code', label: 'Code', type: 'text', required: true, placeholder: 'ex: CHEF_AGR' },
       {
         name: 'service_id',
         label: 'Service',

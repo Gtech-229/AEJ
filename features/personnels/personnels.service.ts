@@ -1,38 +1,44 @@
 import { apiClient } from '@/lib/api/client';
+import type { ApiClient } from '@/lib/api/types';
 import type {
-    CreatePersonnelInput,
-    Personnel,
-    PersonnelListParams,
-    PersonnelListResponse,
-    UpdatePersonnelInput,
-} from '@/lib/types';
+  CreatePersonnelPayload,
+  Personnel,
+  UpdatePersonnelPayload,
+} from './personnels.dto';
 
-const BASE_URL = '/personnel';
+// NB: confirmé via la doc Postman officielle — SANS trailing slash (comme
+// /api/fonctions ; /api/localites fait exception avec un slash final).
+const BASE_URL = '/personnels';
 
-function toQueryString(params: PersonnelListParams = {}): string {
-    const search = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            search.set(key, String(value));
-        }
+/** Responses are enveloped: { Message, data: … } — methods unwrap `data`. */
+export const personnelsService = {
+  getAll: async (client: ApiClient = apiClient): Promise<Personnel[]> => {
+    const res = await client.request<{ data: Personnel[] }>(BASE_URL);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  create: async (
+    payload: CreatePersonnelPayload,
+    client: ApiClient = apiClient,
+  ): Promise<Personnel> => {
+    const res = await client.request<{ data: Personnel }>(BASE_URL, {
+      method: 'POST',
+      body: payload,
     });
-    const qs = search.toString();
-    return qs ? `?${qs}` : '';
-}
+    return res.data;
+  },
 
-export const personnelService = {
-    list: (params: PersonnelListParams = {}): Promise<PersonnelListResponse> =>
-        apiClient.get<PersonnelListResponse>(`${BASE_URL}${toQueryString(params)}`),
+  update: async (
+    payload: UpdatePersonnelPayload,
+    client: ApiClient = apiClient,
+  ): Promise<Personnel> => {
+    const res = await client.request<{ data: Personnel }>(`${BASE_URL}/${payload.id}`, {
+      method: 'PUT',
+      body: payload,
+    });
+    return res.data;
+  },
 
-    getById: (id: string): Promise<Personnel> =>
-        apiClient.get<Personnel>(`${BASE_URL}/${id}`),
-
-    create: (payload: CreatePersonnelInput): Promise<Personnel> =>
-        apiClient.post<Personnel>(BASE_URL, payload),
-
-    update: ({ id, ...payload }: UpdatePersonnelInput): Promise<Personnel> =>
-        apiClient.put<Personnel>(`${BASE_URL}/${id}`, payload),
-
-    remove: (id: string): Promise<void> =>
-        apiClient.delete<void>(`${BASE_URL}/${id}`),
+  remove: (id: number, client: ApiClient = apiClient): Promise<void> =>
+    client.request<void>(`${BASE_URL}/${id}`, { method: 'DELETE' }),
 };

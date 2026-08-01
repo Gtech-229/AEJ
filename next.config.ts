@@ -13,6 +13,16 @@ import type { NextConfig } from "next";
 const BACKEND_ORIGIN =
   process.env.BACKEND_ORIGIN ?? "https://apis.aej-ci.net/public";
 
+/**
+ * The EXISTING AEJ programme API (v1.0). We reuse some of its referentials
+ * (secteurs, sous-secteurs, niveaux-études, agences, pièces d'identité,
+ * situations matrimoniales) as-is instead of rewriting those routes. Proxied
+ * under `/api-v1` so the browser stays same-origin (no CORS). The `api-v1`
+ * prefix is intentionally NOT matched by the auth middleware (proxy.ts).
+ */
+const PROGRAMME_ORIGIN =
+  process.env.PROGRAMME_ORIGIN ?? "https://agenceemploijeunes.ci";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
@@ -28,6 +38,11 @@ const nextConfig: NextConfig = {
       {
         source: "/api/:path*",
         destination: `${BACKEND_ORIGIN}/api/:path*`,
+      },
+      // Existing AEJ programme API v1.0 (referentials reused as-is)
+      {
+        source: "/api-v1/:path*",
+        destination: `${PROGRAMME_ORIGIN}/api/v1.0/:path*`,
       },
     ];
   },

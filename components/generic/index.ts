@@ -10,3 +10,4 @@ export {
   type DialogState,
   type DialogMode,
 } from './use-dialog-state';
+export { usePageParams } from './use-page-params';

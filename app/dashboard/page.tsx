@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Clock3, CircleCheckBig, BriefcaseBusiness, ChartColumnIncreasing, Wallet } from 'lucide-react';
+import { Users, FolderKanban, Wallet, RefreshCcw, BriefcaseBusiness, ChartColumnIncreasing } from 'lucide-react';
 import KpiCardV2 from '@/components/dashboard/KpiCard';
 import SimpleBarChart from '@/components/dashboard/SimpleBarChart';
 import ListWidget from '@/components/dashboard/ListWidget';
@@ -15,7 +15,7 @@ import { getRoleSlug } from '@/lib/auth/acteur';
 import { getDashboardConfig, type KpiId } from '@/features/dashboard/dashboard.config';
 import type { UserRole } from '@/lib/auth/roles';
 
-// ─── Fake data (en attendant l'API) ──────────────────────────────────────────
+// ─── Placeholder data (en attendant l'API) ───────────────────────────────────
 
 const KPI_DATA: Array<{
   id: KpiId;
@@ -25,26 +25,26 @@ const KPI_DATA: Array<{
   variation: number;
   accent: AccentName;
 }> = [
-    { id: 'stagiaires', icon: Users, label: 'Total Stagiaires', value: 12723, variation: 69.7, accent: 'green' },
-    { id: 'stages_cours', icon: Clock3, label: 'Stages en cours', value: 9506, variation: 37.2, accent: 'blue' },
-    { id: 'stages_acheves', icon: CircleCheckBig, label: 'Stages achevés', value: 2494, variation: 9.5, accent: 'violet' },
-    { id: 'emplois', icon: BriefcaseBusiness, label: 'Emplois obtenus', value: 5933, variation: 20.3, accent: 'orange' },
-    { id: 'taux_insertion', icon: ChartColumnIncreasing, label: "Taux d'insertion", value: '84%', variation: 3.8, accent: 'teal' },
-    { id: 'budget_consomme', icon: Wallet, label: 'Budget consommé (FCFA)', value: '4,15 Mrd', variation: 65, accent: 'green' },
+    { id: 'jeunes', icon: Users, label: 'Jeunes bénéficiaires', value: 12723, variation: 8.4, accent: 'green' },
+    { id: 'micro_projets', icon: FolderKanban, label: 'Micro-projets financés', value: 3820, variation: 12.1, accent: 'blue' },
+    { id: 'montant_finance', icon: Wallet, label: 'Montant financé (FCFA)', value: '4,15 Mrd', variation: 15.0, accent: 'violet' },
+    { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', value: '87%', variation: 2.3, accent: 'teal' },
+    { id: 'emplois_crees', icon: BriefcaseBusiness, label: 'Emplois créés', value: 5933, variation: 9.6, accent: 'orange' },
+    { id: 'taux_insertion', icon: ChartColumnIncreasing, label: "Taux d'insertion", value: '84%', variation: 3.8, accent: 'green' },
   ];
 
-const EVOLUTION_STAGES = [
-  { label: 'Jan', value: 820 }, { label: 'Fév', value: 950 }, { label: 'Mar', value: 1100 },
-  { label: 'Avr', value: 1350 }, { label: 'Mai', value: 1580 }, { label: 'Jun', value: 1720 },
-  { label: 'Jul', value: 1800 },
+const EVOLUTION_FINANCEMENTS = [
+  { label: 'Jan', value: 320 }, { label: 'Fév', value: 410 }, { label: 'Mar', value: 480 },
+  { label: 'Avr', value: 560 }, { label: 'Mai', value: 640 }, { label: 'Jun', value: 720 },
+  { label: 'Jul', value: 810 },
 ];
 
 const REGIONS = [
-  { label: 'Abidjan', value: 2145 },
-  { label: 'Bouaké', value: 1287 },
-  { label: 'Korhogo', value: 956 },
-  { label: 'Daloa', value: 768 },
-  { label: 'Autres', value: 1245 },
+  { label: 'Abidjan', value: 1245 },
+  { label: 'Bouaké', value: 820 },
+  { label: 'Korhogo', value: 610 },
+  { label: 'Daloa', value: 540 },
+  { label: 'Autres', value: 605 },
 ];
 
 const SECTEURS = [
@@ -56,21 +56,21 @@ const SECTEURS = [
 ];
 
 const ACTIONS = [
-  { label: 'Nouvelle offre', href: '/dashboard/offres/stages', accentBg: ACCENTS.green.bg, accentDot: ACCENTS.green.fg },
-  { label: 'Ajouter un stagiaire', href: '/dashboard/stagiaires', accentBg: ACCENTS.blue.bg, accentDot: ACCENTS.blue.fg },
-  { label: 'Créer une évaluation', href: '/dashboard/evaluations', accentBg: ACCENTS.violet.bg, accentDot: ACCENTS.violet.fg },
+  { label: 'Ajouter un jeune', href: '/dashboard/jeunes', accentBg: ACCENTS.green.bg, accentDot: ACCENTS.green.fg },
+  { label: 'Nouveau financement', href: '/dashboard/financements/projets', accentBg: ACCENTS.blue.bg, accentDot: ACCENTS.blue.fg },
+  { label: 'Gérer le personnel', href: '/dashboard/parametrage/personnels', accentBg: ACCENTS.violet.bg, accentDot: ACCENTS.violet.fg },
 ];
 
-const TOP_ENTREPRISES = [
-  { id: 1, nom: 'SODECI', stagiaires: 452, emplois: 210, statut: 'Actif' },
-  { id: 2, nom: 'ORANGE CI', stagiaires: 386, emplois: 178, statut: 'Actif' },
-  { id: 3, nom: 'BOLLORÉ TRANSPORT', stagiaires: 312, emplois: 145, statut: 'Actif' },
+const TOP_ORGANISMES = [
+  { id: 1, nom: 'Banque Mondiale', projets: 3, montant: '1,20 Mrd' },
+  { id: 2, nom: 'BAD', projets: 2, montant: '0,85 Mrd' },
+  { id: 3, nom: 'Union Européenne', projets: 1, montant: '0,60 Mrd' },
 ];
 
 const ALERTES = [
-  { label: '12 évaluations en retard', severity: 'critique' as const },
-  { label: '5 contrats à approuver', severity: 'attention' as const },
-  { label: '3 rapports à générer', severity: 'info' as const },
+  { label: '18 échéances de remboursement en retard', severity: 'critique' as const },
+  { label: '7 dossiers de financement à valider', severity: 'attention' as const },
+  { label: '3 rapports mensuels à générer', severity: 'info' as const },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export default function DashboardPage() {
 
   if (loading || !allowed) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bg }}>
+      <div className="flex min-h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">Chargement du tableau de bord…</p>
       </div>
     );
@@ -94,16 +94,16 @@ export default function DashboardPage() {
   const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
 
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]" style={{ backgroundColor: COLORS.bg }}>
+    <div className="max-w-[1400px] space-y-5 p-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: COLORS.text }}>
-          Bienvenue, {getUserDisplayName(user)}
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">Vue d'ensemble de toutes les activités de l'agence</p>
+        <h1 className="text-2xl font-bold text-foreground">Bienvenue, {getUserDisplayName(user)}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Vue d&apos;ensemble de l&apos;activité de l&apos;agence
+        </p>
       </div>
 
       {visibleKpis.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {visibleKpis.map((kpi) => (
             <KpiCardV2
               key={kpi.id}
@@ -120,11 +120,13 @@ export default function DashboardPage() {
       {(config.widgets.includes('evolution') ||
         config.widgets.includes('regions') ||
         config.widgets.includes('secteurs')) && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {config.widgets.includes('evolution') && (
-              <SimpleBarChart title="Évolution des stages" data={EVOLUTION_STAGES} color={COLORS.green} />
+              <SimpleBarChart title="Évolution des financements" data={EVOLUTION_FINANCEMENTS} color={COLORS.green} />
             )}
-            {config.widgets.includes('regions') && <ListWidget title="Répartition par région" rows={REGIONS} />}
+            {config.widgets.includes('regions') && (
+              <ListWidget title="Financements par région" rows={REGIONS} />
+            )}
             {config.widgets.includes('secteurs') && (
               <LegendWidget title="Répartition par secteur" rows={SECTEURS} showBar />
             )}
@@ -132,31 +134,31 @@ export default function DashboardPage() {
         )}
 
       {(config.widgets.includes('actions_rapides') ||
-        config.widgets.includes('top_entreprises') ||
+        config.widgets.includes('top_organismes') ||
         config.widgets.includes('alertes')) && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {config.widgets.includes('actions_rapides') && (
               <ActionsWidget title="Actions rapides" items={ACTIONS} />
             )}
 
-            {config.widgets.includes('top_entreprises') && (
+            {config.widgets.includes('top_organismes') && (
               <TableWidget
-                title="Top entreprises partenaires"
-                rows={TOP_ENTREPRISES}
+                title="Top organismes financeurs"
+                rows={TOP_ORGANISMES}
                 rowKey={(r) => r.id}
                 columns={[
-                  { key: 'nom', label: 'Entreprise', render: (r) => <span className="font-medium">{r.nom}</span> },
-                  { key: 'stagiaires', label: 'Stagiaires', align: 'right', render: (r) => r.stagiaires },
+                  { key: 'nom', label: 'Organisme', render: (r) => <span className="font-medium">{r.nom}</span> },
+                  { key: 'projets', label: 'Projets', align: 'right', render: (r) => r.projets },
                   {
-                    key: 'emplois',
-                    label: 'Emplois',
+                    key: 'montant',
+                    label: 'Montant',
                     align: 'right',
                     render: (r) => (
                       <span
-                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        className="rounded-full px-2 py-0.5 text-xs font-semibold"
                         style={{ backgroundColor: ACCENTS.green.bg, color: ACCENTS.green.fg }}
                       >
-                        {r.emplois}
+                        {r.montant}
                       </span>
                     ),
                   },

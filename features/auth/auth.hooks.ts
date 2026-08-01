@@ -40,15 +40,10 @@ export function useLogin() {
         return;
       }
       // No 2FA → the backend has set the session cookies.
-    const resRefresh =  await refreshMe();
-   
+      await refreshMe();
       toast.success(res.message || 'Connexion réussie');
-      console.log("refresh res ", resRefresh);
-      router.push('/dashboard')
       router.replace(searchParams.get('redirect') || '/dashboard');
-   
     },
-   
   });
 }
 

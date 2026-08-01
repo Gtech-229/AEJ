@@ -17,6 +17,11 @@ function makeQueryClient(): QueryClient {
       queries: {
         // Avoids immediate client refetch of data hydrated from the server.
         staleTime: 60 * 1000,
+        // Don't refetch every mounted query each time the tab regains focus —
+        // that produced a burst of requests across every open screen.
+        refetchOnWindowFocus: false,
+        // Cap retries so a failing endpoint doesn't fan out into request storms.
+        retry: 1,
       },
     },
   });

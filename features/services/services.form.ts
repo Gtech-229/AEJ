@@ -18,7 +18,7 @@ export function getServiceFormConfig(directions: Direction[]): FormConfig {
         placeholder: 'ex: Service Développement applicatif',
         colSpan: 'full',
       },
-      { name: 'code', label: 'Code', type: 'text', placeholder: 'ex: SDA' },
+      { name: 'code', label: 'Code', type: 'text', required: true, placeholder: 'ex: SDA' },
       {
         name: 'direction_id',
         label: 'Direction',

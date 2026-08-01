@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
 export const serviceSchema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
-  code: z.string().optional(),
+  code: z.string().min(1, 'Le code est requis'),
   description: z.string().optional(),
   direction_id: z.coerce
     .number({ message: 'La direction est requise' })

@@ -32,7 +32,7 @@ function StatusBadge({ statut }: { statut: Credit['statut'] }) {
     );
 }
 
-/** Analogue de `ProjetsFinancesWidget`, mais pour le portefeuille de crédits d'une institution financière. */
+/** Analogue de `ProjetsFinancesWidget`, mais pour le portefeuille de crédits d'un organisme financeur. */
 export default function CreditsWidget({ total, credits, pageSize = 6 }: CreditsWidgetProps) {
     const [page, setPage] = useState(0);
     const totalPages = Math.ceil(credits.length / pageSize);

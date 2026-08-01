@@ -66,11 +66,12 @@ export function useUpdateConfigurations() {
 }
 
 
-export function useUploadStructureLogo() {
+/** Upload the structure or system logo (`logo_structure` / `logo_systeme`). */
+export function useUploadLogo(field: 'logo_structure' | 'logo_systeme') {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (file: File) => configurationsService.uploadStructureLogo(file),
+    mutationFn: (file: File) => configurationsService.uploadLogo(field, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: configurationsKeys.all })
       toast.success('Logo mis à jour')

@@ -9,7 +9,6 @@ import { z } from 'zod';
 
 // ── Reusable optional-format fields (empty string allowed) ────────────────────
 const optionalEmail = z.union([z.literal(''), z.email('Adresse email invalide')]);
-const optionalUrl = z.union([z.literal(''), z.url('Lien invalide')]);
 
 // ── Per-section form schemas (strict, French messages) ────────────────────────
 // Field names stay identical to the API so section values merge 1:1 into the
@@ -53,14 +52,18 @@ export const securiteSchema = z.object({
 export type SecuriteInput = z.infer<typeof securiteSchema>;
 
 export const notificationsSchema = z.object({
-  code_instance_whatsapp: z.string(),
   email_notifications: optionalEmail,
   mot_de_passe_email_notifications: z.string(),
-  smtp_email_notifications: z.string(),
+  smtp_host_notifications: z.string(),
+  smtp_port_notifications: z.number({ message: 'Le port est requis' }).min(0, 'Port invalide'),
+  smtp_email_notifications: optionalEmail,
+  smtp_encrypt_notifications: z.string(),
 });
 export type NotificationsInput = z.infer<typeof notificationsSchema>;
 
+// WhatsApp Business instance credentials (rendered under the "WhatsApp" tab).
 export const integrationsSchema = z.object({
-  lien_api_parent: optionalUrl,
+  code_instance_whatsapp: z.string(),
+  token_instance_whatsapp: z.string(),
 });
 export type IntegrationsInput = z.infer<typeof integrationsSchema>;
