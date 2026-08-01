@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '../auth.context';
@@ -10,7 +9,7 @@ import { useResendOtp, useVerifyOtp } from '../auth.hooks';
 
 export function OtpForm() {
   const router = useRouter();
-  const { pendingUserId, clearPending, markSignedIn, refreshMe } = useAuth();
+  const { pendingUserId } = useAuth();
   const verify = useVerifyOtp();
   const resend = useResendOtp();
   const [code, setCode] = useState('');
@@ -20,34 +19,24 @@ export function OtpForm() {
     if (pendingUserId == null) router.replace('/auth/login');
   }, [pendingUserId, router]);
 
-  async function submit(value: string) {
+  function submit(value: string) {
     if (pendingUserId == null || verify.isPending) return;
-    try {
-      await verify.mutateAsync({ code: value, id_personnel_perso: pendingUserId });
-      markSignedIn();
-      await refreshMe();
-      clearPending();
-      router.replace('/dashboard');
-    } catch {
-      toast.error('Code invalide ou expiré');
-      setCode('');
-    }
+    // Success/redirect and the error toast live in `useVerifyOtp`; the form only
+    // clears the input so the user can retype.
+    verify.mutate(
+      { code: value, user_id: pendingUserId },
+      { onError: () => setCode('') },
+    );
   }
 
   function onChange(value: string) {
     setCode(value);
-    if (value.length === 6) void submit(value); // auto-submit on completion
+    if (value.length === 6) submit(value); // auto-submit on completion
   }
 
   function onResend() {
     if (pendingUserId == null) return;
-    resend.mutate(
-      { userId: pendingUserId },
-      {
-        onSuccess: () => toast.success('Code envoyé par email'),
-        onError: () => toast.error("Échec de l'envoi du code"),
-      },
-    );
+    resend.mutate({ user_id: pendingUserId });
   }
 
   if (pendingUserId == null) return null;

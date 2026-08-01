@@ -47,6 +47,7 @@ export const DIALOG_SIZES = {
   md: 'sm:max-w-md',
   lg: 'sm:max-w-lg',
   xl: 'sm:max-w-2xl',
+  '2xl': 'sm:max-w-4xl',
 } as const;
 
 export type DialogSize = keyof typeof DIALOG_SIZES;

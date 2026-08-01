@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export type DialogMode = 'create' | 'edit' | 'delete';
 
@@ -16,35 +16,41 @@ export interface DialogState<T> {
   isDeleteOpen: boolean;
 }
 
-/**
- * Drives the add / edit / delete dialogs for a resource. One hook instance per
- * table; pass it to `GenericDialogs` and to the row-action builders.
- */
 export function useDialogState<T>(): DialogState<T> {
   const [mode, setMode] = useState<DialogMode | null>(null);
   const [item, setItem] = useState<T | null>(null);
 
-  return {
-    mode,
-    item,
-    openCreate: () => {
-      setItem(null);
-      setMode('create');
-    },
-    openEdit: (next: T) => {
-      setItem(next);
-      setMode('edit');
-    },
-    openDelete: (next: T) => {
-      setItem(next);
-      setMode('delete');
-    },
-    close: () => {
-      setMode(null);
-      setItem(null);
-    },
-    isCreateOpen: mode === 'create',
-    isEditOpen: mode === 'edit',
-    isDeleteOpen: mode === 'delete',
-  };
+  const openCreate = useCallback(() => {
+    setItem(null);
+    setMode('create');
+  }, []);
+
+  const openEdit = useCallback((next: T) => {
+    setItem(next);
+    setMode('edit');
+  }, []);
+
+  const openDelete = useCallback((next: T) => {
+    setItem(next);
+    setMode('delete');
+  }, []);
+
+  const close = useCallback(() => {
+    setMode(null);
+    setItem(null);
+  }, []);
+  return useMemo(
+    () => ({
+      mode,
+      item,
+      openCreate,
+      openEdit,
+      openDelete,
+      close,
+      isCreateOpen: mode === 'create',
+      isEditOpen: mode === 'edit',
+      isDeleteOpen: mode === 'delete',
+    }),
+    [mode, item, openCreate, openEdit, openDelete, close],
+  );
 }

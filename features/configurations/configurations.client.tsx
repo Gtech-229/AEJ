@@ -1,6 +1,6 @@
 'use client';
 
-import { AppWindow, Bell, Coins, Link2, Mail, ShieldCheck } from 'lucide-react';
+import { AppWindow, Bell, Coins, MessageCircle, Mail, ShieldCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Configuration } from './configurations.dto';
@@ -27,7 +27,7 @@ const TABS: {
   { value: 'finance', label: 'Finance', icon: Coins, Section: FinanceSection },
   { value: 'securite', label: 'Sécurité', icon: ShieldCheck, Section: SecuriteSection },
   { value: 'notifications', label: 'Notifications', icon: Bell, Section: NotificationsSection },
-  { value: 'integrations', label: 'Intégrations', icon: Link2, Section: IntegrationsSection },
+  { value: 'integrations', label: 'WhatsApp', icon: MessageCircle, Section: IntegrationsSection },
 ];
 
 export function ConfigurationsClient() {
@@ -35,9 +35,9 @@ export function ConfigurationsClient() {
   const patch = useUpdateConfigurations();
    
   function handleSave(section: Partial<Configuration>) {
-    if (!config) return;
-    
-    patch.mutate({ ...config, ...section });
+    // PATCH sends only this section's fields; the hook merges them into the
+    // cached config optimistically and reconciles via onSettled.
+    patch.mutate(section);
   }
 
 

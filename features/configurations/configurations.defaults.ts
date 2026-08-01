@@ -45,12 +45,15 @@ export const getSecuriteDefaults = (c: Configuration): SecuriteInput => ({
 });
 
 export const getNotificationsDefaults = (c: Configuration): NotificationsInput => ({
-  code_instance_whatsapp: c.code_instance_whatsapp ?? '',
   email_notifications: c.email_notifications ?? '',
   mot_de_passe_email_notifications: c.mot_de_passe_email_notifications ?? '',
+  smtp_host_notifications: c.smtp_host_notifications ?? '',
+  smtp_port_notifications: c.smtp_port_notifications ?? 587,
   smtp_email_notifications: c.smtp_email_notifications ?? '',
+  smtp_encrypt_notifications: c.smtp_encrypt_notifications ?? 'tls',
 });
 
 export const getIntegrationsDefaults = (c: Configuration): IntegrationsInput => ({
-  lien_api_parent: c.lien_api_parent ?? '',
+  code_instance_whatsapp: c.code_instance_whatsapp ?? '',
+  token_instance_whatsapp: c.token_instance_whatsapp ?? '',
 });
