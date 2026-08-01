@@ -13,39 +13,18 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard' },
-  { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs' },
-  {
-    label: 'Offres & Demandes',
-    children: [
-      { label: 'Offres de stage', href: '/dashboard/offres/stages' },
-      { label: "Offres d'emploi", href: '/dashboard/offres/emplois' },
-      { label: 'Matching', href: '/dashboard/offres/matching' },
-    ],
-  },
-  {
-    label: 'Évaluations',
-    children: [
-      { label: "Formulaires d'évaluation", href: '/dashboard/evaluations/formulaires' },
-      { label: "Résultats d'évaluation", href: '/dashboard/evaluations/resultats' },
-    ],
-  },
-  { label: 'Stagiaires', href: '/dashboard/stagiaires' },
+  { label: 'Personnel', href: '/dashboard/parametrage/personnels' },
+  { label: 'Jeunes', href: '/dashboard/jeunes' },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises' },
-  {
-    label: 'Financements',
-    children: [
-      { label: 'Parténaires financiers', href: '/dashboard/financements/partenaires' },
-      { label: 'Projets financé', href: '/dashboard/financements/projets' },
-    ],
-  },
+  { label: 'Organismes', href: '/dashboard/parametrage/organismes' },
+  { label: 'Financements', href: '/dashboard/financements/projets' },
+  { label: 'Indicateurs', href: '/dashboard/indicateurs' },
   { label: 'Rapports & Statistiques', href: '/dashboard/rapports' },
-  { label: 'Personnels', href: '/dashboard/personnel' },
   {
     label: 'Paramétrage',
     children: [
       { label: 'Rôles & permissions', href: '/dashboard/parametrage/roles' },
       { label: 'Secteurs', href: '/dashboard/parametrage/secteurs' },
-      { label: "Journal d'activité", href: '/dashboard/parametrage/journal' },
       { label: 'Système', href: '/dashboard/parametrage/systeme' },
       { label: 'Profil', href: '/dashboard/parametrage/profil' },
     ],

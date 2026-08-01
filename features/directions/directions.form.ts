@@ -13,7 +13,7 @@ export function getDirectionFormConfig(): FormConfig {
         placeholder: 'ex: Direction des Finances et Partenariats',
         colSpan: 'full',
       },
-      { name: 'code', label: 'Code', type: 'text', placeholder: 'ex: DFP' },
+      { name: 'code', label: 'Code', type: 'text', required: true, placeholder: 'ex: DFP' },
       {
         name: 'description',
         label: 'Description',

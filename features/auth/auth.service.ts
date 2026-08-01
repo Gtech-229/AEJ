@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type { ApiClient } from '@/lib/api/types';
+import { SPACES, DEFAULT_SPACE, type SpaceKey } from './auth.spaces';
 import type {
   LoginPayload,
   LoginResponse,
@@ -12,31 +13,32 @@ import type {
 } from './auth.dto';
 
 /**
- * Centralized auth endpoints. Login is confirmed (`/personnels/login`); the
- * rest follow the spec pattern (trailing slashes dropped for Laravel). Change
- * any of these in ONE place when the real AEJ paths are confirmed.
+ * Space-agnostic endpoints (login/me/logout live in the space registry —
+ * `auth.spaces.ts` — since auth is per-space). These are backoffice-only flows
+ * for now.
  *
- * TODO(backend): confirm ME / LOGOUT / VERIFY_OTP / RESEND_OTP / password paths.
+ * TODO(backend): confirm VERIFY_OTP / RESEND_OTP / password paths.
  */
 const ENDPOINTS = {
-  login: '/personnels/login',
   verifyOtp: '/auth/verify-otp',
   resendOtp: '/auth/2fa/send-otp',
-  me: '/personnel/me',
-  logout: '/auth/logout',
   passwordReset: '/password/reset',
   passwordSet: '/password/set',
 } as const;
 
 /**
- * Cookie-session auth service. Every call rides the httpOnly cookie
- * (`credentials: 'include'` is set by the client). Methods take an optional
- * `client` so `me()` can run during a server prefetch with `serverApiClient`.
+ * Cookie-session auth service. Every call rides the httpOnly session cookie
+ * (`credentials: 'include'` is set by the client). `login`/`me`/`logout` take a
+ * `space` (defaulting to the backoffice) and read that space's endpoints from
+ * the registry, so the same methods serve all three web spaces.
  */
 export const authService = {
-  /** Step 1 — submit credentials. May return `otp_required` (2FA pending). */
-  login: (payload: LoginPayload): Promise<LoginResponse> =>
-    apiClient.request<LoginResponse>(ENDPOINTS.login, { method: 'POST', body: payload }),
+  /** Step 1 — submit credentials for a space. May return `otp_required` (2FA pending). */
+  login: (payload: LoginPayload, space: SpaceKey = DEFAULT_SPACE): Promise<LoginResponse> =>
+    apiClient.request<LoginResponse>(SPACES[space].endpoints.login, {
+      method: 'POST',
+      body: payload,
+    }),
 
   /** Step 2 — verify the emailed code; server sets the session cookie. */
   verifyOtp: (payload: VerifyOtpPayload): Promise<void> =>
@@ -47,17 +49,20 @@ export const authService = {
     apiClient.request<void>(ENDPOINTS.resendOtp, { method: 'POST', body: payload }),
 
   /**
-   * The single source of truth for auth state: 200 → authenticated, 401 → not.
+   * Source of truth for a space's auth state: 200 → authenticated, 401 → not.
    * The response is enveloped (`{ message, data }`), unlike login which is flat.
    */
-  me: async (client: ApiClient = apiClient): Promise<User> => {
-    const res = await client.request<MeResponse>(ENDPOINTS.me);
+  me: async (
+    client: ApiClient = apiClient,
+    space: SpaceKey = DEFAULT_SPACE,
+  ): Promise<User> => {
+    const res = await client.request<MeResponse>(SPACES[space].endpoints.me);
     return res.data;
   },
 
-  /** Server clears the session cookie. */
-  logout: (): Promise<void> =>
-    apiClient.request<void>(ENDPOINTS.logout, { method: 'POST' }),
+  /** Server clears the space's session cookie. */
+  logout: (space: SpaceKey = DEFAULT_SPACE): Promise<void> =>
+    apiClient.request<void>(SPACES[space].endpoints.logout, { method: 'POST' }),
 
   /** Request a password-reset email. */
   requestPasswordReset: (payload: PasswordResetPayload): Promise<void> =>

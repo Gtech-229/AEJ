@@ -157,6 +157,7 @@ const NO_REFRESH_PREFIXES = [
   '/personnels/login',
   '/auth/login',
   '/auth/refresh',
+  '/personnel/logout',
   '/auth/logout',
   '/auth/verify-otp',
   '/auth/2fa',

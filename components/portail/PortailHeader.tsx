@@ -4,24 +4,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
-  BarChart3,
-  Briefcase,
   Building2,
   ChevronDown,
-  ClipboardCheck,
-  ClipboardList,
-  FolderKanban,
-  GraduationCap,
+  Gauge,
   Handshake,
-  IdCard,
   KeyRound,
   Landmark,
   Layers,
   LayoutDashboard,
   LogOut,
-  MapPin,         // ← nouveau
+  MapPin,
   Settings,
-  Shuffle,
+  ShieldCheck,
   SlidersHorizontal,
   User,
   Users,
@@ -30,6 +24,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/auth.context';
 import { getUserDisplayName } from '@/features/auth/auth.dto';
+import { useConfigurations } from '@/features/configurations/configurations.hooks';
 import { ThemeSwitch } from '@/components/theme/theme-switch';
 import { AccentSwitch } from '@/components/theme/accent-switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -42,9 +37,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Fixed brand colors (NOT the themeable --primary token) — the header bar stays
-// brand-locked regardless of the accent switcher.
-const BRAND_GREEN = '#1a7a3c';
+// The header bar follows the themeable --primary token (so the accent switcher
+// recolors it). The lower strip keeps a fixed orange as a two-tone brand detail.
 const BRAND_ORANGE = '#f97316';
 
 type IconType = React.ComponentType<{ className?: string }>;
@@ -65,43 +59,17 @@ interface NavItem {
 // ─── Navigation config ────────────────────────────────────────────────────────
 const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  {
-    label: 'Offres & Demandes',
-    icon: Briefcase,
-    children: [
-      { label: "Offres d'emplois", href: '/dashboard/offres/emplois', icon: Briefcase },
-      { label: 'Matching', href: '/dashboard/offres/matching', icon: Shuffle },
-      { label: 'Offres de stages', href: '/dashboard/offres/stages', icon: GraduationCap },
-    ],
-  },
-  {
-    label: 'Évaluations',
-    icon: ClipboardCheck,
-    children: [
-      { label: "Formulaires d'évaluation", href: '/dashboard/evaluations/formulaires', icon: ClipboardList },
-      { label: 'Résultats', href: '/dashboard/evaluations/resultats', icon: BarChart3 },
-    ],
-  },
-  { label: 'Stagiaires', href: '/dashboard/stagiaires', icon: Users },
+  { label: 'Jeunes', href: '/dashboard/jeunes', icon: Users },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
-  {
-    label: 'Financements',
-    icon: Wallet,
-    children: [
-      { label: 'Projets financés', href: '/dashboard/financements/projets', icon: FolderKanban },
-      { label: 'Partenaires', href: '/dashboard/financements/partenaires', icon: Handshake },
-    ],
-  },
-  // {
-  //   label: 'Personnel',
-  //   href: '/dashboard/personnel',
-  //   icon: IdCard,
-  // },
+  { label: 'Organismes', href: '/dashboard/parametrage/organismes', icon: Handshake },
+  { label: 'Financements', href: '/dashboard/financements/projets', icon: Wallet },
+  { label: 'Indicateurs', href: '/dashboard/indicateurs', icon: Gauge },
   {
     label: 'Paramétrage',
     icon: Settings,
     children: [
-      { label: 'Utilisateurs', href: '/dashboard/parametrage/utilisateurs', icon: Users },
+      { label: 'Personnel', href: '/dashboard/parametrage/personnels', icon: Users },
+      { label: 'Rôles & permissions', href: '/dashboard/parametrage/roles', icon: ShieldCheck },
       { label: 'Localités', href: '/dashboard/parametrage/localites', icon: MapPin },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
       { label: 'Autres paramètres', href: '/dashboard/parametrage/autres', icon: Layers },
@@ -112,6 +80,9 @@ const NAV: NavItem[] = [
 export function PortailHeader() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { data: config } = useConfigurations();
+  const structureName = config?.intitule_structure || 'Agence Emploi Jeunes';
+  const structureSigle = config?.sigle_structure ?? '';
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
   const isSectionActive = (item: NavItem) =>
@@ -126,10 +97,7 @@ export function PortailHeader() {
   return (
     <header className="shrink-0">
       {/* ── Row 1 — fixed brand bar ── */}
-      <div
-        className="flex h-16 items-center justify-between gap-4 px-4 text-white md:px-6"
-        style={{ backgroundColor: BRAND_GREEN }}
-      >
+      <div className="flex h-16 items-center justify-between gap-4 bg-primary px-4 text-white md:px-6">
         {/* Logos + title */}
         <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
           <Image
@@ -150,8 +118,8 @@ export function PortailHeader() {
             className="hidden rounded-lg bg-white p-1 object-contain sm:block"
           />
           <div className="hidden leading-tight lg:block">
-            <p className="text-sm font-bold">Système de Gestion</p>
-            <p className="text-xs text-white/70">Agence Emploi Jeunes</p>
+            <p className="text-sm font-bold">{structureName}</p>
+            {structureSigle && <p className="text-xs text-white/70">{structureSigle}</p>}
           </div>
         </Link>
 
@@ -163,13 +131,7 @@ export function PortailHeader() {
 
           <ThemeSwitch className="border-white/20 bg-white/15 text-white hover:bg-white/25 hover:text-white" />
 
-          <Link
-            href="/dashboard/configurations"
-            aria-label="Paramètres"
-            className="inline-flex size-9 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
-          >
-            <Settings size={17} />
-          </Link>
+         
 
           {/* User menu */}
           <DropdownMenu>
@@ -248,8 +210,8 @@ export function PortailHeader() {
           })}
         </nav>
 
-        {/* Fixed two-tone brand strip */}
-        <div className="h-0.5 w-full" style={{ backgroundColor: BRAND_GREEN }} />
+        {/* Two-tone brand strip: primary (accent-aware) + fixed orange */}
+        <div className="h-0.5 w-full bg-primary" />
         <div className="h-0.5 w-full" style={{ backgroundColor: BRAND_ORANGE }} />
 
         {/* ── Row 3 — sub-nav of the active section ── */}

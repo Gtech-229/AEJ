@@ -45,3 +45,7 @@ next-env.d.ts
 
 
 CLAUDE.md
+.claude/business-logic_Module.md
+.claude/backend_schema.md
+.claude/backend-asks.md
+.claude*

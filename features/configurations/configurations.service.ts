@@ -48,7 +48,6 @@ export const DEFAULT_CONFIGURATION: Configuration = {
   smtp_host_notifications: '',
   smtp_port_notifications: 587,
   smtp_encrypt_notifications: 'tls',
-  lien_api_parent: '',
 };
 
 /**
@@ -87,7 +86,6 @@ function fromApi(data: ConfigurationApi): Configuration {
     smtp_host_notifications: data.smtp_host_notifications,
     smtp_port_notifications: data.smtp_port_notifications,
     smtp_encrypt_notifications: data.smtp_encrypt_notifications,
-    lien_api_parent: data.lien_api_parent,
   };
 }
 
@@ -149,24 +147,23 @@ export const configurationsService = {
   },
 
   /**
-   * Upload the structure logo (multipart, its own endpoint).
+   * Upload a logo file (multipart, its own endpoint). `field` is the multipart
+   * key the controller reads — confirmed as `logo_structure` (structure logo)
+   * and `logo_systeme` (system logo); the same field is also the stored path
+   * column, and the controller writes the new path back.
    *
    * PHP only parses multipart bodies on POST — a real PATCH arrives with an
    * empty `$request->file()` — so we POST with Laravel's `_method` spoofing to
    * reach the same PATCH route. Content-Type is deliberately NOT set: the
    * browser must add the `boundary=...`.
    */
-  uploadStructureLogo: async (
+  uploadLogo: async (
+    field: 'logo_structure' | 'logo_systeme',
     file: File,
     client: ApiClient = apiClient,
   ): Promise<Configuration | null> => {
     const formData = new FormData();
-    // NB: the FILE goes under `structure_logo`, NOT `logo_structure`.
-    // `logo_structure` is the string PATH column the backend validates as a
-    // string — posting the binary there fails with "must be a string". The
-    // controller reads `structure_logo`, stores it, and writes the path back.
-    // TODO(backend): confirm the exact multipart field name for the file.
-    formData.append('structure_logo', file);
+    formData.append(field, file);
     formData.append('_method', 'PATCH');
 
     const res = await client.request<ConfigurationEnvelope | null>(DETAIL_URL, {

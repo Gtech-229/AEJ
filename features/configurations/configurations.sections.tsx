@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { DynamicForm, type FormConfig } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useUploadStructureLogo } from './configurations.hooks';
+import { useUploadLogo } from './configurations.hooks';
 import type { Configuration } from './configurations.dto';
 import {
   identiteSchema,
@@ -118,15 +118,25 @@ function isDisplayableSrc(src: string): boolean {
 
 /**
  * Logo picker — the image box is the trigger. Selecting a file uploads it
- * immediately via `useUploadStructureLogo` (its own endpoint), independent of
- * the Identité form's save button.
+ * immediately via `useUploadLogo` (its own endpoint), independent of the
+ * Identité form's save button. Reused for both the structure and system logos.
  */
-function LogoUploader({ value, structureSigle }: { value: string, structureSigle : string }) {
+function LogoUploader({
+  value,
+  field,
+  label,
+  fallbackText,
+}: {
+  value: string;
+  field: 'logo_structure' | 'logo_systeme';
+  label: string;
+  fallbackText: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   // Local object-URL preview wins once a file is picked (the stored value may
   // be a bare filename we can't render).
   const [localPreview, setLocalPreview] = useState<string | null>(null);
-  const upload = useUploadStructureLogo();
+  const upload = useUploadLogo(field);
 
   const src = localPreview ?? (isDisplayableSrc(value) ? value : null);
 
@@ -158,11 +168,11 @@ function LogoUploader({ value, structureSigle }: { value: string, structureSigle
          <div className="relative">
         <Avatar className="size-16 rounded-full border border-border">
           <AvatarImage
-            src={value ?? ''}
-            alt={"structure logo"}
+            src={src ?? ''}
+            alt={label}
           />
           <AvatarFallback className="rounded-xl bg-muted text-xs font-medium text-muted-foreground">
-            {structureSigle?.slice(0, 3).toUpperCase() ?? "AEJ"}
+            {fallbackText?.slice(0, 3).toUpperCase() || 'AEJ'}
           </AvatarFallback>
         </Avatar>
 
@@ -185,7 +195,7 @@ function LogoUploader({ value, structureSigle }: { value: string, structureSigle
       </div>
 
       <div className="space-y-0.5">
-        <Label>Logo de la structure</Label>
+        <Label>{label}</Label>
         <p className="text-xs text-muted-foreground">JPG, PNG, WEBP ou SVG · max {MAX_MB} Mo</p>
       </div>
 
@@ -215,7 +225,20 @@ export function IdentiteSection({ params, isSaving, onSave }: SectionProps) {
       isSaving={isSaving}
       onSave={onSave}
     >
-      <LogoUploader value={params.logo_structure ?? ''}  structureSigle={getIdentiteDefaults(params).sigle_structure}/>
+      <div className="flex space-x-4">
+        <LogoUploader
+          value={params.logo_structure ?? ''}
+          field="logo_structure"
+          label="Logo de la structure"
+          fallbackText={getIdentiteDefaults(params).sigle_structure}
+        />
+        <LogoUploader
+          value={params.logo_systeme ?? ''}
+          field="logo_systeme"
+          label="Logo du système"
+          fallbackText="SYS"
+        />
+      </div>
     </ConfigSectionForm>
   );
 }

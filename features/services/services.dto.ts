@@ -7,14 +7,14 @@
 export interface Service {
   id: number;
   nom: string;
-  code: string | null;
+  code: string; // NOT NULL UNIQUE in the DB
   description: string | null;
   direction_id: number;
 }
 
 export type CreateServicePayload = {
   nom: string;
-  code?: string | null;
+  code: string;
   description?: string | null;
   direction_id: number;
 };

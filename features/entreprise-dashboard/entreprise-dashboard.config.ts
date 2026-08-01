@@ -1,4 +1,5 @@
 import type { EntrepriseRole } from '@/lib/auth/roles.entreprise';
+import { FORCE_ACTEUR } from '@/lib/auth/acteur';
 
 export type EntrepriseKpiId =
     | 'projets_finances'
@@ -28,6 +29,8 @@ export const ENTREPRISE_DASHBOARD_CONFIG: Record<EntrepriseRole, EntrepriseDashb
 };
 
 export function getEntrepriseDashboardConfig(role: EntrepriseRole | undefined): EntrepriseDashboardConfig {
+    // PREVIEW: with a forced profile (lib/auth/acteur.ts), show the full dashboard.
+    if (FORCE_ACTEUR) return { kpis: ALL_KPIS, widgets: ALL_WIDGETS };
     if (!role) return { kpis: [], widgets: [] };
     return ENTREPRISE_DASHBOARD_CONFIG[role];
 }

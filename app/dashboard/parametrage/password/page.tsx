@@ -70,9 +70,9 @@ export default function MotDePassePage() {
 
                     <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-500 space-y-1">
                         <p className="font-medium text-gray-700 mb-1">Critères de sécurité :</p>
-                        <p className={form.new.length >= 8 ? 'text-green-600' : ''}>✓ Au moins 8 caractères</p>
-                        <p className={/[A-Z]/.test(form.new) ? 'text-green-600' : ''}>✓ Une lettre majuscule</p>
-                        <p className={/[0-9]/.test(form.new) ? 'text-green-600' : ''}>✓ Un chiffre</p>
+                        <p className={`flex items-center gap-1.5 ${form.new.length >= 8 ? 'text-green-600' : ''}`}><Check size={12} /> Au moins 8 caractères</p>
+                        <p className={`flex items-center gap-1.5 ${/[A-Z]/.test(form.new) ? 'text-green-600' : ''}`}><Check size={12} /> Une lettre majuscule</p>
+                        <p className={`flex items-center gap-1.5 ${/[0-9]/.test(form.new) ? 'text-green-600' : ''}`}><Check size={12} /> Un chiffre</p>
                     </div>
 
                     <button type="submit" disabled={saving}

@@ -6,13 +6,13 @@
 export interface Direction {
   id: number;
   nom: string;
-  code: string | null;
+  code: string; // NOT NULL UNIQUE in the DB
   description: string | null;
 }
 
 export type CreateDirectionPayload = {
   nom: string;
-  code?: string | null;
+  code: string;
   description?: string | null;
 };
 export type UpdateDirectionPayload = Direction;

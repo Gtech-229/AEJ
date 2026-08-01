@@ -30,18 +30,16 @@ export interface Configuration {
   email_notifications: string;
   mot_de_passe_email_notifications: string;
   /**
-   * ⚠️ Historically the form's "Serveur SMTP" field, but the API value is an
-   * EMAIL (e.g. notifications@structure.com). The actual SMTP host lives in
-   * `smtp_host_notifications`. See the Notifications section — the form mapping
-   * needs correcting.
+   * Sender / "from" email for SMTP notifications (e.g.
+   * notifications@structure.com) — distinct from `smtp_host_notifications`
+   * (the actual server, e.g. smtp.gmail.com).
    */
   smtp_email_notifications: string;
+  /** SMTP server host, e.g. "smtp.gmail.com". */
   smtp_host_notifications: string;
   smtp_port_notifications: number;
   /** Encryption, e.g. "tls" / "ssl". */
   smtp_encrypt_notifications: string;
-  /** Not returned by the current API — kept optional until confirmed. */
-  lien_api_parent?: string;
 }
 
 /** Body accepted by `POST /configurations` — the whole config object. */

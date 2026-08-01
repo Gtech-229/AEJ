@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
     Plus, Search, Pencil, Trash2, X, Check,
     AlertTriangle, MapPin, Phone, Mail, Building2,
+    Users, ClipboardList, List, LayoutGrid,
 } from 'lucide-react';
 import api from '@/lib/api/client';
 
@@ -282,20 +283,23 @@ export default function EntreprisesPage() {
             {/* Stats rapides */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: 'Total entreprises', value: stats.total, icon: '🏢', color: '#1a7a3c' },
-                    { label: 'Entreprises actives', value: stats.actifs, icon: '✅', color: '#2EA84F' },
-                    { label: 'Total stagiaires', value: stats.stages, icon: '👤', color: '#F7941D' },
-                    { label: 'Offres actives', value: stats.offres, icon: '📋', color: '#3b82f6' },
-                ].map((s, i) => (
+                    { label: 'Total entreprises', value: stats.total, icon: Building2, color: '#1a7a3c' },
+                    { label: 'Entreprises actives', value: stats.actifs, icon: Check, color: '#2EA84F' },
+                    { label: 'Jeunes embauchés', value: stats.stages, icon: Users, color: '#F7941D' },
+                    { label: 'Embauches', value: stats.offres, icon: ClipboardList, color: '#3b82f6' },
+                ].map((s, i) => {
+                    const Icon = s.icon;
+                    return (
                     <div key={i} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                            style={{ backgroundColor: s.color + '18' }}>{s.icon}</div>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: s.color + '18', color: s.color }}><Icon size={18} /></div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{s.value}</p>
                             <p className="text-xs text-gray-400">{s.label}</p>
                         </div>
                     </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Filtres + toggle vue */}
@@ -311,7 +315,7 @@ export default function EntreprisesPage() {
                     {(['tous', 'actif', 'inactif', 'suspendu'] as const).map(s => (
                         <button key={s} onClick={() => setFilterStat(s)}
                             className="px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-                            style={{ backgroundColor: filterStat === s ? '#1a7a3c' : '#f3f4f6', color: filterStat === s ? 'white' : '#6b7280' }}>
+                            style={{ backgroundColor: filterStat === s ? 'var(--primary)' : '#f3f4f6', color: filterStat === s ? 'white' : '#6b7280' }}>
                             {s === 'tous' ? 'Tous' : STATUT_CFG[s].label}
                         </button>
                     ))}
@@ -326,13 +330,13 @@ export default function EntreprisesPage() {
                 <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                     {(['table', 'cards'] as const).map(v => (
                         <button key={v} onClick={() => setView(v)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                             style={{
                                 backgroundColor: view === v ? 'white' : 'transparent',
-                                color: view === v ? '#1a7a3c' : '#6b7280',
+                                color: view === v ? 'var(--primary)' : '#6b7280',
                                 boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                             }}>
-                            {v === 'table' ? '☰ Tableau' : '⊞ Cartes'}
+                            {v === 'table' ? <><List size={13} /> Tableau</> : <><LayoutGrid size={13} /> Cartes</>}
                         </button>
                     ))}
                 </div>
@@ -504,8 +508,8 @@ export default function EntreprisesPage() {
                                 </div>
                                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                     <div className="flex gap-4 text-xs text-gray-500">
-                                        <span>👤 <strong className="text-gray-800">{e.stagiaires_count}</strong> stagiaires</span>
-                                        <span>📋 <strong className="text-gray-800">{e.offres_count}</strong> offres</span>
+                                        <span className="flex items-center gap-1"><Users size={12} /> <strong className="text-gray-800">{e.stagiaires_count}</strong> jeunes</span>
+                                        <span className="flex items-center gap-1"><ClipboardList size={12} /> <strong className="text-gray-800">{e.offres_count}</strong> embauches</span>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => setEditItem(e)} className="w-7 h-7 rounded-lg hover:bg-green-50 flex items-center justify-center">
