@@ -60,7 +60,7 @@ export default function EntrepriseDashboardPage() {
 
     if (loading || !allowed) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bg }}>
+            <div className="flex min-h-full items-center justify-center">
                 <p className="text-sm text-muted-foreground">Chargement du tableau de bord…</p>
             </div>
         );
@@ -74,7 +74,7 @@ export default function EntrepriseDashboardPage() {
     const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
 
     return (
-        <div className="min-h-screen px-6 py-6" style={{ backgroundColor: COLORS.bg }}>
+        <div className="min-h-full px-6 py-6">
             <PageHeader
                 title={`Bienvenue, ${getUserDisplayName(user)}`}
                 subtitle="Vue d'ensemble de vos activités de recrutement"

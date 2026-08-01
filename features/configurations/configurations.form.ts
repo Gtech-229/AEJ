@@ -60,19 +60,31 @@ export function getNotificationsConfig(): FormConfig {
   return {
     columns: 2,
     fields: [
-      { name: 'code_instance_whatsapp', label: 'Code instance WhatsApp', type: 'text', placeholder: 'WHATSAPP-001' },
-      { name: 'email_notifications', label: 'Email de notifications', type: 'email', placeholder: 'notify@structure.ci' },
+      { name: 'email_notifications', label: 'Email de notifications', type: 'email', placeholder: 'notifications@structure.com', colSpan: 'full' },
       { name: 'mot_de_passe_email_notifications', label: "Mot de passe de l'email", type: 'password', showPasswordToggle: true, placeholder: '••••••••', colSpan: 'full' },
-      { name: 'smtp_email_notifications', label: 'Serveur SMTP', type: 'text', placeholder: 'smtp.mailtrap.io' },
+      { name: 'smtp_host_notifications', label: 'Serveur SMTP', type: 'text', placeholder: 'smtp.gmail.com' },
+      { name: 'smtp_port_notifications', label: 'Port SMTP', type: 'number', min: 0, placeholder: '587' },
+      { name: 'smtp_email_notifications', label: 'Email expéditeur (SMTP)', type: 'email', placeholder: 'notifications@structure.com' },
+      {
+        name: 'smtp_encrypt_notifications',
+        label: 'Chiffrement',
+        type: 'select',
+        placeholder: 'TLS',
+        options: [
+          { label: 'TLS', value: 'tls' },
+          { label: 'SSL', value: 'ssl' },
+        ],
+      },
     ],
   };
 }
 
 export function getIntegrationsConfig(): FormConfig {
   return {
-    columns: 2,
+    columns: 1,
     fields: [
-      { name: 'lien_api_parent', label: 'Lien API parent', type: 'url', placeholder: 'https://api.parent-system.com', colSpan: 'full' },
+      { name: 'code_instance_whatsapp', label: 'Code instance WhatsApp', type: 'text', placeholder: 'INSTANCE_001' },
+      { name: 'token_instance_whatsapp', label: 'Token instance WhatsApp', type: 'password', showPasswordToggle: true, placeholder: '••••••••' },
     ],
   };
 }

@@ -4,6 +4,24 @@
  */
 
 /**
+ * A role (from `/roles`). Shape confirmed via `GET /roles/{id}`
+ * (`{ id, code, libelle, description, … }`). `space` is the dashboard-space
+ * discriminator we asked the backend to add — see `.claude/backend-asks.md`.
+ * It's backend-owned and STABLE (unlike the admin-editable `code`), so routing
+ * keys off it. Optional until `/personnel/me` embeds the role + `space`.
+ */
+export interface Role {
+  id: number;
+  code: string;
+  libelle: string;
+  description?: string | null;
+  /** Which dashboard this role's users belong to. */
+  space?: 'agence' | 'organismes' | 'entreprise';
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * The authenticated personnel, resolved from `GET /personnel/me`.
  * Confirmed against the real payload.
  */
@@ -15,6 +33,11 @@ export interface User {
   telephone: string;
   adresse: string;
   role_id: number;
+  /**
+   * Embedded role, once `/personnel/me` includes it. Its `space` drives
+   * dashboard routing (see `getActeurTypeForUser`) — preferred over `role_id`.
+   */
+  role?: Role;
   fonction_id: number;
   /** NB: the API returns 0/1, not a boolean. */
   is_active: number;

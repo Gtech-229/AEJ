@@ -1,19 +1,20 @@
 import type { UserRole } from '@/lib/auth/roles';
+import { FORCE_ACTEUR } from '@/lib/auth/acteur';
 
 export type KpiId =
-    | 'stagiaires'
-    | 'stages_cours'
-    | 'stages_acheves'
-    | 'emplois'
-    | 'taux_insertion'
-    | 'budget_consomme';
+    | 'jeunes'
+    | 'micro_projets'
+    | 'montant_finance'
+    | 'taux_remboursement'
+    | 'emplois_crees'
+    | 'taux_insertion';
 
 export type WidgetId =
     | 'evolution'
     | 'regions'
     | 'secteurs'
     | 'actions_rapides'
-    | 'top_entreprises'
+    | 'top_organismes'
     | 'alertes';
 
 interface RoleDashboardConfig {
@@ -22,44 +23,42 @@ interface RoleDashboardConfig {
 }
 
 const ALL_KPIS: KpiId[] = [
-    'stagiaires',
-    'stages_cours',
-    'stages_acheves',
-    'emplois',
+    'jeunes',
+    'micro_projets',
+    'montant_finance',
+    'taux_remboursement',
+    'emplois_crees',
     'taux_insertion',
-    'budget_consomme',
 ];
 const ALL_WIDGETS: WidgetId[] = [
     'evolution',
     'regions',
     'secteurs',
     'actions_rapides',
-    'top_entreprises',
+    'top_organismes',
     'alertes',
 ];
-
 
 export const DASHBOARD_CONFIG: Record<UserRole, RoleDashboardConfig> = {
     admin_general: { kpis: ALL_KPIS, widgets: ALL_WIDGETS },
     directeur_general: { kpis: ALL_KPIS, widgets: ALL_WIDGETS },
 
     directeur_finances: {
-        kpis: ['budget_consomme'],
-        widgets: ['top_entreprises', 'alertes'],
+        kpis: ['montant_finance', 'taux_remboursement', 'micro_projets'],
+        widgets: ['evolution', 'top_organismes', 'alertes'],
     },
     directeur_suivi_evaluation: {
         kpis: ALL_KPIS,
         widgets: ['evolution', 'regions', 'secteurs', 'alertes'],
     },
     directeur_si: {
-        
         kpis: [],
         widgets: [],
     },
 
     comptable: {
-        kpis: ['budget_consomme'],
-        widgets: ['top_entreprises'],
+        kpis: ['montant_finance', 'taux_remboursement'],
+        widgets: ['top_organismes'],
     },
     analyste: {
         kpis: ALL_KPIS,
@@ -72,6 +71,8 @@ export const DASHBOARD_CONFIG: Record<UserRole, RoleDashboardConfig> = {
 };
 
 export function getDashboardConfig(role: UserRole | undefined): RoleDashboardConfig {
+    // PREVIEW: with a forced profile (lib/auth/acteur.ts), show the full dashboard.
+    if (FORCE_ACTEUR) return { kpis: ALL_KPIS, widgets: ALL_WIDGETS };
     if (!role) return { kpis: [], widgets: [] };
     return DASHBOARD_CONFIG[role];
 }

@@ -47,7 +47,7 @@ const PERIOD_LABELS: { key: Period; label: string }[] = [
 
 /**
  * Version générique d'`EvolutionChart` : deux séries configurables au lieu
- * de `financement`/`stage` figés. Utilisé pour les dashboards Institution
+ * de `financement`/`stage` figés. Utilisé pour les dashboards Organismes
  * financière et Entreprise.
  */
 export default function DualAreaChart({ title = 'Évolution dans le temps', data, series }: DualAreaChartProps) {

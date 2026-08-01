@@ -3,9 +3,10 @@ import { z } from 'zod';
 /** Form/input validation for creating/editing a fonction (French messages). */
 export const fonctionSchema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
-  code: z.string().optional(),
+  code: z.string().min(1, 'Le code est requis'),
   description: z.string().optional(),
-  service_id: z
+  // Fed by a <select> whose value arrives as a string → coerce before validating.
+  service_id: z.coerce
     .number({ message: 'Le service est requis' })
     .int()
     .positive('Le service est requis'),

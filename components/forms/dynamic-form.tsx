@@ -99,7 +99,7 @@ export function DynamicForm<T extends FieldValues = FieldValues>({
         {renderAfter}
 
         {!hideFormFooter && (
-          <div className="flex items-center justify-end gap-2">
+          <div className="sticky bottom-0 z-10 -mx-6 flex items-center justify-end gap-2 border-t border-border bg-background px-6 py-4">
             {onBack && (
               <Button type="button" variant="ghost" onClick={onBack} disabled={isLoading}>
                 {backText}
