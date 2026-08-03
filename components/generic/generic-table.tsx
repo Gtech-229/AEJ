@@ -30,6 +30,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/generic/empty-state';
+import type { LucideIcon } from 'lucide-react';
 import { DataTableToolbar } from '@/components/data-table/toolbar';
 import { DataTablePagination } from '@/components/data-table/pagination';
 import type { FacetedFilter } from '@/components/data-table/types';
@@ -44,11 +46,26 @@ export interface GenericTableProps<TData> {
   bulkActionsSlot?: (rows: TData[]) => React.ReactNode;
   toolbarEndSlot?: React.ReactNode;
   defaultPageSize?: number;
+  /** Empty-row content. `emptyMessage` is the title fallback; the rest enrich it. */
   emptyMessage?: string;
+  emptyIcon?: LucideIcon;
+  emptyTitle?: React.ReactNode;
+  emptyDescription?: React.ReactNode;
+  /** Action slot for the empty state — typically a `<Button>`. */
+  emptyAction?: React.ReactNode;
   showSearch?: boolean;
   showViewOptions?: boolean;
   showPagination?: boolean;
   compactPagination?: boolean;
+  /**
+   * Opt-in **server-side** pagination. When provided, the table renders `data`
+   * as the current page as-is (no client slicing/filtering/sorting) and relies
+   * on the backend — `pageCount`/`rowCount` come from the response `meta`. The
+   * URL still drives page/size/search/sort; the consuming hook reads them (see
+   * `usePageParams`) and refetches. Omit it to keep the default client-side
+   * pagination (fetch the whole list, slice in the browser).
+   */
+  manualPagination?: { pageCount: number; rowCount?: number };
   onRowClick?: (row: TData) => void;
   isLoading?: boolean;
   initialState?: {
@@ -103,10 +120,14 @@ export function GenericTable<TData>({
   toolbarEndSlot,
   defaultPageSize = 10,
   emptyMessage = 'Aucun résultat.',
+  emptyIcon,
+  emptyTitle,
+  emptyDescription,
+  emptyAction,
   showSearch = true,
-  showViewOptions = true,
   showPagination = true,
   compactPagination,
+  manualPagination,
   onRowClick,
   isLoading,
   initialState,
@@ -148,7 +169,12 @@ export function GenericTable<TData>({
   function replaceParams(mutate: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
     mutate(params);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const next = params.toString();
+    // No-op if nothing actually changed. Writing the same params still triggers
+    // an RSC navigation/refetch, which — combined with React Table's state sync —
+    // can loop into constant background requests.
+    if (next === searchParams.toString()) return;
+    router.replace(`${pathname}?${next}`, { scroll: false });
   }
 
   function onSortingChange(updater: Updater<SortingState>) {
@@ -187,10 +213,21 @@ export function GenericTable<TData>({
     });
   }
 
+  const manual = !!manualPagination;
   const table = useReactTable({
     data,
     columns,
     state: { sorting, columnFilters, columnVisibility, rowSelection, pagination },
+    // Pagination/filters are URL-controlled — don't let React Table auto-reset
+    // the page index when data arrives (it fires onPaginationChange → a URL
+    // write → RSC refetch → re-render → reset again → request loop).
+    autoResetPageIndex: false,
+    // Server-side mode: the backend already sliced/filtered/sorted this page.
+    manualPagination: manual,
+    manualFiltering: manual,
+    manualSorting: manual,
+    pageCount: manual ? manualPagination!.pageCount : undefined,
+    rowCount: manual ? manualPagination!.rowCount : undefined,
     onSortingChange,
     onColumnFiltersChange,
     onPaginationChange,
@@ -200,7 +237,8 @@ export function GenericTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // In server mode the rows already are the page — don't re-paginate client-side.
+    getPaginationRowModel: manual ? undefined : getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
@@ -217,7 +255,7 @@ export function GenericTable<TData>({
 
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((r) => r.original);
 
-  const hasToolbar = showSearch || showViewOptions || !!facetedFilters?.length || !!toolbarEndSlot;
+  const hasToolbar = showSearch || !!toolbarEndSlot;
 
   return (
     <div className="space-y-3">
@@ -226,9 +264,7 @@ export function GenericTable<TData>({
           table={table}
           searchKey={searchKey}
           searchPlaceholder={searchPlaceholder}
-          facetedFilters={facetedFilters}
           showSearch={showSearch}
-          showViewOptions={showViewOptions}
           toolbarEndSlot={toolbarEndSlot}
         />
       )}
@@ -287,12 +323,16 @@ export function GenericTable<TData>({
                 </TableRow>
               ))
             ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getVisibleFlatColumns().length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  {emptyMessage}
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={table.getVisibleFlatColumns().length} className="p-0">
+                  <EmptyState
+                    variant="bare"
+                    icon={emptyIcon}
+                    title={emptyTitle ?? emptyMessage}
+                    description={emptyDescription}
+                  >
+                    {emptyAction}
+                  </EmptyState>
                 </TableCell>
               </TableRow>
             )}

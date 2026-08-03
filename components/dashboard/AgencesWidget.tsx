@@ -11,7 +11,7 @@ interface AgencesWidgetProps {
     agences: Agence[];
 }
 
-/** Analogue léger d'`EntreprisesWidget`, pour les agences propres à l'institution. */
+/** Analogue léger d'`EntreprisesWidget`, pour les agences propres à l'organisme. */
 export default function AgencesWidget({ agences }: AgencesWidgetProps) {
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm">

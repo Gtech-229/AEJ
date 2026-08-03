@@ -55,7 +55,7 @@ export function GenericDialogs<T>({
           if (!open) state.close();
         }}
       >
-        <DialogContent className={cn(DIALOG_SIZES[dialogSize])}>
+        <DialogContent className={cn(DIALOG_SIZES[dialogSize], 'max-h-[90vh] overflow-y-auto')}>
           <DialogHeader>
             <DialogTitle>{state.isEditOpen ? titles.edit : titles.create}</DialogTitle>
             <DialogDescription className={description ? undefined : 'sr-only'}>

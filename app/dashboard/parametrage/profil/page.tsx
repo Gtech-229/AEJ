@@ -3,19 +3,23 @@ import { useState, useEffect } from 'react';
 import { Check, User } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api/client';
 import { useAuth } from '@/features/auth/auth.context';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
 
 export default function ProfilPage() {
     const { user } = useAuth();
-    const [form, setForm] = useState({ nom: user?.name ?? '', email: user?.email ?? '' });
+    const [form, setForm] = useState({
+        nom: user ? getUserDisplayName(user) : '',
+        email: user?.email ?? '',
+    });
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-    // `user` is resolved asynchronously from /auth/me now, so seed the form
+    // `user` is resolved asynchronously from /personnel/me, so seed the form
     // once it arrives.
     useEffect(() => {
-        if (user) setForm({ nom: user.name ?? '', email: user.email ?? '' });
+        if (user) setForm({ nom: getUserDisplayName(user), email: user.email ?? '' });
     }, [user]);
 
     async function submit(e: React.FormEvent) {
@@ -42,7 +46,10 @@ export default function ProfilPage() {
                     </div>
                     <div>
                         <p className="font-bold text-gray-900 text-lg">{form.nom}</p>
-                        <p className="text-sm text-gray-400">{user?.role ?? 'Administrateur'}</p>
+                        {/* TODO: afficher le libellé du rôle une fois le module Rôles livré. */}
+                        <p className="text-sm text-gray-400">
+                            {user?.role_id ? `Rôle #${user.role_id}` : 'Administrateur'}
+                        </p>
                     </div>
                 </div>
 

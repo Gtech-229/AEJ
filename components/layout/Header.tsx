@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
+import { getUserDisplayName } from '@/features/auth/auth.dto';
+import { getRoleSlug } from '@/lib/auth/acteur';
+import { ROLE_LABELS, type UserRole } from '@/lib/auth/roles';
 import UserMenu from './UserMenu';
 
 export default function Header() {
   const [search, setSearch] = useState('');
   const { user } = useAuth();
+  const roleSlug = getRoleSlug(user);
+  const roleLabel = roleSlug ? ROLE_LABELS[roleSlug as UserRole] ?? roleSlug : 'Super Administrateur';
 
   return (
     <header className="h-16 shrink-0 flex items-center gap-4 px-4 bg-white border-b border-gray-200 z-10">
@@ -61,8 +66,8 @@ export default function Header() {
       {/* User info + menu */}
       <div className="flex items-center gap-2 shrink-0">
         <div className="hidden md:block text-right leading-none">
-          <p className="text-sm font-semibold text-gray-800">{user?.name ?? 'Admin'}</p>
-          <p className="text-xs text-gray-400">{user?.role ?? 'Super Administrateur'}</p>
+          <p className="text-sm font-semibold text-gray-800">{getUserDisplayName(user)}</p>
+          <p className="text-xs text-gray-400">{roleLabel}</p>
         </div>
         <UserMenu />
       </div>

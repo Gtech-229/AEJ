@@ -1,4 +1,4 @@
-export const ACTEUR_TYPES = ['agence', 'institution_financiere', 'entreprise'] as const;
+export const ACTEUR_TYPES = ['agence', 'organismes', 'entreprise'] as const;
 export type ActeurType = (typeof ACTEUR_TYPES)[number];
 
 export const AGENCE_ROLES = [

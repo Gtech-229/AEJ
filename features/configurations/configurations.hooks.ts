@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import type { Configuration } from './configurations.dto';
 import { configurationsKeys } from './configurations.keys';
 import { configurationsService } from './configurations.service';
-import apiClient from '@/lib/api/client';
 
 /** Reads the full configuration object. */
 export function useConfigurations() {
@@ -27,13 +26,17 @@ export function useUpdateConfigurations() {
   const detailKey = configurationsKeys.detail();
 
   return useMutation({
-    mutationFn: (payload: Configuration) => configurationsService.updateConfigurations(payload),
+    mutationFn: (payload: Partial<Configuration>) =>
+      configurationsService.updateConfigurations(payload),
 
-    onMutate: async (payload: Configuration) => {
+    onMutate: async (payload: Partial<Configuration>) => {
       // Prevent an in-flight refetch from clobbering the optimistic value.
       await queryClient.cancelQueries({ queryKey: detailKey });
       const previous = queryClient.getQueryData<Configuration>(detailKey);
-      queryClient.setQueryData<Configuration>(detailKey, payload);
+      // MERGE (not replace) — the payload is only one section's fields now.
+      queryClient.setQueryData<Configuration>(detailKey, (prev) =>
+        prev ? { ...prev, ...payload } : prev,
+      );
       return { previous };
     },
 
@@ -47,29 +50,30 @@ export function useUpdateConfigurations() {
     },
 
     onSuccess: (saved) => {
-      // Replace the optimistic value with the server's normalized record.
-      queryClient.setQueryData(detailKey, saved);
+      // Replace the optimistic value with the server's normalized record — but
+      // only if it echoed one; otherwise keep the merge and let onSettled refetch.
+      if (saved) queryClient.setQueryData(detailKey, saved);
       toast.success('Configuration enregistrée');
+    },
+
+    // Reconcile with server truth after BOTH outcomes: it catches anything the
+    // backend normalized on write (and any concurrent change), and after a
+    // rollback it re-syncs the cache instead of trusting the local snapshot.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: configurationsKeys.all });
     },
   });
 }
 
 
-export function useUploadStructureLogo() {
+/** Upload the structure or system logo (`logo_structure` / `logo_systeme`). */
+export function useUploadLogo(field: 'logo_structure' | 'logo_systeme') {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (file: File) => {
-      const formData = new FormData()
-      formData.append('structure_logo', file)
-      return apiClient.request<Configuration>('/configurations/1', {
-        method:  'PATCH',
-        body:    formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-    },
+    mutationFn: (file: File) => configurationsService.uploadLogo(field, file),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: configurationsKeys.detail() })
+      queryClient.invalidateQueries({ queryKey: configurationsKeys.all })
       toast.success('Logo mis à jour')
     },
     onError: () => toast.error('Échec de la mise à jour du logo'),

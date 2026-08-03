@@ -1,7 +1,12 @@
 import type { FormConfig } from '@/components/forms';
+import type { Service } from '@/features/services/services.dto';
 
-/** Field config for the create/edit fonction form. Names match the API 1:1. */
-export function getFonctionFormConfig(): FormConfig {
+/**
+ * Field config for the create/edit fonction form. Names match the API 1:1.
+ * The service is a <select> fed by the services list (pass an empty array while
+ * it loads).
+ */
+export function getFonctionFormConfig(services: Service[]): FormConfig {
   return {
     columns: 2,
     fields: [
@@ -13,15 +18,14 @@ export function getFonctionFormConfig(): FormConfig {
         placeholder: "ex: Chef d'agence régionale",
         colSpan: 'full',
       },
-      { name: 'code', label: 'Code', type: 'text', placeholder: 'ex: CHEF_AGR' },
+      { name: 'code', label: 'Code', type: 'text', required: true, placeholder: 'ex: CHEF_AGR' },
       {
         name: 'service_id',
         label: 'Service',
-        type: 'number',
+        type: 'select',
         required: true,
-        min: 1,
-        // TODO: remplacer par un select une fois le module Services livré (Noum).
-        helperText: 'Sélecteur à venir — en attendant, saisir l\'ID du service',
+        placeholder: 'Sélectionner un service…',
+        options: services.map((s) => ({ label: s.nom, value: s.id })),
       },
       {
         name: 'description',
