@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth.context';
+import { SPACES } from '@/features/auth/auth.spaces';
 import { getActeurTypeForUser, getHomeRouteForActeur, type ActeurType } from '@/lib/auth/acteur';
 
 interface ActeurGuardResult {
@@ -17,8 +18,12 @@ export function useActeurGuard(expected: ActeurType): ActeurGuardResult {
     const { user, loading } = useAuth();
     const router = useRouter();
     const acteurType = getActeurTypeForUser(user);
+    // Preview spaces (organismes / entreprise) aren't guarded yet — they render
+    // as free templates with no session. Flip `authLive` in auth.spaces to guard.
+    const guarded = SPACES[expected].authLive;
 
     useEffect(() => {
+        if (!guarded) return;
         if (loading) return;
         if (!user) {
             router.replace('/auth/login');
@@ -31,8 +36,8 @@ export function useActeurGuard(expected: ActeurType): ActeurGuardResult {
         if (acteurType && acteurType !== expected) {
             router.replace(getHomeRouteForActeur(acteurType));
         }
-    }, [loading, user, acteurType, expected, router]);
+    }, [guarded, loading, user, acteurType, expected, router]);
 
-    const allowed = !loading && !!user && (acteurType === null || acteurType === expected);
+    const allowed = !guarded || (!loading && !!user && (acteurType === null || acteurType === expected));
     return { user, loading, allowed };
 }

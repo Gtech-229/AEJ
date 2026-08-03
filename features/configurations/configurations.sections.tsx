@@ -227,7 +227,7 @@ export function IdentiteSection({ params, isSaving, onSave }: SectionProps) {
     >
       <div className="flex space-x-4">
         <LogoUploader
-          value={params.logo_structure ?? ''}
+          value={params.logo_structure ?`https://apis.aej-ci.net/public/${params.logo_structure}` : ''}
           field="logo_structure"
           label="Logo de la structure"
           fallbackText={getIdentiteDefaults(params).sigle_structure}
