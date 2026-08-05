@@ -13,7 +13,7 @@ export interface AppModule {
 }
 
 export const MODULES: AppModule[] = [
-  { key: 'jeunes', label: 'Jeunes bénéficiaires' },
+  { key: 'promoteurs', label: 'Promoteurs' },
   { key: 'entreprises', label: 'Entreprises' },
   { key: 'organismes', label: 'Organismes' },
   { key: 'financements', label: 'Financements' },

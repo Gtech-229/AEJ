@@ -57,6 +57,7 @@ export const authService = {
     space: SpaceKey = DEFAULT_SPACE,
   ): Promise<User> => {
     const res = await client.request<MeResponse>(SPACES[space].endpoints.me);
+    console.log("Details de l'utilisateur connecte", res.data)
     return res.data;
   },
 

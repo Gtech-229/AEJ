@@ -54,16 +54,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const pathname = usePathname();
 
-  // Space of the current route; the session we actually authenticate against is
-  // that space's — but only if its backend auth is live, else the backoffice.
+  // Space of the current route. Only spaces whose backend auth is live are
+  // guarded; `organismes` and `entreprise` are unguarded **template previews**
+  // at this stage of the project — no session is fetched and no redirect fires,
+  // so their dashboards are freely viewable without wiring them to auth.
+  // Flipping `authLive` in `auth.spaces` re-enables the guard with no other change.
   const space = spaceForPath(pathname);
-  const activeSpace: SpaceKey = SPACES[space].authLive ? space : DEFAULT_SPACE;
+  const guarded = SPACES[space].authLive;
+  const activeSpace: SpaceKey = guarded ? space : DEFAULT_SPACE;
 
   // The `me` query lives here (not in auth.hooks) so the dependency stays
   // one-way: hooks → context. Otherwise the two modules import each other.
   const meQuery = useQuery({
     queryKey: authKeys.me(activeSpace),
     queryFn: () => authService.me(apiClient, activeSpace),
+    // Preview spaces aren't authenticated — don't even hit `/me`.
+    enabled: guarded,
     retry: false,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -83,6 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    *    down, which is not the same as being logged out.
    */
   useEffect(() => {
+    // Unguarded preview space (organismes / entreprise) — never redirect.
+    if (!guarded) return;
     if (meQuery.isSuccess) {
       redirectedRef.current = false; // allow a later 401 to redirect again
       return;
@@ -98,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     redirectedRef.current = true;
     const target = pathname ?? SPACES[activeSpace].homePath;
     router.replace(`${SPACES[activeSpace].loginPath}?redirect=${encodeURIComponent(target)}`);
-  }, [meQuery.isSuccess, meQuery.isError, meQuery.error, pathname, router, activeSpace]);
+  }, [guarded, meQuery.isSuccess, meQuery.isError, meQuery.error, pathname, router, activeSpace]);
 
   const refreshMe = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: authKeys.me(activeSpace) });
