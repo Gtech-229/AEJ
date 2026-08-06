@@ -19,29 +19,29 @@ export const creditsColumns: ColumnDef<Credit>[] = [
         meta: { label: 'Bénéficiaire' },
     },
     {
-        accessorKey: 'montant',
+        accessorKey: 'montantFinance',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Montant" />,
         meta: { label: 'Montant' },
-        cell: ({ row }) => `${row.original.montant.toLocaleString('fr-FR')} GNF`,
+        cell: ({ row }) => `${row.original.montantFinance.toLocaleString('fr-FR')} F CFA`,
     },
     {
         accessorKey: 'montantRembourse',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Remboursé" />,
         meta: { label: 'Remboursé' },
-        cell: ({ row }) => `${row.original.montantRembourse.toLocaleString('fr-FR')} GNF`,
+        cell: ({ row }) => `${row.original.montantRembourse.toLocaleString('fr-FR')} F CFA`,
     },
     {
-        accessorKey: 'dateEcheance',
+        accessorKey: 'dateDecaissement',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Échéance" />,
         meta: { label: 'Échéance' },
-        cell: ({ row }) => new Date(row.original.dateEcheance).toLocaleDateString('fr-FR'),
+        cell: ({ row }) => new Date(row.original.dateDecaissement).toLocaleDateString('fr-FR'),
     },
     {
-        accessorKey: 'statut',
+        accessorKey: 'statutCredit',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Statut" />,
         meta: { label: 'Statut' },
         cell: ({ row }) => {
-            const statut = row.original.statut;
+            const statut = row.original.statutCredit as keyof typeof CREDIT_STATUT_LABELS;
             return (
                 <Badge className={cn(CREDIT_STATUT_BADGE_CLASSES[statut])} variant="outline">
                     {CREDIT_STATUT_LABELS[statut]}

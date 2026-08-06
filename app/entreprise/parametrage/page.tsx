@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/legacy-ui/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/auth.context';
 import { ChangePasswordForm } from '@/features/parametrage';
 
 export default function EntrepriseParametragePage() {
@@ -24,8 +24,8 @@ export default function EntrepriseParametragePage() {
                     <TabsContent value="profil" className="mt-4 space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label>Nom</Label>
-                                <Input defaultValue={user?.name} disabled />
+                                <Label>Nom et Prénom</Label>
+                                <Input defaultValue={user?.nom && user?.prenom ? `${user.nom} ${user.prenom}` : ''} disabled />
                             </div>
                             <div className="space-y-1.5">
                                 <Label>E-mail</Label>

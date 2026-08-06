@@ -1,28 +1,42 @@
+export type StatutWorkflow =
+  | 'instruction'
+  | 'plan_affaires'
+  | 'transmission_partenaire'
+  | 'traitement_partenaire'
+  | 'suivi_exploitation';
+
 export type CreditStatut = 'actif' | 'solde' | 'retard';
 
+
 export interface Credit {
-    id: string;
-    code: string;
-    beneficiaire: string;
-    montant: number;
-    montantRembourse: number;
-    tauxInteret: number;
-    dateOctroi: string;
-    dateEcheance: string;
-    statut: CreditStatut;
-    agenceId?: string;
+  id: string;
+  beneficiaireId: number;
+  code: string;
+  banque: string;
+  agence: string;
+  montantFinance: number;
+  montantRembourse: number;
+  soldeRestant: number;
+  tauxRemboursement: number;
+  dateDecaissement: string;
+  statutWorkflow: StatutWorkflow;
+  statutCredit: CreditStatut;
+  joursDansEtape: number;
+  echeanceEnRetard?: { mois: string; jours: number };
 }
 
 export interface CreditListParams {
-    page?: number;
-    size?: number;
-    q?: string;
-    statut?: CreditStatut;
+  page?: number;
+  size?: number;
+  beneficiaireId?: number;
+  banque?: string;
+  statutWorkflow?: StatutWorkflow;
+  statutCredit?: CreditStatut;
 }
 
 export interface CreditListResponse {
-    data: Credit[];
-    total: number;
-    page: number;
-    size: number;
+  data: Credit[];
+  total: number;
+  page: number;
+  size: number;
 }

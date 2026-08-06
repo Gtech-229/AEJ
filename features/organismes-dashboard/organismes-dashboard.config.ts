@@ -9,7 +9,15 @@ export type OrganismeKpiId =
     | 'taux_remboursement'
     | 'taux_retard';
 
-export type OrganismeWidgetId = 'credits' | 'agences' | 'repartition' | 'evolution';
+export type OrganismeWidgetId =
+    'credits'
+    | 'agences'
+    | 'repartition'
+    | 'evolution'
+    | 'prets_chart'
+    | 'carte'
+    | 'agences_table'
+    | 'raccourcis';;
 
 interface OrganismeDashboardConfig {
     kpis: OrganismeKpiId[];
@@ -24,7 +32,16 @@ const ALL_KPIS: OrganismeKpiId[] = [
     'taux_remboursement',
     'taux_retard',
 ];
-const ALL_WIDGETS: OrganismeWidgetId[] = ['credits', 'agences', 'repartition', 'evolution'];
+const ALL_WIDGETS: OrganismeWidgetId[] = [
+    'carte',
+    'credits',
+    'agences',
+    'repartition',
+    'evolution',
+    'prets_chart',
+    'agences_table',
+    'raccourcis'
+];
 
 export const ORGANISMES_DASHBOARD_CONFIG: Record<OrganismeRole, OrganismeDashboardConfig> = {
     gestionnaire_microfinance: { kpis: ALL_KPIS, widgets: ALL_WIDGETS },
