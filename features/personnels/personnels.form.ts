@@ -1,7 +1,17 @@
 import type { FieldConfig, FormConfig } from '@/components/forms';
+import { refOptions, type RefItem } from '@/features/referentials/referentials.types';
+
+/** Referential lists backing the role/fonction selects. */
+export interface PersonnelFormRefs {
+  roles: RefItem[];
+  fonctions: RefItem[];
+}
 
 /** Field config for the create/edit personnel form. Names match the API 1:1. */
-export function getPersonnelFormConfig(mode: 'create' | 'edit'): FormConfig {
+export function getPersonnelFormConfig(
+  mode: 'create' | 'edit',
+  refs: PersonnelFormRefs,
+): FormConfig {
   const fields: FieldConfig[] = [
     { name: 'nom', label: 'Nom', type: 'text', required: true, placeholder: 'Koné' },
     { name: 'prenom', label: 'Prénom', type: 'text', required: true, placeholder: 'Awa' },
@@ -33,21 +43,18 @@ export function getPersonnelFormConfig(mode: 'create' | 'edit'): FormConfig {
     {
       name: 'role_id',
       label: 'Rôle',
-      type: 'number',
+      type: 'select',
       required: true,
-      min: 1,
-      // TODO: remplacer par un select une fois le module Rôles livré.
-      helperText: "Sélecteur à venir — en attendant, saisir l'ID du rôle",
+      placeholder: 'Sélectionner un rôle…',
+      options: refOptions(refs.roles),
     },
     {
       name: 'fonction_id',
       label: 'Fonction',
-      type: 'number',
+      type: 'select',
       required: true,
-      min: 1,
-      // TODO: remplacer par un select branché sur le module Fonctions
-      // (features/fonctions) une fois son API atteignable.
-      helperText: "Sélecteur à venir — en attendant, saisir l'ID de la fonction",
+      placeholder: 'Sélectionner une fonction…',
+      options: refOptions(refs.fonctions),
     },
   );
 

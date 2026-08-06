@@ -59,7 +59,7 @@ interface NavItem {
 // ─── Navigation config ────────────────────────────────────────────────────────
 const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Jeunes', href: '/dashboard/jeunes', icon: Users },
+  { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
   { label: 'Organismes', href: '/dashboard/parametrage/organismes', icon: Handshake },
   { label: 'Financements', href: '/dashboard/financements/projets', icon: Wallet },

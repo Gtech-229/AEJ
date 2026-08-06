@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isPublicAuthPath } from '@/features/auth/auth.routes';
+import { SPACES, spaceForPath } from '@/features/auth/auth.spaces';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Shared with AuthProvider's client-side guard so the two can't drift apart.
   if (isPublicAuthPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Unguarded template-preview spaces (organismes / entreprise) — no gate until
+  // their backend auth is live (`authLive` in auth.spaces). Mirrors AuthProvider.
+  if (!SPACES[spaceForPath(pathname)].authLive) {
     return NextResponse.next();
   }
 
