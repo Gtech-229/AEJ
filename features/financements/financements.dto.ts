@@ -3,6 +3,7 @@
  * `/api/*` bodies. `Budget` matches the real `GET /api/budgets` response.
  */
 import type { Projet } from '@/features/projects/projects.dto';
+import type { Organisme } from '@/features/organismes/organismes.dto';
 
 // ── budgets ───────────────────────────────────────────────────────────────────
 export type BudgetStatut = 'EN_ATTENTE' | 'APPROUVE' | 'REJETE';
@@ -70,8 +71,11 @@ export interface CompteFinancement {
   date_ouverture: string | null;
   avis_partenaire: AvisPartenaire;
   observation: string | null;
-  organisme?: string;
-  projet_intitule?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Embedded relations on the list response.
+  organisme?: Organisme;
+  micro_projet?: Projet;
 }
 
 // ── plan-decaissements ────────────────────────────────────────────────────────

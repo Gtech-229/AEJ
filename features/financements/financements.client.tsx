@@ -75,6 +75,7 @@ interface Col<T> {
 }
 
 function MiniTable<T>({ columns, rows }: { columns: Col<T>[]; rows: T[] }) {
+ 
   return (
     <div className="overflow-x-auto rounded-md border border-border">
       <Table>
@@ -129,6 +130,7 @@ function TabTable<T>({
       <EmptyState variant="card" icon={emptyIcon} title={emptyTitle} description={emptyDescription} />
     );
   }
+ 
   return <MiniTable columns={columns} rows={rows} />;
 }
 
@@ -207,8 +209,11 @@ const remboursementColumns: Col<Remboursement>[] = [
 ];
 
 const compteColumns: Col<CompteFinancement>[] = [
-  { header: 'Projet', cell: (c) => <ProjetCell code={`#${c.micro_projet_id}`} intitule={c.projet_intitule} /> },
-  { header: 'Organisme', cell: (c) => c.organisme ?? `#${c.organisme_id}` },
+  {
+    header: 'Projet',
+    cell: (c) => <ProjetCell code={c.micro_projet?.code} intitule={c.micro_projet?.intitule} />,
+  },
+  { header: 'Organisme', cell: (c) => c.organisme?.nom ?? `#${c.organisme_id}` },
   {
     header: 'Ouverture',
     cell: (c) => <StatusBadge value={c.etat_ouverture} label={ETAT_OUVERTURE_LABELS[c.etat_ouverture]} />,
