@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/generic/empty-state';
+import { LoadingState } from '@/components/generic/loader';
 import { CountryFlag } from '@/components/generic/country-flag';
 import { cn } from '@/lib/utils';
 import { formatDate, getAge } from '@/lib/date';
@@ -173,7 +174,7 @@ export function PromoteurDetailSheet({
 
               <Section title="Projets" icon={FolderKanban}>
                 {projetsLoading ? (
-                  <p className="py-2 text-sm text-muted-foreground">Chargement des projets…</p>
+                  <LoadingState label="Chargement des projets…" size="default" className="py-6" />
                 ) : projets && projets.length > 0 ? (
                   <div className="space-y-2">
                     {projets.map((projet) => (

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/generic/empty-state';
 import { ExpandableText } from '@/components/generic/expandable-text';
+import { LoadingState } from '@/components/generic/loader';
 import { formatDate } from '@/lib/date';
 import { useProject } from './projects.hooks';
 import { ProjectSuiviTabs } from './project-suivi-tabs';
@@ -29,7 +30,7 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
   const { data: projet, isLoading } = useProject(projectId);
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Chargement du projet…</div>;
+    return <LoadingState label="Chargement du projet…" />;
   }
 
   if (!projet) {
