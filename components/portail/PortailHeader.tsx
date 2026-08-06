@@ -62,7 +62,7 @@ const NAV: NavItem[] = [
   { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
   { label: 'Organismes', href: '/dashboard/parametrage/organismes', icon: Handshake },
-  { label: 'Financements', href: '/dashboard/financements/projets', icon: Wallet },
+  { label: 'Financements', href: '/dashboard/financements', icon: Wallet },
   { label: 'Indicateurs', href: '/dashboard/indicateurs', icon: Gauge },
   {
     label: 'Paramétrage',

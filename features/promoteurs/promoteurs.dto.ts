@@ -47,6 +47,9 @@ export interface Promoteur {
  * FK dimensions the list can be filtered by. The query-param name matches the
  * promoteur field 1:1, so the backend can bind them directly.
  */
+// `handicap` is the filter key for the situation-handicap id (same type as the
+// other FK filters) — it maps to the `typesituationhandicap` referential. On the
+// promoteur record the display field is `typesituationhandicap_id`.
 export const PROMOTEUR_FK_PARAMS = [
   'sexe_id',
   'agenceregionale_id',
@@ -55,8 +58,8 @@ export const PROMOTEUR_FK_PARAMS = [
   'niveauetude_id',
   'situationmatrimoniale_id',
   'typepieceidentite_id',
-  'typesituationhandicap_id',
   'paysnationalite_id',
+  'handicap',
 ] as const;
 
 export type PromoteurFkParam = (typeof PROMOTEUR_FK_PARAMS)[number];
@@ -84,4 +87,4 @@ export interface PromoteurQuery
 }
 
 /** Backend's default page size (the API returns 15 when `per_page` is omitted). */
-export const DEFAULT_PER_PAGE = 15;
+export const DEFAULT_PER_PAGE = 10;
