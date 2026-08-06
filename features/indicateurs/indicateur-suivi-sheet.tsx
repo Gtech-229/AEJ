@@ -67,7 +67,7 @@ export function RenseignerButton({ indicateur }: { indicateur: Indicateur }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button className='cursor-pointer' variant="outline" size="sm">
           <LineChart className="size-4" />
           Renseigner
         </Button>
@@ -94,7 +94,7 @@ export function RenseignerButton({ indicateur }: { indicateur: Indicateur }) {
               placeholder={indicateur.unite ? `Valeur en ${indicateur.unite}` : 'Valeur mesurée'}
             />
           </div>
-          <Button type="submit" disabled={addValeur.isPending || !valeur.trim()}>
+          <Button className='cursor-pointer' type="submit" disabled={addValeur.isPending || !valeur.trim()}>
             {addValeur.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
             Ajouter
           </Button>

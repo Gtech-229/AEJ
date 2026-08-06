@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, FolderKanban, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/generic/empty-state';
+import { ExpandableText } from '@/components/generic/expandable-text';
 import { formatDate } from '@/lib/date';
 import { useProject } from './projects.hooks';
 import { ProjectSuiviTabs } from './project-suivi-tabs';
@@ -95,7 +96,7 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
       {projet.description && (
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="mb-2 text-sm font-semibold text-foreground">Description</h2>
-          <p className="text-sm text-muted-foreground">{projet.description}</p>
+          <ExpandableText text={projet.description} clampLines={3} />
         </section>
       )}
 

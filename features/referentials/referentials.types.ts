@@ -9,6 +9,8 @@ export interface RefItem {
   intitule?: string | null;
   nom?: string | null;
   code?: string | null;
+  /** ISO-2 country code (present on `/aej/pays`), e.g. "CI" — used for flags. */
+  code_iso?: string | null;
 }
 
 /** Best display label for a referential item. */

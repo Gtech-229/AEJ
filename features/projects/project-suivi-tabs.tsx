@@ -149,7 +149,7 @@ export function ProjectSuiviTabs({ projet: _projet }: { projet: Projet }) {
     <Tabs defaultValue={tabs[0].value} className="w-full">
       <TabsList variant="solid" className="flex h-auto flex-wrap justify-start">
         {tabs.map(({ value, label, icon: Icon }) => (
-          <TabsTrigger key={value} value={value} className="gap-1.5">
+          <TabsTrigger key={value} value={value} className="gap-1.5 cursor-pointer">
             <Icon className="size-4" />
             {label}
           </TabsTrigger>

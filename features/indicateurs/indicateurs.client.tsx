@@ -125,7 +125,7 @@ export function IndicateursClient() {
           emptyTitle="Aucun indicateur"
           emptyDescription="Créez un premier indicateur pour mesurer l'impact du programme."
           toolbarEndSlot={
-            <Button size="sm" onClick={dialog.openCreate}>
+            <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />
               Ajouter
             </Button>
