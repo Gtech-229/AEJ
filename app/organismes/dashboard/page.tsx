@@ -26,13 +26,13 @@ const KPI_DATA: Array<{
   variation: number;
   accent: AccentName;
 }> = [
-  { id: 'portefeuille_global', icon: Wallet, label: 'Portefeuille global (FCFA)', value: 1250000000, variation: 12.4, accent: 'green' },
-  { id: 'montant_total_finance', icon: Landmark, label: 'Montant total financé', value: 980000000, variation: 8.1, accent: 'blue' },
-  { id: 'nombre_credits', icon: CreditCard, label: 'Crédits actifs', value: 3421, variation: 5.6, accent: 'violet' },
-  { id: 'encours_credit', icon: TrendingUp, label: 'Encours de crédit', value: 412000000, variation: -2.3, accent: 'orange' },
-  { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', value: '91%', variation: 1.8, accent: 'teal' },
-  { id: 'taux_retard', icon: AlertTriangle, label: 'Taux de retard', value: '6%', variation: -0.9, accent: 'orange' },
-];
+    { id: 'portefeuille_global', icon: Wallet, label: 'Portefeuille global (FCFA)', value: 1250000000, variation: 12.4, accent: 'green' },
+    { id: 'montant_total_finance', icon: Landmark, label: 'Montant total financé', value: 980000000, variation: 8.1, accent: 'blue' },
+    { id: 'nombre_credits', icon: CreditCard, label: 'Crédits actifs', value: 3421, variation: 5.6, accent: 'violet' },
+    { id: 'encours_credit', icon: TrendingUp, label: 'Encours de crédit', value: 412000000, variation: -2.3, accent: 'orange' },
+    { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', value: '91%', variation: 1.8, accent: 'teal' },
+    { id: 'taux_retard', icon: AlertTriangle, label: 'Taux de retard', value: '6%', variation: -0.9, accent: 'orange' },
+  ];
 
 const BANQUES = ['Toutes les banques', 'SFD Advans', 'SFD Baobab', 'Coris Bank', 'NSIA Banque'];
 const REGIONS = ['Toutes les régions', 'Abidjan', 'Bouaké', 'Yamoussoukro', 'San Pédro', 'Korhogo'];
@@ -71,7 +71,11 @@ const RACCOURCIS = [
 export default function OrganismeDashboardPage() {
   const { user, loading, allowed } = useActeurGuard('organismes');
 
-  if (loading || !allowed) {
+  // `allowed` peut être vrai sans que `user` soit encore résolu (SSR /
+  // prerendering statique, ou un éventuel FORCE_ACTEUR qui force l'accès
+  // sans forcer un utilisateur factice) — donc tout ce qui suit reste en
+  // optional chaining, jamais en `user!.x`.
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bg }}>
         <p className="text-sm text-muted-foreground">Chargement du tableau de bord…</p>
@@ -79,20 +83,25 @@ export default function OrganismeDashboardPage() {
     );
   }
 
-  const config = getOrganismesDashboardConfig(user!.role as OrganismeRole | undefined);
+  if (!allowed) {
+    return null;
+  }
+
+  const config = getOrganismesDashboardConfig(user?.role as OrganismeRole | undefined);
   const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
+  const displayName = [user?.nom, user?.prenom].filter(Boolean).join(' ') || 'Administrateur';
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-6" style={{ backgroundColor: COLORS.bg }}>
       <PageHeader
-        title={`Bienvenue, ${user!.nom} ${user!.prenom}`}
+        title={`Bienvenue, ${displayName}`}
         subtitle="Vue d'ensemble de votre portefeuille de crédits"
         actions={<RegionBankFilters banques={BANQUES} regions={REGIONS} regionPills={REGION_PILLS} />}
       />
 
-      <div className="mt-6 flex flex-col gap-6">
+      <div className="mt-6 flex flex-col gap-4 sm:gap-6">
         {visibleKpis.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {visibleKpis.map((item) => (
               <KpiCard
                 key={item.id}
@@ -109,19 +118,19 @@ export default function OrganismeDashboardPage() {
         {(config.widgets.includes('carte') ||
           config.widgets.includes('evolution') ||
           config.widgets.includes('prets_chart')) && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            {config.widgets.includes('carte') && <CIMapCI />}
-            {config.widgets.includes('evolution') && (
-              <SimpleBarChart title="Évolution des remboursements" data={REPAYMENT_EVOLUTION} color={COLORS.blue} />
-            )}
-            {config.widgets.includes('prets_chart') && (
-              <SimpleBarChart title="Évolution des prêts accordés" data={LOAN_EVOLUTION} color={COLORS.green} />
-            )}
-          </div>
-        )}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {config.widgets.includes('carte') && <CIMapCI />}
+              {config.widgets.includes('evolution') && (
+                <SimpleBarChart title="Évolution des remboursements" data={REPAYMENT_EVOLUTION} color={COLORS.blue} />
+              )}
+              {config.widgets.includes('prets_chart') && (
+                <SimpleBarChart title="Évolution des prêts accordés" data={LOAN_EVOLUTION} color={COLORS.green} />
+              )}
+            </div>
+          )}
 
         {(config.widgets.includes('agences') || config.widgets.includes('repartition')) && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {config.widgets.includes('agences') && (
               <ListWidget
                 title="Crédits par agence"
@@ -135,7 +144,7 @@ export default function OrganismeDashboardPage() {
         )}
 
         {(config.widgets.includes('agences_table') || config.widgets.includes('raccourcis')) && (
-          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
             {config.widgets.includes('agences_table') && (
               <TableWidget
                 title="Agences"
