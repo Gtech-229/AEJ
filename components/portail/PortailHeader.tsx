@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -14,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Menu,           // ← nouveau (icône hamburger)
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -36,6 +38,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 // The header bar follows the themeable --primary token (so the accent switcher
 // recolors it). The lower strip keeps a fixed orange as a two-tone brand detail.
@@ -83,6 +92,7 @@ export function PortailHeader() {
   const { data: config } = useConfigurations();
   const structureName = config?.intitule_structure || 'Agence Emploi Jeunes';
   const structureSigle = config?.sigle_structure ?? '';
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
   const isSectionActive = (item: NavItem) =>
@@ -98,8 +108,89 @@ export function PortailHeader() {
     <header className="shrink-0">
       {/* ── Row 1 — fixed brand bar ── */}
       <div className="flex h-16 items-center justify-between gap-4 bg-primary px-4 text-white md:px-6">
+        {/* Hamburger — only < lg, opens the drawer nav */}
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetTrigger asChild>
+            <button
+              aria-label="Ouvrir le menu"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 lg:hidden"
+            >
+              <Menu size={19} />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <SheetHeader className="border-b border-border px-4 py-3 text-left">
+              <SheetTitle className="text-sm">{structureName}</SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-0.5 overflow-y-auto p-2">
+              {NAV.map((item) => {
+                const Icon = item.icon;
+                const section = !!item.children?.length;
+                const active = section ? isSectionActive(item) : isActive(item.href!);
+
+                if (!section) {
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href!}
+                      onClick={() => setMobileNavOpen(false)}
+                      className={cn(
+                        'flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                        active
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-foreground/70 hover:bg-muted hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="size-4" />
+                      {item.label}
+                    </Link>
+                  );
+                }
+
+                // Section with children — always expanded in the drawer (no accordion,
+                // keeps the interaction simple and avoids adding new architecture).
+                return (
+                  <div key={item.label} className="mt-1 first:mt-0">
+                    <div
+                      className={cn(
+                        'flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-semibold tracking-wide uppercase',
+                        active ? 'text-primary' : 'text-foreground/50',
+                      )}
+                    >
+                      <Icon className="size-3.5" />
+                      {item.label}
+                    </div>
+                    <div className="ml-4 flex flex-col gap-0.5 border-l border-border pl-3">
+                      {item.children!.map((child) => {
+                        const ChildIcon = child.icon;
+                        const childActive = isActive(child.href);
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setMobileNavOpen(false)}
+                            className={cn(
+                              'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                              childActive
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-foreground/70 hover:bg-muted hover:text-foreground',
+                            )}
+                          >
+                            <ChildIcon className="size-3.5" />
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
         {/* Logos + title */}
-        <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
+        <Link href="/dashboard" className="flex min-w-0 shrink items-center gap-3">
           <Image
             src="/logo-psg.jpeg"
             alt="Agence Emploi Jeunes"
@@ -107,7 +198,7 @@ export function PortailHeader() {
             height={44}
             style={{ width: 'auto', height: '44px' }}
             priority
-            className="rounded-lg bg-white p-1 object-contain"
+            className="shrink-0 rounded-lg bg-white p-1 object-contain"
           />
           <Image
             src="/logo-aej.jpg"
@@ -115,7 +206,7 @@ export function PortailHeader() {
             width={100}
             height={44}
             priority
-            className="hidden rounded-lg bg-white p-1 object-contain sm:block"
+            className="hidden shrink-0 rounded-lg bg-white p-1 object-contain sm:block"
           />
           <div className="hidden leading-tight lg:block">
             <p className="text-sm font-bold">{structureName}</p>
@@ -130,8 +221,6 @@ export function PortailHeader() {
           <AccentSwitch className="hidden md:flex" />
 
           <ThemeSwitch className="border-white/20 bg-white/15 text-white hover:bg-white/25 hover:text-white" />
-
-         
 
           {/* User menu */}
           <DropdownMenu>
@@ -180,9 +269,9 @@ export function PortailHeader() {
         </div>
       </div>
 
-      {/* ── Row 2 — main nav ── */}
-      <div className="bg-card">
-        <nav className="flex items-center gap-1 overflow-x-auto px-2 py-1.5 md:px-6">
+      {/* ── Row 2 — main nav (>= lg only; < lg uses the hamburger drawer above) ── */}
+      <div className="hidden bg-card lg:block">
+        <nav className="flex items-center gap-1 overflow-x-auto px-6 py-1.5">
           {NAV.map((item) => {
             const Icon = item.icon;
             const section = !!item.children?.length;
@@ -217,7 +306,7 @@ export function PortailHeader() {
         {/* ── Row 3 — sub-nav of the active section ── */}
         {activeSection && (
           <div className="border-b border-border bg-card">
-            <nav className="flex items-center gap-1 overflow-x-auto px-2 py-1.5 md:px-6">
+            <nav className="flex items-center gap-1 overflow-x-auto px-6 py-1.5">
               {activeSection.children!.map((child) => {
                 const ChildIcon = child.icon;
                 const childActive = isActive(child.href);
@@ -241,6 +330,17 @@ export function PortailHeader() {
           </div>
         )}
       </div>
+
+      {/* ── Row 2 (mobile/tablette, < lg) — indique la section active,
+           le bouton hamburger de la Row 1 reste le point d'entrée du menu complet ── */}
+      {activeSection && (
+        <div className="border-b border-border bg-card lg:hidden">
+          <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-1.5 text-sm font-medium text-primary">
+            <activeSection.icon className="size-4" />
+            {activeSection.label}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
