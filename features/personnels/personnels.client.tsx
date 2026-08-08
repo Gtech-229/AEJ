@@ -13,6 +13,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { useRoles } from '@/features/roles/roles.hooks';
 import { useFonctions } from '@/features/fonctions/fonctions.hooks';
@@ -128,7 +129,7 @@ export function PersonnelsClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Personnel>
           data={personnels ?? []}
           columns={columns}

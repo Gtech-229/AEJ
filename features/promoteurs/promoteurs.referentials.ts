@@ -58,8 +58,10 @@ export const PROMOTEUR_FK_FILTERS: {
     label: 'Situation matrimoniale',
   },
   { param: 'typepieceidentite_id', refKey: 'typepieceidentite', label: 'Type de pièce' },
-  { param: 'typesituationhandicap_id', refKey: 'typesituationhandicap', label: 'Situation handicap' },
   { param: 'paysnationalite_id', refKey: 'paysnationalite', label: 'Pays de nationalité' },
+  // The endpoint's handicap filter key is `handicap` (an id), resolved from the
+  // `typesituationhandicap` referential.
+  { param: 'handicap', refKey: 'typesituationhandicap', label: 'Situation handicap' },
 ];
 
 /** Unwrap the `{ message, data: [...] }` envelope (tolerates a bare array too). */
@@ -85,6 +87,10 @@ export interface ReferentialResolver {
   optionsOf: (key: PromoteurRefKey) => { label: string; value: string }[];
   /** Human label for a FK id, falling back to `#id` until referentials load. */
   labelOf: (key: PromoteurRefKey, id: number | null | undefined) => string;
+  /** The raw referential item for a FK id (e.g. to read `code_iso` for a flag). */
+  itemOf: (key: PromoteurRefKey, id: number | null | undefined) => RefItem | undefined;
+  /** The full referential list (e.g. to build combobox options with flags). */
+  listOf: (key: PromoteurRefKey) => RefItem[];
 }
 
 export function usePromoteurReferentials(): ReferentialResolver {
@@ -108,5 +114,7 @@ export function usePromoteurReferentials(): ReferentialResolver {
       const item = byKey[key].find((r) => r.id === id);
       return item ? refLabel(item) : `#${id}`;
     },
+    itemOf: (key, id) => (id == null ? undefined : byKey[key].find((r) => r.id === id)),
+    listOf: (key) => byKey[key],
   };
 }

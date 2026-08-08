@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { ShieldCheck, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { LoadingState } from '@/components/generic/loader';
 import {
   Sheet,
   SheetContent,
@@ -144,7 +145,7 @@ export function RolePermissionsButton({ role }: { role: Role }) {
 
         <div className="flex-1 overflow-y-auto px-4">
           {isLoading ? (
-            <p className="py-6 text-sm text-muted-foreground">Chargement…</p>
+            <LoadingState className="py-6" size="default" />
           ) : (
             <table className="w-full text-sm">
               <thead>

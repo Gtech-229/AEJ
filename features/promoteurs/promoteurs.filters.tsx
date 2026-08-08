@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import {
   PROMOTEUR_FK_PARAMS,
   PROMOTEUR_PROJET_PARAMS,
@@ -35,6 +34,9 @@ import {
   PROJET_STATUT_OPTIONS,
   PROJET_TYPE_OPTIONS,
 } from '@/features/projects/projects.constants';
+import { Combobox, type ComboboxOption } from '@/components/generic/combobox';
+import { CountryFlag } from '@/components/generic/country-flag';
+import { refLabel } from '@/features/referentials/referentials.types';
 
 /** Radix `SelectItem` can't hold an empty value, so "all" needs a sentinel. */
 const ALL = '__all__';
@@ -54,7 +56,15 @@ const STATUT_OPTIONS: Option[] = [
 ];
 
 type Filters = Partial<Omit<PromoteurQuery, 'page' | 'perPage'>>;
-type SelectConfig = { param: string; label: string; options: Option[]; disabled: boolean };
+type SelectConfig = {
+  param: string;
+  label: string;
+  options: Option[];
+  disabled: boolean;
+  /** Render as a searchable combobox (long lists, e.g. pays) instead of a Select. */
+  searchable?: boolean;
+  comboboxOptions?: ComboboxOption[];
+};
 
 /** Categorical filters live in the dialog; `search` stays inline. */
 const CATEGORICAL_KEYS = [
@@ -155,9 +165,25 @@ export function PromoteursFilters() {
   const promoteurSelects: SelectConfig[] = [
     { param: 'statut', label: 'Statut', options: STATUT_OPTIONS, disabled: false },
     { param: 'tranche_age', label: "Tranche d'âge", options: TRANCHE_AGE_OPTIONS, disabled: false },
-    ...PROMOTEUR_FK_FILTERS.map((f) => {
+    ...PROMOTEUR_FK_FILTERS.map((f): SelectConfig => {
       const options = refs.optionsOf(f.refKey);
-      return { param: f.param, label: f.label, options, disabled: options.length === 0 };
+      const base: SelectConfig = {
+        param: f.param,
+        label: f.label,
+        options,
+        disabled: options.length === 0,
+      };
+      // Pays has ~250 entries — use a searchable combobox with flags.
+      if (f.refKey === 'paysnationalite') {
+        const comboboxOptions: ComboboxOption[] = refs.listOf('paysnationalite').map((p) => ({
+          value: String(p.id),
+          label: refLabel(p),
+          icon: <CountryFlag code={p.code_iso} />,
+          keywords: p.code_iso ? [p.code_iso] : undefined,
+        }));
+        return { ...base, searchable: true, comboboxOptions, disabled: comboboxOptions.length === 0 };
+      }
+      return base;
     }),
   ];
   const projetSelects: SelectConfig[] = [
@@ -169,23 +195,36 @@ export function PromoteursFilters() {
   const renderSelect = (s: SelectConfig) => (
     <div key={s.param} className="space-y-1.5">
       <Label className="text-xs text-muted-foreground">{s.label}</Label>
-      <Select
-        value={(filters as Record<string, string>)[s.param] ?? ALL}
-        onValueChange={(v) => setSelect(s.param, v)}
-        disabled={s.disabled}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={s.label} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>Tous</SelectItem>
-          {s.options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {s.searchable ? (
+        <Combobox
+          options={s.comboboxOptions ?? []}
+          value={(filters as Record<string, string>)[s.param] ?? ''}
+          onValueChange={(v) => setSelect(s.param, v === '' ? ALL : v)}
+          placeholder={s.label}
+          searchPlaceholder="Rechercher…"
+          allLabel="Tous"
+          disabled={s.disabled}
+          modal
+        />
+      ) : (
+        <Select
+          value={(filters as Record<string, string>)[s.param] ?? ALL}
+          onValueChange={(v) => setSelect(s.param, v)}
+          disabled={s.disabled}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={s.label} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Tous</SelectItem>
+            {s.options.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 
@@ -204,7 +243,7 @@ export function PromoteursFilters() {
       <div className="flex items-center gap-2">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant={activeCount > 0 ? 'default' : 'outline'}>
+            <Button className='cursor-pointer' variant={activeCount > 0 ? 'default' : 'outline'}>
               <Filter className="size-4" />
               Filtres
               {activeCount > 0 && (

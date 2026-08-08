@@ -106,7 +106,7 @@ export function PromoteursClient() {
             <Button
               variant="ghost"
               size="icon"
-              className="size-8"
+              className="size-8 cursor-pointer"
               aria-label="Voir le promoteur"
               onClick={() => setSelected(row.original)}
             >

@@ -11,14 +11,17 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/generic/empty-state';
+import { LoadingState } from '@/components/generic/loader';
+import { CountryFlag } from '@/components/generic/country-flag';
 import { cn } from '@/lib/utils';
-import { getAge } from '@/lib/date';
+import { formatDate, getAge } from '@/lib/date';
 import { useProjectsByPromoteur } from '@/features/projects/projects.hooks';
 import { ProjetCard } from '@/features/projects/projet-card';
+import { refLabel } from '@/features/referentials/referentials.types';
 import { usePromoteurReferentials } from './promoteurs.referentials';
 import type { Promoteur } from './promoteurs.dto';
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function Field({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -105,7 +108,7 @@ export function PromoteurDetailSheet({
 
               <Section title="État civil" icon={User}>
                 <dl className="grid grid-cols-2 gap-4">
-                  <Field label="Date de naissance" value={promoteur.datenaissance} />
+                  <Field label="Date de naissance" value={formatDate(promoteur.datenaissance)} />
                   <Field label="Âge" value={age != null ? `${age} ans` : undefined} />
                   <Field label="Lieu de naissance" value={promoteur.lieunaissance} />
                   <Field label="Nom du père" value={promoteur.nomdupere} />
@@ -151,7 +154,16 @@ export function PromoteurDetailSheet({
                   />
                   <Field
                     label="Pays de nationalité"
-                    value={refs.labelOf('paysnationalite', promoteur.paysnationalite_id)}
+                    value={(() => {
+                      const pays = refs.itemOf('paysnationalite', promoteur.paysnationalite_id);
+                      if (!pays) return '—';
+                      return (
+                        <span className="flex items-center gap-1.5">
+                          <CountryFlag code={pays.code_iso} />
+                          {refLabel(pays)}
+                        </span>
+                      );
+                    })()}
                   />
                   <Field
                     label="Situation handicap"
@@ -162,7 +174,7 @@ export function PromoteurDetailSheet({
 
               <Section title="Projets" icon={FolderKanban}>
                 {projetsLoading ? (
-                  <p className="py-2 text-sm text-muted-foreground">Chargement des projets…</p>
+                  <LoadingState label="Chargement des projets…" size="default" className="py-6" />
                 ) : projets && projets.length > 0 ? (
                   <div className="space-y-2">
                     {projets.map((projet) => (

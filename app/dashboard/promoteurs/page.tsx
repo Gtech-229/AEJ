@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { LoadingState } from '@/components/generic/loader';
 import { getQueryClient } from '@/lib/query/get-query-client';
 import { serverApiClient } from '@/lib/api/server';
 import { promoteursKeys } from '@/features/promoteurs/promoteurs.keys';
@@ -26,7 +27,7 @@ export default async function PromoteursPage() {
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       {/* useSearchParams (pagination + filters) needs a Suspense boundary above it. */}
-      <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <PromoteursClient />
       </Suspense>
     </HydrationBoundary>

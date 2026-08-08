@@ -11,6 +11,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { Can } from '@/features/permissions/permissions.access';
 import type { Role } from './roles.dto';
@@ -74,7 +75,7 @@ export function RolesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Role>
           data={roles ?? []}
           columns={columns}

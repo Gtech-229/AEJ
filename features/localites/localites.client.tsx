@@ -12,6 +12,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import type { Localite } from './localites.dto';
 import type { LocaliteInput } from './localites.schema';
@@ -90,7 +91,7 @@ export function LocalitesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Localite>
           data={localites ?? []}
           columns={columns}
