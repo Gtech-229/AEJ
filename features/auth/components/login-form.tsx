@@ -184,7 +184,7 @@ export function LoginForm() {
                 />
                 Se souvenir de moi
               </label>
-              <a href="/auth/mot-de-passe-oublie" className="text-xs font-medium text-green-700 hover:underline">
+              <a href="/auth/password" className="text-xs font-medium text-green-700 hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>
