@@ -8,13 +8,13 @@ import { EmptyState } from '@/components/generic/empty-state';
 import { ExpandableText } from '@/components/generic/expandable-text';
 import { LoadingState } from '@/components/generic/loader';
 import { formatDate } from '@/lib/date';
+import { useFormatMontant } from '@/features/configurations/configurations.hooks';
 import { useProject } from './projects.hooks';
 import { ProjectSuiviTabs } from './project-suivi-tabs';
 import {
   PROJET_STADE_LABELS,
   PROJET_STATUT_LABELS,
   PROJET_TYPE_LABELS,
-  formatMontant,
 } from './projects.constants';
 
 function Field({ label, value }: { label: string; value?: React.ReactNode }) {
@@ -28,6 +28,7 @@ function Field({ label, value }: { label: string; value?: React.ReactNode }) {
 
 export function ProjectDetailClient({ projectId }: { projectId: number }) {
   const { data: projet, isLoading } = useProject(projectId);
+  const formatMontant = useFormatMontant();
 
   if (isLoading) {
     return <LoadingState label="Chargement du projet…" />;

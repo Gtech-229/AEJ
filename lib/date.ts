@@ -22,12 +22,30 @@ export function getAge(
 }
 
 /**
- * Format a date as `dd/mm/yyyy` (fr). Accepts a `Date` or ISO string; returns
- * `—` for a missing or unparseable value.
+ * THE canonical date format for the whole app: `dd/mm/yyyy` (fr). Accepts a
+ * `Date` or ISO string; returns `—` for a missing or unparseable value. Use
+ * this everywhere a date is displayed so the format stays uniform.
  */
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return '—';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR');
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+/**
+ * Canonical date + time format: `dd/mm/yyyy HH:mm` (fr). Same input/`—` rules as
+ * `formatDate`. Use for timestamps (created/updated, logs…).
+ */
+export function formatDateTime(value: string | Date | null | undefined): string {
+  if (!value) return '—';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/generic/empty-state';
 import { cn } from '@/lib/utils';
 import type { Projet } from './projects.dto';
-import { formatMontant } from './projects.constants';
+import { useFormatMontant } from '@/features/configurations/configurations.hooks';
 import { computeProfitability, type Operation } from './operations';
 
 /** Placeholder body for a section whose endpoint doesn't exist yet. */
@@ -48,6 +48,7 @@ function Stat({
 }
 
 function OperationsTab() {
+  const formatMontant = useFormatMontant();
   // TODO(backend): fetch the project's operations once the endpoint exists.
   const operations: Operation[] = [];
   const { recettes, depenses, resultat, marge } = computeProfitability(operations);

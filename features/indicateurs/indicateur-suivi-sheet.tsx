@@ -15,16 +15,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { GenericTable } from '@/components/generic';
+import { formatDate } from '@/lib/date';
 import type { Indicateur, IndicateurSuivi } from './indicateurs.dto';
 import { useAddIndicateurValeur, useIndicateurSuivi } from './indicateurs.hooks';
-
-function formatDate(iso?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 /**
  * "Renseigner" — a per-indicateur side sheet to capture a new measurement

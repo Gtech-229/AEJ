@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { ACCENTS, type AccentName } from '@/lib/design/tokens';
+import { formatNumber } from '@/lib/number';
 
 interface KpiCardV2Props {
   icon: LucideIcon;
@@ -11,7 +12,7 @@ interface KpiCardV2Props {
 }
 
 function formatValue(value: string | number): string {
-  if (typeof value === 'number') return value.toLocaleString('fr-FR');
+  if (typeof value === 'number') return formatNumber(value);
   return value;
 }
 

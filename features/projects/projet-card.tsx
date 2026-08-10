@@ -1,16 +1,19 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useFormatMontant } from '@/features/configurations/configurations.hooks';
 import type { Projet } from './projects.dto';
 import {
   PROJET_STADE_LABELS,
   PROJET_STATUT_LABELS,
   PROJET_TYPE_LABELS,
-  formatMontant,
 } from './projects.constants';
 
 /** Compact summary card for one micro-projet. */
 export function ProjetCard({ projet }: { projet: Projet }) {
+  const formatMontant = useFormatMontant();
   return (
     <div className="space-y-2 rounded-lg border border-border p-3">
       <div className="flex items-start justify-between gap-2">
