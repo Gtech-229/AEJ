@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from './number-input';
 import {
   Select,
   SelectContent,
@@ -196,6 +197,19 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
               </button>
             )}
           </div>
+        </FormControl>
+      );
+
+    case 'amount':
+      // Formatted number: live thousands separators, emits the bare number.
+      return (
+        <FormControl>
+          <NumberInput
+            placeholder={field.placeholder}
+            disabled={field.disabled}
+            value={rhf.value as number | string | null | undefined}
+            onValueChange={(v) => rhf.onChange(v ?? undefined)}
+          />
         </FormControl>
       );
 

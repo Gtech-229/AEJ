@@ -16,7 +16,7 @@ import { EmptyState } from '@/components/generic/empty-state';
 import { LoadingState } from '@/components/generic/loader';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
-import { formatMontant } from '@/features/projects/projects.constants';
+import { useFormatMontant } from '@/features/configurations/configurations.hooks';
 import type {
   Budget,
   CompteFinancement,
@@ -144,7 +144,10 @@ function ProjetCell({ code, intitule }: { code?: string; intitule?: string }) {
 }
 
 // ── Column definitions ───────────────────────────────────────────────────────
-const budgetColumns: Col<Budget>[] = [
+/** Injected so column cells can format money with the configured currency. */
+type MontantFormatter = (value: string | number | null | undefined) => string;
+
+const budgetColumns = (formatMontant: MontantFormatter): Col<Budget>[] => [
   {
     header: 'Projet',
     cell: (b) => <ProjetCell code={b.micro_projet?.code} intitule={b.micro_projet?.intitule} />,
@@ -177,7 +180,7 @@ const budgetColumns: Col<Budget>[] = [
   },
 ];
 
-const decaissementColumns: Col<Decaissement>[] = [
+const decaissementColumns = (formatMontant: MontantFormatter): Col<Decaissement>[] => [
   { header: 'Projet', cell: (d) => <ProjetCell intitule={d.projet_intitule} /> },
   { header: 'Plan', cell: (d) => <span className="text-muted-foreground">{d.plan_intitule ?? '—'}</span> },
   {
@@ -193,7 +196,7 @@ const decaissementColumns: Col<Decaissement>[] = [
   { header: 'Statut', cell: (d) => <StatusBadge value={d.statut} label={DECAISSEMENT_STATUT_LABELS[d.statut]} /> },
 ];
 
-const remboursementColumns: Col<Remboursement>[] = [
+const remboursementColumns = (formatMontant: MontantFormatter): Col<Remboursement>[] => [
   { header: 'Projet', cell: (r) => <ProjetCell intitule={r.projet_intitule} /> },
   { header: 'Promoteur', cell: (r) => r.promoteur },
   { header: 'Échu', align: 'right', cell: (r) => formatMontant(r.montant_echu) },
@@ -232,6 +235,7 @@ export function FinancementsClient() {
   const comptes = useComptes();
   const decaissements = useDecaissements();
   const remboursements = useRemboursements();
+  const formatMontant = useFormatMontant();
 
   const budgetRows = budgets.data ?? [];
   const compteRows = comptes.data ?? [];
@@ -259,7 +263,7 @@ export function FinancementsClient() {
         <TabTable
           isLoading={budgets.isLoading}
           rows={budgetRows}
-          columns={budgetColumns}
+          columns={budgetColumns(formatMontant)}
           emptyIcon={Wallet}
           emptyTitle="Aucun financement"
           emptyDescription="Aucun financement accordé n'est enregistré pour le moment."
@@ -274,7 +278,7 @@ export function FinancementsClient() {
         <TabTable
           isLoading={decaissements.isLoading}
           rows={decaissementRows}
-          columns={decaissementColumns}
+          columns={decaissementColumns(formatMontant)}
           emptyIcon={Banknote}
           emptyTitle="Aucun décaissement"
           emptyDescription="Aucun décaissement n'est enregistré pour le moment."
@@ -289,7 +293,7 @@ export function FinancementsClient() {
         <TabTable
           isLoading={remboursements.isLoading}
           rows={remboursementRows}
-          columns={remboursementColumns}
+          columns={remboursementColumns(formatMontant)}
           emptyIcon={HandCoins}
           emptyTitle="Aucun remboursement"
           emptyDescription="Aucun remboursement n'est enregistré pour le moment."

@@ -1,3 +1,4 @@
+import { formatNumber, toNumber } from '@/lib/number';
 import type { ProjetStade, ProjetStatut, ProjetType } from './projects.dto';
 
 type Option<T extends string> = { value: T; label: string };
@@ -33,10 +34,16 @@ export const PROJET_STATUT_LABELS = toLabels(PROJET_STATUT_OPTIONS);
 export const PROJET_STADE_LABELS = toLabels(PROJET_STADE_OPTIONS);
 export const PROJET_TYPE_LABELS = toLabels(PROJET_TYPE_OPTIONS);
 
-/** Format a decimal-string amount as FCFA, e.g. "31433885.07" → "31 433 885 FCFA". */
-export function formatMontant(value: string | number | null | undefined): string {
-  if (value == null || value === '') return '—';
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '—';
-  return `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
+/**
+ * Format an amount with its currency, e.g. "31433885.07" → "31 433 885 FCFA".
+ * `currency` defaults to FCFA — for the system-configured currency, use the
+ * `useFormatMontant()` hook (features/configurations) which binds it for you.
+ */
+export function formatMontant(
+  value: string | number | null | undefined,
+  currency = 'FCFA',
+): string {
+  const n = toNumber(value);
+  if (n === null) return '—';
+  return `${formatNumber(Math.round(n))} ${currency}`;
 }
