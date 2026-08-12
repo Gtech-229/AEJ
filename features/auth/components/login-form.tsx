@@ -1,18 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { getApiErrorMessage } from '@/lib/api/errors';
-import { useLogin } from '../auth.hooks';
 import { loginSchema, type LoginInput } from '../auth.schema';
+import type { SpaceKey } from '../auth.spaces';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { AuthIllustration, FloatingParticles } from './auth-background';
 import { StatCard } from './stat-card';
-import Image from 'next/image';
+import { useLogin } from '../auth.hooks';
 
-const REMEMBER_ME_KEY = 'aej_remember_email';
+const REMEMBER_ME_KEY_PREFIX = 'aej_remember_email';
+
 const PARTNER_LOGOS = [
   { name: 'PSGouv', src: '/logo-aej.jpg' },
   { name: 'BAD', src: '/partenaire/logo-BAD.jpg' },
@@ -20,17 +22,47 @@ const PARTNER_LOGOS = [
   { name: 'Ecobank', src: '/partenaire/ecobank_ci_0.jpg' },
 ];
 
+interface StatItem {
+  value: number;
+  suffix?: string;
+  label: string;
+}
+
+export interface LoginFormProps {
+  space: SpaceKey;
+  homeRoute: string;
+  brandTitle?: string;
+  brandTagline?: string;
+  stats?: StatItem[];
+  showPartnerLogos?: boolean;
+}
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   return hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir';
 }
 
+const DEFAULT_STATS: StatItem[] = [
+  { value: 12723, label: 'Jeunes accompagnés' },
+  { value: 5933, suffix: '+', label: 'Emplois obtenus' },
+  { value: 84, suffix: '%', label: "Taux d'insertion" },
+];
 
-export function LoginForm() {
-  const login = useLogin();
+
+export function LoginForm({
+  space,
+  homeRoute,
+  brandTitle = 'AGENCE EMPLOI JEUNES',
+  brandTagline = "Le Guichet Unique de l'Emploi en Côte d'Ivoire",
+  stats = DEFAULT_STATS,
+  showPartnerLogos = true,
+}: LoginFormProps) {
+  const login = useLogin(space, homeRoute);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [greeting, setGreeting] = useState('Bonjour');
+
+  const rememberMeKey = `${REMEMBER_ME_KEY_PREFIX}:${space}`;
 
   const {
     register,
@@ -47,19 +79,21 @@ export function LoginForm() {
 
   useEffect(() => {
     setGreeting(getGreeting());
-    const savedEmail = localStorage.getItem(REMEMBER_ME_KEY);
+    const savedEmail = localStorage.getItem(rememberMeKey);
     if (savedEmail) {
       setValue('email', savedEmail);
       setRememberMe(true);
     }
-  }, [setValue]);
+  }, [rememberMeKey, setValue]);
 
   function onSubmit(values: LoginInput) {
     if (rememberMe) {
-      localStorage.setItem(REMEMBER_ME_KEY, values.email);
+      localStorage.setItem(rememberMeKey, values.email);
     } else {
-      localStorage.removeItem(REMEMBER_ME_KEY);
+      localStorage.removeItem(rememberMeKey);
     }
+    // ⚠️ Suppose que LoginPayload (auth.dto) a la même forme que LoginInput
+    // ({ email, mot_de_passe }). Ajuste le mapping ici si ce n'est pas le cas.
     login.mutate(values);
   }
 
@@ -72,7 +106,6 @@ export function LoginForm() {
       >
         <FloatingParticles />
 
-        {/* Illustration — masquée en dessous de lg, la colonne est trop étroite pour l'accueillir proprement */}
         <div className="hidden lg:flex absolute inset-0 items-center justify-center opacity-70 pointer-events-none">
           <div className="w-[280px] h-[280px] xl:w-[420px] xl:h-[420px]">
             <AuthIllustration />
@@ -81,45 +114,43 @@ export function LoginForm() {
 
         <div className="relative z-10">
           <Image
-            src="/logo-psg.jpeg"
-            alt="Agence Emploi Jeunes"
+            src="/logo-aej-white.png"
+            alt={brandTitle}
             width={200}
             height={52}
             priority
             className="w-10 sm:w-32 xl:w-[200px] h-auto"
           />
-          <p className="hidden sm:block text-white/70 text-xs sm:text-sm mt-2">
-            Le Guichet Unique de l'Emploi en Côte d'Ivoire
-          </p>
+          <p className="hidden sm:block text-white/70 text-xs sm:text-sm mt-2">{brandTagline}</p>
         </div>
 
-        {/* Stats — passent en 1 colonne sur la bande étroite mobile, 3 colonnes dès sm */}
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-2 xl:gap-3">
-          <StatCard value={12723} label="Jeunes accompagnés" />
-          <StatCard value={5933} suffix="+" label="Emplois obtenus" />
-          <StatCard value={84} suffix="%" label="Taux d'insertion" />
+          {stats.map((stat) => (
+            <StatCard key={stat.label} {...stat} />
+          ))}
         </div>
 
-        {/* Logos partenaires — masqués sous sm, pas la place sur la bande étroite mobile */}
-        <div className="relative z-10 hidden sm:block">
-          <p className="text-white/50 text-[11px] uppercase tracking-wide mb-3">Partenaires du programme</p>
-          <div className="flex items-center gap-4 flex-wrap">
-            {PARTNER_LOGOS.map((partner) => (
-              <div
-                key={partner.name}
-                className="flex items-center justify-center px-3 py-2 rounded-lg bg-white/10 border border-white/10"
-              >
-                <Image
-                  src={partner.src}
-                  alt={partner.name}
-                  width={72}
-                  height={24}
-                  className="h-6 w-auto object-contain opacity-90"
-                />
-              </div>
-            ))}
+        {showPartnerLogos && (
+          <div className="relative z-10 hidden sm:block">
+            <p className="text-white/50 text-[11px] uppercase tracking-wide mb-3">Partenaires du programme</p>
+            <div className="flex items-center gap-4 flex-wrap">
+              {PARTNER_LOGOS.map((partner) => (
+                <div
+                  key={partner.name}
+                  className="flex items-center justify-center px-3 py-2 rounded-lg bg-white/10 border border-white/10"
+                >
+                  <Image
+                    src={partner.src}
+                    alt={partner.name}
+                    width={72}
+                    height={24}
+                    className="h-6 w-auto object-contain opacity-90"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Panneau droit — formulaire ── */}
@@ -184,7 +215,7 @@ export function LoginForm() {
                 />
                 Se souvenir de moi
               </label>
-              <a href="/auth/password" className="text-xs font-medium text-green-700 hover:underline">
+              <a href="/auth/mot-de-passe-oublie" className="text-xs font-medium text-green-700 hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>

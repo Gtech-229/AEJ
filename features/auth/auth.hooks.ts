@@ -12,6 +12,7 @@ import type {
   ResendOtpPayload,
   VerifyOtpPayload,
 } from './auth.dto';
+import { SpaceKey, SPACES } from './auth.spaces';
 
 /**
  * Auth mutations own their side effects — feedback (toast), error handling and
@@ -24,13 +25,15 @@ import type {
  */
 
 /** Step 1 — submit credentials, then branch on 2FA. */
-export function useLogin() {
+
+export function useLogin(space: SpaceKey) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setPending, refreshMe } = useAuth();
+  const { homePath } = SPACES[space];
 
   return useMutation({
-    mutationFn: (payload: LoginPayload) => authService.login(payload),
+    mutationFn: (payload: LoginPayload) => authService.login(payload, space),
     onSuccess: async (res: LoginResponse) => {
       // 2FA pending → no session cookie yet; stash the id, go enter the code.
       if (res.otp_required) {
@@ -42,7 +45,7 @@ export function useLogin() {
       // No 2FA → the backend has set the session cookies.
       await refreshMe();
       toast.success(res.message || 'Connexion réussie');
-      router.replace(searchParams.get('redirect') || '/dashboard');
+      router.replace(searchParams.get('redirect') || homePath);
     },
   });
 }
