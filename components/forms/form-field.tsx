@@ -131,7 +131,13 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
       return (
         <Select
           value={rhf.value != null ? String(rhf.value) : ''}
-          onValueChange={rhf.onChange}
+          onValueChange={(v) => {
+            // Radix always emits a string; restore the option's original
+            // type (e.g. numeric ids like role_id/fonction_id) so it matches
+            // what the Zod schema expects.
+            const opt = field.options?.find((o) => String(o.value) === v);
+            rhf.onChange(opt ? opt.value : v);
+          }}
           disabled={field.disabled}
         >
           <FormControl>
@@ -154,7 +160,10 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
         <FormControl>
           <RadioGroup
             value={rhf.value != null ? String(rhf.value) : ''}
-            onValueChange={rhf.onChange}
+            onValueChange={(v) => {
+              const opt = field.options?.find((o) => String(o.value) === v);
+              rhf.onChange(opt ? opt.value : v);
+            }}
             disabled={field.disabled}
             className="flex flex-col gap-2"
           >
