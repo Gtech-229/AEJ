@@ -2,10 +2,15 @@ import { apiClient } from '@/lib/api/client';
 import type { ApiClient } from '@/lib/api/types';
 import type {
   Budget,
+  CategorieTransaction,
   CompteFinancement,
   CreateBudgetPayload,
   Decaissement,
+  DecaissementDeclaration,
+  PlanDecaissement,
   Remboursement,
+  RemboursementDeclaration,
+  Transaction,
   UpdateBudgetPayload,
 } from './financements.dto';
 
@@ -47,4 +52,28 @@ export const decaissementsService = {
 
 export const remboursementsService = {
   getAll: (client: ApiClient = apiClient) => getList<Remboursement>('/remboursements', client),
+};
+
+export const plansService = {
+  getAll: (client: ApiClient = apiClient) =>
+    getList<PlanDecaissement>('/plan-decaissements', client),
+};
+
+export const transactionsService = {
+  getAll: (client: ApiClient = apiClient) => getList<Transaction>('/transactions', client),
+};
+
+export const decaissementDeclarationsService = {
+  getAll: (client: ApiClient = apiClient) =>
+    getList<DecaissementDeclaration>('/decaissements-declarations', client),
+};
+
+export const remboursementDeclarationsService = {
+  getAll: (client: ApiClient = apiClient) =>
+    getList<RemboursementDeclaration>('/remboursements-declarations', client),
+};
+
+export const categoriesTransactionsService = {
+  getAll: (client: ApiClient = apiClient) =>
+    getList<CategorieTransaction>('/categories-transactions', client),
 };

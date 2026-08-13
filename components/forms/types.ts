@@ -8,7 +8,7 @@ export type FieldType =
   | 'text' | 'email' | 'password' | 'tel' | 'url' | 'search'
   | 'textarea' | 'number' | 'amount' | 'range'
   | 'date' | 'time' | 'datetime-local' | 'month' | 'week'
-  | 'select' | 'radio' | 'checkbox' | 'switch'
+  | 'select' | 'combobox' | 'radio' | 'checkbox' | 'switch'
   | 'color' | 'hidden'
   // Declared for config authors; not yet specially rendered (fall back to text):
   | 'daterange' | 'multiselect' | 'select-with-other' | 'checkbox-group'

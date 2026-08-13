@@ -50,11 +50,6 @@ const TRANCHE_AGE_OPTIONS: Option[] = [
   { value: 'plus_40', label: 'Plus de 40 ans' },
 ];
 
-const STATUT_OPTIONS: Option[] = [
-  { value: '1', label: 'Actif' },
-  { value: '0', label: 'Inactif' },
-];
-
 type Filters = Partial<Omit<PromoteurQuery, 'page' | 'perPage'>>;
 type SelectConfig = {
   param: string;
@@ -68,7 +63,6 @@ type SelectConfig = {
 
 /** Categorical filters live in the dialog; `search` stays inline. */
 const CATEGORICAL_KEYS = [
-  'statut',
   'tranche_age',
   ...PROMOTEUR_FK_PARAMS,
   ...PROMOTEUR_PROJET_PARAMS,
@@ -160,10 +154,11 @@ export function PromoteursFilters() {
   ).length;
   const hasAnyActive = activeCount > 0 || !!filters.search;
 
-  // Statut + Tranche are self-contained; the FK selects come from referentials
-  // and are disabled until those load.
+  // Tranche is self-contained; the FK selects come from referentials and are
+  // disabled until those load. (The promoteur Actif/Inactif "statut" filter is
+  // omitted: the backend's `statut` key is the PROJECT status — no key exists to
+  // filter promoteurs by their own active flag yet. See .claude/backend-asks.md.)
   const promoteurSelects: SelectConfig[] = [
-    { param: 'statut', label: 'Statut', options: STATUT_OPTIONS, disabled: false },
     { param: 'tranche_age', label: "Tranche d'âge", options: TRANCHE_AGE_OPTIONS, disabled: false },
     ...PROMOTEUR_FK_FILTERS.map((f): SelectConfig => {
       const options = refs.optionsOf(f.refKey);
@@ -187,9 +182,9 @@ export function PromoteursFilters() {
     }),
   ];
   const projetSelects: SelectConfig[] = [
-    { param: 'projet_statut', label: 'Statut du projet', options: PROJET_STATUT_OPTIONS, disabled: false },
-    { param: 'projet_stade', label: 'Stade du projet', options: PROJET_STADE_OPTIONS, disabled: false },
-    { param: 'projet_type', label: 'Type de projet', options: PROJET_TYPE_OPTIONS, disabled: false },
+    { param: 'statut', label: 'Statut du projet', options: PROJET_STATUT_OPTIONS, disabled: false },
+    { param: 'stade_projet', label: 'Stade du projet', options: PROJET_STADE_OPTIONS, disabled: false },
+    { param: 'type_projet', label: 'Type de projet', options: PROJET_TYPE_OPTIONS, disabled: false },
   ];
 
   const renderSelect = (s: SelectConfig) => (

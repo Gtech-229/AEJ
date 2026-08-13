@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Combobox } from '@/components/generic/combobox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -147,6 +148,25 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
             ))}
           </SelectContent>
         </Select>
+      );
+
+    case 'combobox':
+      // Searchable single-select for long option lists (e.g. communes). Emits the
+      // option value as a string; `undefined` when cleared. `modal` keeps the
+      // search input focused inside a Dialog.
+      return (
+        <FormControl>
+          <Combobox
+            options={(field.options ?? []).map((o) => ({ value: String(o.value), label: o.label }))}
+            value={rhf.value != null && rhf.value !== '' ? String(rhf.value) : ''}
+            onValueChange={(v) => rhf.onChange(v === '' ? undefined : v)}
+            placeholder={field.placeholder ?? 'Sélectionner…'}
+            searchPlaceholder="Rechercher…"
+            allLabel={field.required ? undefined : 'Aucune sélection'}
+            disabled={field.disabled}
+            modal
+          />
+        </FormControl>
       );
 
     case 'radio':

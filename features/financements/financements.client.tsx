@@ -1,7 +1,15 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Banknote, HandCoins, Landmark, Wallet } from 'lucide-react';
+import {
+  Banknote,
+  CalendarClock,
+  FileText,
+  HandCoins,
+  Landmark,
+  ScrollText,
+  Wallet,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -16,18 +24,24 @@ import { EmptyState } from '@/components/generic/empty-state';
 import { LoadingState } from '@/components/generic/loader';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
+import { toNumber } from '@/lib/number';
 import { useFormatMontant } from '@/features/configurations/configurations.hooks';
 import type {
   Budget,
   CompteFinancement,
   Decaissement,
+  DecaissementDeclaration,
+  PlanDecaissement,
   Remboursement,
+  RemboursementDeclaration,
 } from './financements.dto';
+import type { Promoteur } from '@/features/promoteurs/promoteurs.dto';
 import {
   AVIS_PARTENAIRE_LABELS,
   BUDGET_STATUT_LABELS,
   CONVENTION_LABELS,
   DECAISSEMENT_STATUT_LABELS,
+  DECLARATION_STATUT_LABELS,
   ETAT_OUVERTURE_LABELS,
   OUI_NON_LABELS,
   REMBOURSEMENT_STATUT_LABELS,
@@ -37,7 +51,10 @@ import {
 import {
   useBudgets,
   useComptes,
+  useDecaissementDeclarations,
   useDecaissements,
+  usePlansDecaissement,
+  useRemboursementDeclarations,
   useRemboursements,
 } from './financements.hooks';
 
@@ -181,8 +198,11 @@ const budgetColumns = (formatMontant: MontantFormatter): Col<Budget>[] => [
 ];
 
 const decaissementColumns = (formatMontant: MontantFormatter): Col<Decaissement>[] => [
-  { header: 'Projet', cell: (d) => <ProjetCell intitule={d.projet_intitule} /> },
-  { header: 'Plan', cell: (d) => <span className="text-muted-foreground">{d.plan_intitule ?? '—'}</span> },
+  { header: 'Plan', cell: (d) => <ProjetCell code={d.plan?.code} intitule={d.plan?.intitule} /> },
+  {
+    header: 'Agence',
+    cell: (d) => <span className="text-muted-foreground">{d.agence?.nom ?? '—'}</span>,
+  },
   {
     header: 'Montant décaissé',
     align: 'right',
@@ -197,16 +217,34 @@ const decaissementColumns = (formatMontant: MontantFormatter): Col<Decaissement>
 ];
 
 const remboursementColumns = (formatMontant: MontantFormatter): Col<Remboursement>[] => [
-  { header: 'Projet', cell: (r) => <ProjetCell intitule={r.projet_intitule} /> },
-  { header: 'Promoteur', cell: (r) => r.promoteur },
+  {
+    header: 'Promoteur',
+    cell: (r) =>
+      r.promoteur ? (
+        <span className="font-medium">
+          {r.promoteur.prenom} {r.promoteur.nom}
+        </span>
+      ) : (
+        <span className="text-muted-foreground">#{r.promoteur_id}</span>
+      ),
+  },
   { header: 'Échu', align: 'right', cell: (r) => formatMontant(r.montant_echu) },
   { header: 'Payé', align: 'right', cell: (r) => <span className="text-success">{formatMontant(r.montant_paye)}</span> },
   {
     header: 'Impayé',
     align: 'right',
-    cell: (r) => (r.montant_impaye > 0 ? <span className="text-destructive">{formatMontant(r.montant_impaye)}</span> : '—'),
+    cell: (r) =>
+      (toNumber(r.montant_impaye) ?? 0) > 0 ? (
+        <span className="text-destructive">{formatMontant(r.montant_impaye)}</span>
+      ) : (
+        '—'
+      ),
   },
-  { header: 'Pénalités', align: 'right', cell: (r) => (r.penalites ? formatMontant(r.penalites) : '—') },
+  {
+    header: 'Pénalités',
+    align: 'right',
+    cell: (r) => ((toNumber(r.penalites) ?? 0) > 0 ? formatMontant(r.penalites) : '—'),
+  },
   { header: 'Date', cell: (r) => formatDate(r.date_paiement) },
   { header: 'Statut', cell: (r) => <StatusBadge value={r.statut} label={REMBOURSEMENT_STATUT_LABELS[r.statut]} /> },
 ];
@@ -229,12 +267,77 @@ const compteColumns: Col<CompteFinancement>[] = [
   },
 ];
 
+const promoteurName = (p?: Promoteur) =>
+  p ? (
+    <span className="font-medium">
+      {p.prenom} {p.nom}
+    </span>
+  ) : (
+    <span className="text-muted-foreground">—</span>
+  );
+
+const planColumns = (formatMontant: MontantFormatter): Col<PlanDecaissement>[] => [
+  { header: 'Plan', cell: (p) => <ProjetCell code={p.code} intitule={p.intitule} /> },
+  {
+    header: 'Budget',
+    cell: (p) => <span className="text-muted-foreground">{p.budget?.intitule ?? '—'}</span>,
+  },
+  {
+    header: 'Montant planifié',
+    align: 'right',
+    cell: (p) => <span className="font-medium">{formatMontant(p.montant_planifie)}</span>,
+  },
+  { header: 'Date prévue', cell: (p) => formatDate(p.date_prevue) },
+];
+
+const decaissementDeclColumns = (
+  formatMontant: MontantFormatter,
+): Col<DecaissementDeclaration>[] => [
+  { header: 'Plan', cell: (d) => <ProjetCell code={d.plan?.code} intitule={d.plan?.intitule} /> },
+  { header: 'Promoteur', cell: (d) => promoteurName(d.promoteur) },
+  {
+    header: 'Montant déclaré',
+    align: 'right',
+    cell: (d) => <span className="font-medium">{formatMontant(d.montant_declare)}</span>,
+  },
+  { header: 'Date', cell: (d) => formatDate(d.date_declaree) },
+  {
+    header: 'Réf. banque',
+    cell: (d) => <span className="font-mono text-xs text-muted-foreground">{d.reference_banque ?? '—'}</span>,
+  },
+  { header: 'Statut', cell: (d) => <StatusBadge value={d.statut} label={DECLARATION_STATUT_LABELS[d.statut]} /> },
+];
+
+const remboursementDeclColumns = (
+  formatMontant: MontantFormatter,
+): Col<RemboursementDeclaration>[] => [
+  { header: 'Promoteur', cell: (r) => promoteurName(r.promoteur) },
+  {
+    header: 'Budget',
+    cell: (r) => <span className="text-muted-foreground">{r.budget?.intitule ?? '—'}</span>,
+  },
+  {
+    header: 'Montant déclaré',
+    align: 'right',
+    cell: (r) => <span className="font-medium">{formatMontant(r.montant_declare)}</span>,
+  },
+  { header: 'Date', cell: (r) => formatDate(r.date_declaree) },
+  {
+    header: 'Réf. banque',
+    cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.reference_banque ?? '—'}</span>,
+  },
+  { header: 'Statut', cell: (r) => <StatusBadge value={r.statut} label={DECLARATION_STATUT_LABELS[r.statut]} /> },
+];
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 export function FinancementsClient() {
   const budgets = useBudgets();
   const comptes = useComptes();
   const decaissements = useDecaissements();
   const remboursements = useRemboursements();
+  const plans = usePlansDecaissement();
+  const decaissementDecls = useDecaissementDeclarations();
+  const remboursementDecls = useRemboursementDeclarations();
   const formatMontant = useFormatMontant();
 
   const budgetRows = budgets.data ?? [];
@@ -242,15 +345,20 @@ export function FinancementsClient() {
   const decaissementRows = decaissements.data ?? [];
   const remboursementRows = remboursements.data ?? [];
 
-  const totalAccorde = budgetRows
-    .filter((b) => b.statut === 'APPROUVE')
-    .reduce((s, b) => s + Number(b.montant_accorde), 0);
-  const totalDecaisse = decaissementRows
-    .filter((d) => d.statut === 'VALIDE')
-    .reduce((s, d) => s + d.montant_decaisse, 0);
-  const totalEchu = remboursementRows.reduce((s, r) => s + r.montant_echu, 0);
-  const totalPaye = remboursementRows.reduce((s, r) => s + r.montant_paye, 0);
-  const impayes = remboursementRows.reduce((s, r) => s + r.montant_impaye, 0);
+  const sum = <T,>(rows: T[], pick: (row: T) => string | number | null | undefined) =>
+    rows.reduce((s, row) => s + (toNumber(pick(row)) ?? 0), 0);
+
+  const totalAccorde = sum(
+    budgetRows.filter((b) => b.statut === 'APPROUVE'),
+    (b) => b.montant_accorde,
+  );
+  const totalDecaisse = sum(
+    decaissementRows.filter((d) => d.statut === 'VALIDE'),
+    (d) => d.montant_decaisse,
+  );
+  const totalEchu = sum(remboursementRows, (r) => r.montant_echu);
+  const totalPaye = sum(remboursementRows, (r) => r.montant_paye);
+  const impayes = sum(remboursementRows, (r) => r.montant_impaye);
   const encours = totalDecaisse - totalPaye;
   const tauxRemb = totalEchu > 0 ? Math.round((totalPaye / totalEchu) * 100) : 0;
 
@@ -312,6 +420,51 @@ export function FinancementsClient() {
           emptyIcon={Landmark}
           emptyTitle="Aucun compte"
           emptyDescription="Aucun compte de financement n'est enregistré pour le moment."
+        />
+      ),
+    },
+    {
+      value: 'plans',
+      label: 'Plans décais.',
+      icon: CalendarClock,
+      content: (
+        <TabTable
+          isLoading={plans.isLoading}
+          rows={plans.data ?? []}
+          columns={planColumns(formatMontant)}
+          emptyIcon={CalendarClock}
+          emptyTitle="Aucun plan"
+          emptyDescription="Aucun plan de décaissement n'est enregistré pour le moment."
+        />
+      ),
+    },
+    {
+      value: 'decl-decaissement',
+      label: 'Décl. décais.',
+      icon: FileText,
+      content: (
+        <TabTable
+          isLoading={decaissementDecls.isLoading}
+          rows={decaissementDecls.data ?? []}
+          columns={decaissementDeclColumns(formatMontant)}
+          emptyIcon={FileText}
+          emptyTitle="Aucune déclaration"
+          emptyDescription="Aucune déclaration de décaissement n'est enregistrée pour le moment."
+        />
+      ),
+    },
+    {
+      value: 'decl-remboursement',
+      label: 'Décl. remb.',
+      icon: ScrollText,
+      content: (
+        <TabTable
+          isLoading={remboursementDecls.isLoading}
+          rows={remboursementDecls.data ?? []}
+          columns={remboursementDeclColumns(formatMontant)}
+          emptyIcon={ScrollText}
+          emptyTitle="Aucune déclaration"
+          emptyDescription="Aucune déclaration de remboursement n'est enregistrée pour le moment."
         />
       ),
     },

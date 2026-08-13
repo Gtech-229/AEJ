@@ -9,6 +9,7 @@ import { ExpandableText } from '@/components/generic/expandable-text';
 import { LoadingState } from '@/components/generic/loader';
 import { formatDate } from '@/lib/date';
 import { useFormatMontant } from '@/features/configurations/configurations.hooks';
+import type { Projet } from './projects.dto';
 import { useProject } from './projects.hooks';
 import { ProjectSuiviTabs } from './project-suivi-tabs';
 import {
@@ -26,37 +27,31 @@ function Field({ label, value }: { label: string; value?: React.ReactNode }) {
   );
 }
 
-export function ProjectDetailClient({ projectId }: { projectId: number }) {
-  const { data: projet, isLoading } = useProject(projectId);
+/**
+ * Reusable 360° view of a micro-projet — presentational (takes the `projet`
+ * directly). `backHref`/`backLabel` adapt the return link to the caller (the
+ * Micro-projets list, a promoteur, …); `actions` renders caller-provided buttons
+ * in the header (edit / validate / …) — kept as a prop so new actions slot in
+ * without touching this component.
+ */
+export function ProjectDetail({
+  projet,
+  backHref = '/dashboard/projets',
+  backLabel = 'Retour aux micro-projets',
+  actions,
+}: {
+  projet: Projet;
+  backHref?: string;
+  backLabel?: string;
+  actions?: React.ReactNode;
+}) {
   const formatMontant = useFormatMontant();
-
-  if (isLoading) {
-    return <LoadingState label="Chargement du projet…" />;
-  }
-
-  if (!projet) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-6">
-        <Button variant="ghost" size="sm" asChild className="mb-4">
-          <Link href="/dashboard/promoteurs">
-            <ArrowLeft className="size-4" /> Retour
-          </Link>
-        </Button>
-        <EmptyState
-          variant="card"
-          icon={FolderKanban}
-          title="Projet introuvable"
-          description="Ce micro-projet n'existe pas ou n'est plus disponible."
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2 w-fit">
-        <Link href="/dashboard/promoteurs">
-          <ArrowLeft className="size-4" /> Retour aux promoteurs
+        <Link href={backHref}>
+          <ArrowLeft className="size-4" /> {backLabel}
         </Link>
       </Button>
 
@@ -69,9 +64,12 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
               {projet.code} · {projet.matricule}
             </p>
           </div>
-          <Badge variant="secondary" className="shrink-0">
-            {PROJET_STATUT_LABELS[projet.statut] ?? projet.statut}
-          </Badge>
+          <div className="flex shrink-0 items-center gap-2">
+            <Badge variant="secondary">
+              {PROJET_STATUT_LABELS[projet.statut] ?? projet.statut}
+            </Badge>
+            {actions}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -142,4 +140,44 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
       </section>
     </div>
   );
+}
+
+/**
+ * Route entry for the 360 page: fetches the project by id (`GET /projets/{id}`)
+ * and renders the reusable `ProjectDetail`, handling loading + not-found.
+ */
+export function ProjectDetailClient({
+  projectId,
+  backHref,
+  backLabel,
+}: {
+  projectId: number;
+  backHref?: string;
+  backLabel?: string;
+}) {
+  const { data: projet, isLoading } = useProject(projectId);
+
+  if (isLoading) {
+    return <LoadingState label="Chargement du projet…" />;
+  }
+
+  if (!projet) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-6">
+        <Button variant="ghost" size="sm" asChild className="mb-4">
+          <Link href={backHref ?? '/dashboard/projets'}>
+            <ArrowLeft className="size-4" /> Retour
+          </Link>
+        </Button>
+        <EmptyState
+          variant="card"
+          icon={FolderKanban}
+          title="Projet introuvable"
+          description="Ce micro-projet n'existe pas ou n'est plus disponible."
+        />
+      </div>
+    );
+  }
+
+  return <ProjectDetail projet={projet} backHref={backHref} backLabel={backLabel} />;
 }

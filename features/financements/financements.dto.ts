@@ -4,6 +4,8 @@
  */
 import type { Projet } from '@/features/projects/projects.dto';
 import type { Organisme } from '@/features/organismes/organismes.dto';
+import type { Promoteur } from '@/features/promoteurs/promoteurs.dto';
+import type { Personnel } from '@/features/personnels/personnels.dto';
 
 // ── budgets ───────────────────────────────────────────────────────────────────
 export type BudgetStatut = 'EN_ATTENTE' | 'APPROUVE' | 'REJETE';
@@ -84,8 +86,18 @@ export interface PlanDecaissement {
   budget_id: number;
   code: string;
   intitule: string;
-  montant_planifie: number;
+  /** Decimal returned as a string, e.g. "1000000.00". */
+  montant_planifie: string;
   date_prevue: string;
+  // Embedded on the list response.
+  budget?: Budget;
+}
+
+/** Agence régionale embedded on a décaissement (partial — display fields only). */
+export interface AgenceRef {
+  id: number;
+  code: string | null;
+  nom: string;
 }
 
 // ── declarations (décaissement + remboursement share the same shape) ──────────
@@ -95,24 +107,32 @@ export interface DecaissementDeclaration {
   id: number;
   plan_id: number;
   promoteur_id: number;
-  montant_declare: number;
+  /** Decimal returned as a string. */
+  montant_declare: string;
   date_declaree: string;
   reference_banque: string | null;
   justificatif_path: string | null;
   observations: string | null;
   statut: DeclarationStatut;
+  // Embedded on the list response.
+  plan?: PlanDecaissement;
+  promoteur?: Promoteur;
 }
 
 export interface RemboursementDeclaration {
   id: number;
   promoteur_id: number;
   budget_id: number;
-  montant_declare: number;
+  /** Decimal returned as a string. */
+  montant_declare: string;
   date_declaree: string;
   reference_banque: string | null;
   justificatif_path: string | null;
   observations: string | null;
   statut: DeclarationStatut;
+  // Embedded on the list response.
+  promoteur?: Promoteur;
+  budget?: Budget;
 }
 
 // ── decaissements ─────────────────────────────────────────────────────────────
@@ -122,13 +142,15 @@ export interface Decaissement {
   id: number;
   plan_id: number;
   agence_id: number;
-  montant_decaisse: number;
+  /** Decimal returned as a string, e.g. "1000000.00". */
+  montant_decaisse: string;
   date_decaissement: string;
   reference_banque: string | null;
   statut: DecaissementStatut;
   observations: string | null;
-  projet_intitule?: string;
-  plan_intitule?: string;
+  // Embedded relations on the list response.
+  plan?: PlanDecaissement;
+  agence?: AgenceRef;
 }
 
 // ── remboursements ────────────────────────────────────────────────────────────
@@ -138,15 +160,16 @@ export interface Remboursement {
   id: number;
   promoteur_id: number;
   budget_id: number;
-  montant_echu: number;
-  montant_paye: number;
-  montant_impaye: number;
-  penalites: number;
+  /** Decimals returned as strings, e.g. "1000000.00". */
+  montant_echu: string;
+  montant_paye: string;
+  montant_impaye: string;
+  penalites: string;
   date_paiement: string;
   observations: string | null;
   statut: RemboursementStatut;
-  projet_intitule?: string;
-  promoteur?: string;
+  // Embedded relation on the list response (full promoteur object).
+  promoteur?: Promoteur;
 }
 
 // ── categories-transactions ───────────────────────────────────────────────────
@@ -157,6 +180,9 @@ export interface CategorieTransaction {
   description: string | null;
   niveau: number;
   parent_id: number | null;
+  // Embedded hierarchy on the list response.
+  parent?: CategorieTransaction | null;
+  children?: CategorieTransaction[];
 }
 
 // ── transactions ──────────────────────────────────────────────────────────────
@@ -171,12 +197,17 @@ export interface Transaction {
   categorie_id: number;
   libelle: string;
   type: TransactionType;
-  montant: number;
+  /** Decimal returned as a string. */
+  montant: string;
   statut: TransactionStatut;
   mode_paiement: ModePaiement;
   reference: string | null;
   justificatif_path: string | null;
   observations: string | null;
   date: string;
-  saisi_par: number;
+  // Embedded on the list response (`saisi_par` is the full personnel object).
+  saisi_par?: Personnel;
+  micro_projet?: Projet;
+  promoteur?: Promoteur;
+  categorie?: CategorieTransaction;
 }

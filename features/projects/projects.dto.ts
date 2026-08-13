@@ -42,3 +42,21 @@ export interface Projet {
   created_at?: string;
   updated_at?: string;
 }
+
+/**
+ * Query params for the paginated micro-projets list. `/projets` honors `page` /
+ * `per_page` (verified live); the filter keys are forwarded best-effort — the
+ * endpoint doesn't filter on them yet (see backend-asks), so they light up once
+ * the backend does.
+ */
+export interface ProjetQuery {
+  page: number;
+  perPage: number;
+  search?: string;
+  statut?: string;
+  stade_projet?: string;
+  type_projet?: string;
+}
+
+/** Default page size for the micro-projets list. */
+export const DEFAULT_PROJETS_PER_PAGE = 15;

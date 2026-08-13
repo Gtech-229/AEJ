@@ -63,7 +63,7 @@ export function OrganismesClient() {
       header: 'Type',
       cell: ({ row }) => (
         <Badge variant="secondary" className="font-normal">
-          {typeName(row.original.type)}
+          {row.original.type_organisme?.libelle ?? typeName(row.original.type)}
         </Badge>
       ),
     },
@@ -111,9 +111,9 @@ export function OrganismesClient() {
           toolbarEndSlot={
             <div className="flex items-center gap-2">
               <ManageTypeOrganismesButton />
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouvel Organisme
               </Button>
             </div>
           }

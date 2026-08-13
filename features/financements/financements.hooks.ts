@@ -5,15 +5,25 @@ import { toast } from 'sonner';
 import type { CreateBudgetPayload, UpdateBudgetPayload } from './financements.dto';
 import {
   budgetsKeys,
+  categoriesTransactionsKeys,
   comptesKeys,
+  decaissementDeclarationsKeys,
   decaissementsKeys,
+  plansKeys,
+  remboursementDeclarationsKeys,
   remboursementsKeys,
+  transactionsKeys,
 } from './financements.keys';
 import {
   budgetsService,
+  categoriesTransactionsService,
   comptesService,
+  decaissementDeclarationsService,
   decaissementsService,
+  plansService,
+  remboursementDeclarationsService,
   remboursementsService,
+  transactionsService,
 } from './financements.service';
 
 // ── Budgets (read + write) ───────────────────────────────────────────────────
@@ -73,5 +83,37 @@ export function useRemboursements() {
   return useQuery({
     queryKey: remboursementsKeys.lists(),
     queryFn: () => remboursementsService.getAll(),
+  });
+}
+
+export function usePlansDecaissement() {
+  return useQuery({ queryKey: plansKeys.lists(), queryFn: () => plansService.getAll() });
+}
+
+export function useTransactions() {
+  return useQuery({
+    queryKey: transactionsKeys.lists(),
+    queryFn: () => transactionsService.getAll(),
+  });
+}
+
+export function useDecaissementDeclarations() {
+  return useQuery({
+    queryKey: decaissementDeclarationsKeys.lists(),
+    queryFn: () => decaissementDeclarationsService.getAll(),
+  });
+}
+
+export function useRemboursementDeclarations() {
+  return useQuery({
+    queryKey: remboursementDeclarationsKeys.lists(),
+    queryFn: () => remboursementDeclarationsService.getAll(),
+  });
+}
+
+export function useCategoriesTransactions() {
+  return useQuery({
+    queryKey: categoriesTransactionsKeys.lists(),
+    queryFn: () => categoriesTransactionsService.getAll(),
   });
 }

@@ -20,16 +20,16 @@ function pageQuery(q: PromoteurQuery): string {
 }
 
 /**
- * Body for `POST /promoteurs/filter`. FK ids + statut go as numbers (matching the
- * confirmed contract); tranche_age / search / projet_* stay strings. The projet_*
- * and search keys are sent best-effort — the endpoint doesn't cover them yet, but
- * forwarding them means they light up the moment the backend does.
+ * Body for `POST /promoteurs/filter-with-projects`. FK ids go as numbers; the
+ * project filters (`statut` / `stade_projet` / `type_projet`) and `tranche_age`
+ * stay strings — all verified honored live (2026-08). `search` is forwarded
+ * best-effort — the endpoint doesn't cover it yet, but sending it means it lights
+ * up the moment the backend does.
  */
 function buildFilterBody(q: PromoteurQuery): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (q.search) body.search = q.search;
   if (q.tranche_age) body.tranche_age = q.tranche_age;
-  if (q.statut) body.statut = Number(q.statut);
   for (const param of PROMOTEUR_FK_PARAMS) {
     const value = q[param];
     if (value) body[param] = Number(value);

@@ -66,10 +66,13 @@ export type PromoteurFkParam = (typeof PROMOTEUR_FK_PARAMS)[number];
 
 /**
  * Project-based filters — a promoteur rarely has more than one micro-projet, so
- * filtering the list by the project's enum attributes is meaningful. Values are
- * the `micro_projets` ENUMs (see schema).
+ * filtering the list by the project's enum attributes is meaningful. Keys match
+ * the backend's `filter-with-projects` body 1:1 (verified live 2026-08) —
+ * NB: `statut` here is the **project** status (e.g. EN_ANALYSE), not the
+ * promoteur's active flag (the backend has no key for that yet). Values are the
+ * `micro_projets` ENUMs (see projects.constants).
  */
-export const PROMOTEUR_PROJET_PARAMS = ['projet_statut', 'projet_stade', 'projet_type'] as const;
+export const PROMOTEUR_PROJET_PARAMS = ['statut', 'stade_projet', 'type_projet'] as const;
 
 export type PromoteurProjetParam = (typeof PROMOTEUR_PROJET_PARAMS)[number];
 
@@ -78,10 +81,8 @@ export interface PromoteurQuery
   extends Partial<Record<PromoteurFkParam | PromoteurProjetParam, string>> {
   page: number;
   perPage: number;
-  /** Free-text (nom / prénom / email / matricule). */
+  /** Free-text (nom / prénom / email / matricule). Backend TODO — not honored yet. */
   search?: string;
-  /** '1' = actif, '0' = inactif. */
-  statut?: string;
   /** e.g. "18_40". */
   tranche_age?: string;
 }

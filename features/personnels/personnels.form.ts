@@ -31,7 +31,7 @@ export function getPersonnelFormConfig(
       type: 'select',
       required: true,
       placeholder: 'Sélectionner un rôle…',
-      options: refOptions(refs.roles , 'code'),
+      options: refOptions(refs.roles, 'libelle'),
     },
     {
       name: 'fonction_id',

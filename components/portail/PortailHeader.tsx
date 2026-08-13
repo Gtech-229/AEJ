@@ -7,12 +7,12 @@ import { usePathname } from 'next/navigation';
 import {
   Building2,
   ChevronDown,
+  FolderKanban,
   Gauge,
   Handshake,
   Landmark,
   Layers,
   LayoutDashboard,
-  MapPin,
   Menu,           // ← nouveau (icône hamburger)
   Settings,
   ShieldCheck,
@@ -65,6 +65,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
+  { label: 'Micro-projets', href: '/dashboard/projets', icon: FolderKanban },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
   { label: 'Organismes', href: '/dashboard/parametrage/organismes', icon: Handshake },
   { label: 'Financements', href: '/dashboard/financements', icon: Wallet },
@@ -75,7 +76,6 @@ const NAV: NavItem[] = [
     children: [
       { label: 'Personnel', href: '/dashboard/parametrage/personnels', icon: Users },
       { label: 'Rôles & permissions', href: '/dashboard/parametrage/roles', icon: ShieldCheck },
-      { label: 'Localités', href: '/dashboard/parametrage/localites', icon: MapPin },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
       { label: 'Autres paramètres', href: '/dashboard/parametrage/autres', icon: Layers },
     ],
