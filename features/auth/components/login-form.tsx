@@ -10,13 +10,21 @@ import { Label } from '@/components/ui/label';
 import { getApiErrorMessage } from '@/lib/api/errors';
 import { useLogin } from '../auth.hooks';
 import { loginSchema, type LoginInput } from '../auth.schema';
+import { DEFAULT_SPACE, type SpaceKey } from '../auth.spaces';
+
+const EMAIL_PLACEHOLDER: Record<SpaceKey, string> = {
+  agence: 'admin@aej.ci',
+  organismes: 'contact@organisme.ci',
+  entreprise: 'contact@entreprise.ci',
+};
 
 /**
  * Presentational only — feedback, error handling and the post-login redirect
- * (including the 2FA branch) all live in `useLogin`.
+ * (including the 2FA branch) all live in `useLogin`. `space` picks which
+ * space's session this form authenticates (defaults to the backoffice).
  */
-export function LoginForm() {
-  const login = useLogin();
+export function LoginForm({ space = DEFAULT_SPACE }: { space?: SpaceKey }) {
+  const login = useLogin(space);
   const [showPwd, setShowPwd] = useState(false);
 
   const {
@@ -45,7 +53,7 @@ export function LoginForm() {
 
       <div className="space-y-1.5">
         <Label htmlFor="email">Adresse email</Label>
-        <Input id="email" type="email" placeholder="admin@aej.ci" {...register('email')} />
+        <Input id="email" type="email" placeholder={EMAIL_PLACEHOLDER[space]} {...register('email')} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
 

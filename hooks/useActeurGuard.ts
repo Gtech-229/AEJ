@@ -4,7 +4,12 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth.context';
 import { SPACES } from '@/features/auth/auth.spaces';
-import { getActeurTypeForUser, getHomeRouteForActeur, type ActeurType } from '@/lib/auth/acteur';
+import {
+    getActeurTypeForUser,
+    getHomeRouteForActeur,
+    hasSpaceMembership,
+    type ActeurType,
+} from '@/lib/auth/acteur';
 
 interface ActeurGuardResult {
     user: ReturnType<typeof useAuth>['user'];
@@ -26,7 +31,7 @@ export function useActeurGuard(expected: ActeurType): ActeurGuardResult {
         if (!guarded) return;
         if (loading) return;
         if (!user) {
-            router.replace('/auth/login');
+            router.replace(SPACES[expected].loginPath);
             return;
         }
         // Only redirect when we can positively resolve a DIFFERENT acteur space.
@@ -35,9 +40,20 @@ export function useActeurGuard(expected: ActeurType): ActeurGuardResult {
         // than bouncing the user somewhere wrong.
         if (acteurType && acteurType !== expected) {
             router.replace(getHomeRouteForActeur(acteurType));
+            return;
+        }
+        // Right space, but not attached to an organisme/agence (AEJ-20) —
+        // bounce back to sign-in rather than showing an empty/broken dashboard.
+        if (!hasSpaceMembership(expected, user)) {
+            router.replace(`${SPACES[expected].loginPath}?error=no_access`);
         }
     }, [guarded, loading, user, acteurType, expected, router]);
 
-    const allowed = !guarded || (!loading && !!user && (acteurType === null || acteurType === expected));
+    const allowed =
+        !guarded ||
+        (!loading &&
+            !!user &&
+            (acteurType === null || acteurType === expected) &&
+            hasSpaceMembership(expected, user));
     return { user, loading, allowed };
 }

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/lib/api/errors';
 import { authService } from './auth.service';
 import { useAuth } from './auth.context';
+import { SPACES, DEFAULT_SPACE, type SpaceKey } from './auth.spaces';
 import type {
   LoginPayload,
   LoginResponse,
@@ -23,14 +24,19 @@ import type {
  * page already does).
  */
 
-/** Step 1 — submit credentials, then branch on 2FA. */
-export function useLogin() {
+/**
+ * Step 1 — submit credentials for a space, then branch on 2FA.
+ * `space` defaults to the backoffice (agence); pass 'organismes' / 'entreprise'
+ * for the other sign-in pages so login hits that space's endpoint and, on
+ * success, redirects to that space's home route (or `?redirect=` if present).
+ */
+export function useLogin(space: SpaceKey = DEFAULT_SPACE) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setPending, refreshMe } = useAuth();
 
   return useMutation({
-    mutationFn: (payload: LoginPayload) => authService.login(payload),
+    mutationFn: (payload: LoginPayload) => authService.login(payload, space),
     onSuccess: async (res: LoginResponse) => {
       // 2FA pending → no session cookie yet; stash the id, go enter the code.
       if (res.otp_required) {
@@ -42,7 +48,7 @@ export function useLogin() {
       // No 2FA → the backend has set the session cookies.
       await refreshMe();
       toast.success(res.message || 'Connexion réussie');
-      router.replace(searchParams.get('redirect') || '/dashboard');
+      router.replace(searchParams.get('redirect') || SPACES[space].homePath);
     },
   });
 }

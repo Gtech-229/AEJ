@@ -69,6 +69,25 @@ export function getActeurTypeForUser(user: User | null | undefined): ActeurType 
     return getActeurTypeForRole(getRoleSlug(user));
 }
 
+/**
+ * Entity-membership check (AEJ-20): being authenticated on the `organismes`
+ * session isn't enough — the account must actually be attached to an
+ * organisme (or, for agence-scoped roles, an agence) to use the space.
+ * Guards against a personnel record that has the right role/space but no
+ * assignment yet (e.g. mid-onboarding, or a misconfigured account).
+ *
+ * Only `organismes` is checked today; extend the same way for `entreprise`
+ * once its membership field is confirmed.
+ */
+export function hasSpaceMembership(
+  acteurType: ActeurType,
+  user: User | null | undefined,
+): boolean {
+  if (!user) return false;
+  if (acteurType !== 'organismes') return true;
+  return user.organisme_id != null || user.agence_id != null;
+}
+
 export function getHomeRouteForActeur(acteurType: ActeurType): string {
     switch (acteurType) {
         case 'agence':
