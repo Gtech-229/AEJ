@@ -66,7 +66,6 @@ export function PromoteurDetailSheet({
   const age = getAge(promoteur?.datenaissance);
   const refs = usePromoteurReferentials();
   const { data: projets, isLoading: projetsLoading } = useProjectsByPromoteur(promoteur?.id);
-   console.log("Projects :", projets)
   return (
     <Sheet open={!!promoteur} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col sm:max-w-xl">

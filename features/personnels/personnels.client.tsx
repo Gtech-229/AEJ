@@ -76,7 +76,7 @@ export function PersonnelsClient() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Rôle" />,
         cell: ({ row }) => {
           const role = roles?.find((r) => r.id === row.original.role_id);
-          return <Badge variant="secondary">{role?.code ?? `#${row.original.role_id}`}</Badge>;
+          return <Badge variant="secondary">{role?.libelle ?? `#${row.original.role_id}`}</Badge>;
         },
       },
       {

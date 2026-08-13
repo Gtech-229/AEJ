@@ -5,8 +5,10 @@ import type {
   DecaissementStatut,
   DeclarationStatut,
   EtatOuverture,
+  ModePaiement,
   OuiNon,
   RemboursementStatut,
+  TransactionStatut,
   TransactionType,
 } from './financements.dto';
 
@@ -48,6 +50,16 @@ export const DECLARATION_STATUT_LABELS: Record<DeclarationStatut, string> = {
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   DEPENSE: 'Dépense',
   RECETTE: 'Recette',
+};
+export const TRANSACTION_STATUT_LABELS: Record<TransactionStatut, string> = {
+  BROUILLON: 'Brouillon',
+  VALIDE: 'Validé',
+  REJETE: 'Rejeté',
+};
+export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {
+  BANQUE: 'Banque',
+  ESPECES: 'Espèces',
+  MOBILE_MONEY: 'Mobile money',
 };
 
 /** Shared status → colour tone for financing badges (values are unique). */

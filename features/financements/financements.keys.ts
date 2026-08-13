@@ -18,3 +18,28 @@ export const remboursementsKeys = {
   all: ['remboursements'] as const,
   lists: () => [...remboursementsKeys.all, 'list'] as const,
 };
+
+export const plansKeys = {
+  all: ['plan-decaissements'] as const,
+  lists: () => [...plansKeys.all, 'list'] as const,
+};
+
+export const transactionsKeys = {
+  all: ['transactions'] as const,
+  lists: () => [...transactionsKeys.all, 'list'] as const,
+};
+
+export const decaissementDeclarationsKeys = {
+  all: ['decaissements-declarations'] as const,
+  lists: () => [...decaissementDeclarationsKeys.all, 'list'] as const,
+};
+
+export const remboursementDeclarationsKeys = {
+  all: ['remboursements-declarations'] as const,
+  lists: () => [...remboursementDeclarationsKeys.all, 'list'] as const,
+};
+
+export const categoriesTransactionsKeys = {
+  all: ['categories-transactions'] as const,
+  lists: () => [...categoriesTransactionsKeys.all, 'list'] as const,
+};

@@ -13,13 +13,14 @@ export interface AppModule {
 }
 
 export const MODULES: AppModule[] = [
-  { key: 'promoteurs', label: 'Promoteurs' },
+  // NB: backend stores this module as `jeunes` (verified live 2026-08); the UI
+  // label is "Promoteurs" (the renamed section) but the key must stay `jeunes`.
+  { key: 'jeunes', label: 'Promoteurs' },
   { key: 'entreprises', label: 'Entreprises' },
   { key: 'organismes', label: 'Organismes' },
   { key: 'financements', label: 'Financements' },
   { key: 'indicateurs', label: 'Indicateurs' },
   { key: 'utilisateurs', label: 'Personnel' },
   { key: 'roles', label: 'Rôles & permissions' },
-  { key: 'localites', label: 'Localités' },
   { key: 'configurations', label: 'Paramètres système' },
 ];

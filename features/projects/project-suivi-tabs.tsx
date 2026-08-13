@@ -1,12 +1,39 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Building2, GitBranch, HandCoins, Receipt, Wallet } from 'lucide-react';
+import {
+  Building2,
+  FileText,
+  GitBranch,
+  HandCoins,
+  MessageSquare,
+  Receipt,
+  Wallet,
+} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { EmptyState } from '@/components/generic/empty-state';
+import { LoadingState } from '@/components/generic/loader';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/date';
 import type { Projet } from './projects.dto';
 import { useFormatMontant } from '@/features/configurations/configurations.hooks';
+import { ProjectObservations } from './project-observations';
+import { ProjectDocuments } from './project-documents';
+import { useTransactions } from '@/features/financements/financements.hooks';
+import {
+  MODE_PAIEMENT_LABELS,
+  TRANSACTION_TYPE_LABELS,
+} from '@/features/financements/financements.constants';
 import { computeProfitability, type Operation } from './operations';
 
 /** Placeholder body for a section whose endpoint doesn't exist yet. */
@@ -47,10 +74,25 @@ function Stat({
   );
 }
 
-function OperationsTab() {
+function OperationsTab({ projet }: { projet: Projet }) {
   const formatMontant = useFormatMontant();
-  // TODO(backend): fetch the project's operations once the endpoint exists.
-  const operations: Operation[] = [];
+  const { data: allTx, isLoading } = useTransactions();
+
+  // The backend doesn't filter `/transactions` by micro_projet_id yet, so we
+  // fetch the list and scope it client-side (stopgap — see backend-asks).
+  const transactions = useMemo(
+    () => (allTx ?? []).filter((t) => t.micro_projet_id === projet.id),
+    [allTx, projet.id],
+  );
+
+  const operations: Operation[] = transactions.map((t) => ({
+    id: t.id,
+    projet_id: t.micro_projet_id,
+    type: t.type,
+    libelle: t.libelle,
+    montant: t.montant,
+    date: t.date,
+  }));
   const { recettes, depenses, resultat, marge } = computeProfitability(operations);
 
   return (
@@ -64,12 +106,60 @@ function OperationsTab() {
           tone={resultat >= 0 ? 'success' : 'danger'}
         />
       </div>
-      <EmptyState
-        variant="card"
-        icon={Receipt}
-        title="Aucune opération"
-        description="Enregistrez les dépenses et recettes du projet pour calculer sa rentabilité."
-      />
+
+      {isLoading ? (
+        <LoadingState label="Chargement…" />
+      ) : transactions.length === 0 ? (
+        <EmptyState
+          variant="card"
+          icon={Receipt}
+          title="Aucune opération"
+          description="Enregistrez les dépenses et recettes du projet pour calculer sa rentabilité."
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-md border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted hover:bg-muted">
+                <TableHead>Libellé</TableHead>
+                <TableHead>Catégorie</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Montant</TableHead>
+                <TableHead>Mode</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium">{t.libelle}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {t.categorie?.libelle ?? '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'font-normal',
+                        t.type === 'RECETTE'
+                          ? 'border-success/30 bg-success/10 text-success'
+                          : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                      )}
+                    >
+                      {TRANSACTION_TYPE_LABELS[t.type]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">{formatMontant(t.montant)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {MODE_PAIEMENT_LABELS[t.mode_paiement]}
+                  </TableCell>
+                  <TableCell>{formatDate(t.date)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
@@ -88,7 +178,7 @@ interface SuiviTab {
  * liner. Progression, Financement, Remboursements and Organisation are
  * scaffolded until their endpoints exist; Opérations shows the profitability.
  */
-export function ProjectSuiviTabs({ projet: _projet }: { projet: Projet }) {
+export function ProjectSuiviTabs({ projet }: { projet: Projet }) {
   const tabs: SuiviTab[] = [
     {
       value: 'progression',
@@ -142,7 +232,19 @@ export function ProjectSuiviTabs({ projet: _projet }: { projet: Projet }) {
       value: 'operations',
       label: 'Opérations',
       icon: Receipt,
-      content: <OperationsTab />,
+      content: <OperationsTab projet={projet} />,
+    },
+    {
+      value: 'documents',
+      label: 'Documents',
+      icon: FileText,
+      content: <ProjectDocuments projet={projet} />,
+    },
+    {
+      value: 'observations',
+      label: 'Observations',
+      icon: MessageSquare,
+      content: <ProjectObservations projet={projet} />,
     },
   ];
 
