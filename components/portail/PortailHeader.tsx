@@ -9,27 +9,23 @@ import {
   ChevronDown,
   Gauge,
   Handshake,
-  KeyRound,
   Landmark,
   Layers,
   LayoutDashboard,
-  LogOut,
   MapPin,
   Menu,           // ← nouveau (icône hamburger)
   Settings,
   ShieldCheck,
   SlidersHorizontal,
-  User,
   Users,
   Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/auth.context';
-import { getUserDisplayName } from '@/features/auth/auth.dto';
 import { useConfigurations } from '@/features/configurations/configurations.hooks';
 import { ThemeSwitch } from '@/components/theme/theme-switch';
 import { AccentSwitch } from '@/components/theme/accent-switch';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { UserDropdown } from './user-dropdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,9 +96,6 @@ export function PortailHeader() {
 
   // The section whose sub-nav (third row) is shown, driven by the current route.
   const activeSection = NAV.find((item) => item.children && isSectionActive(item));
-
-  const displayName = getUserDisplayName(user);
-  const initiale = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="shrink-0">
@@ -222,50 +215,7 @@ export function PortailHeader() {
 
           <ThemeSwitch className="border-white/20 bg-white/15 text-white hover:bg-white/25 hover:text-white" />
 
-          {/* User menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                aria-label="Menu utilisateur"
-                className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-              >
-                <Avatar className="size-9">
-                  <AvatarFallback
-                    className="font-bold text-white"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-                  >
-                    {initiale}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="flex flex-col gap-0.5">
-                <span className="text-sm font-semibold">{displayName}</span>
-                {user?.email && (
-                  <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/parametrage/profil">
-                  <User className="mr-2 size-4 text-muted-foreground/70" />
-                  Mon profil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/parametrage/password">
-                  <KeyRound className="mr-2 size-4 text-muted-foreground/70" />
-                  Changer le mot de passe
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={() => logout()}>
-                <LogOut className="mr-2 size-4" />
-                Déconnexion
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UserDropdown user={user} onLogout={logout} />
         </div>
       </div>
 

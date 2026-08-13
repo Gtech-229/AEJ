@@ -8,7 +8,6 @@ export function getCreatePersonnelDefaults(): CreatePersonnelInput {
     email: '',
     telephone: '',
     adresse: '',
-    mot_de_passe: '',
     role_id: 0,
     fonction_id: 0,
   };
