@@ -87,9 +87,9 @@ export function RolesClient() {
           emptyDescription="Créez un premier rôle pour organiser les accès du backoffice."
           toolbarEndSlot={
             <Can module="roles" action="write">
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouveau rôle
               </Button>
             </Can>
           }

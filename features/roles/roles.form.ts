@@ -11,6 +11,7 @@ export function getRoleFormConfig(): FormConfig {
         type: 'text',
         required: true,
         placeholder: 'ex: ADMIN',
+      
       },
       {
         name: 'libelle',
@@ -24,6 +25,7 @@ export function getRoleFormConfig(): FormConfig {
         label: 'Description',
         type: 'textarea',
         rows: 3,
+        required : true,
         colSpan: 'full',
         placeholder: 'Rôle et périmètre de ce profil…',
       },
