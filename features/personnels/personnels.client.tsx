@@ -13,6 +13,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { useRoles } from '@/features/roles/roles.hooks';
 import { useFonctions } from '@/features/fonctions/fonctions.hooks';
@@ -41,6 +42,8 @@ export function PersonnelsClient() {
     () => ({ roles: roles ?? [], fonctions: fonctions ?? [] }),
     [roles, fonctions],
   );
+
+
 
   const columns: ColumnDef<Personnel>[] = useMemo(
     () => [
@@ -73,7 +76,7 @@ export function PersonnelsClient() {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Rôle" />,
         cell: ({ row }) => {
           const role = roles?.find((r) => r.id === row.original.role_id);
-          return <Badge variant="secondary">{role?.libelle ?? `#${row.original.role_id}`}</Badge>;
+          return <Badge variant="secondary">{role?.code ?? `#${row.original.role_id}`}</Badge>;
         },
       },
       {
@@ -128,7 +131,7 @@ export function PersonnelsClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Personnel>
           data={personnels ?? []}
           columns={columns}
@@ -141,7 +144,7 @@ export function PersonnelsClient() {
           toolbarEndSlot={
             <Button size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />
-              Ajouter
+              Nouveau personnel
             </Button>
           }
         />

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from './number-input';
 import {
   Select,
   SelectContent,
@@ -130,7 +131,13 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
       return (
         <Select
           value={rhf.value != null ? String(rhf.value) : ''}
-          onValueChange={rhf.onChange}
+          onValueChange={(v) => {
+            // Radix always emits a string; restore the option's original
+            // type (e.g. numeric ids like role_id/fonction_id) so it matches
+            // what the Zod schema expects.
+            const opt = field.options?.find((o) => String(o.value) === v);
+            rhf.onChange(opt ? opt.value : v);
+          }}
           disabled={field.disabled}
         >
           <FormControl>
@@ -153,7 +160,10 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
         <FormControl>
           <RadioGroup
             value={rhf.value != null ? String(rhf.value) : ''}
-            onValueChange={rhf.onChange}
+            onValueChange={(v) => {
+              const opt = field.options?.find((o) => String(o.value) === v);
+              rhf.onChange(opt ? opt.value : v);
+            }}
             disabled={field.disabled}
             className="flex flex-col gap-2"
           >
@@ -196,6 +206,19 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
               </button>
             )}
           </div>
+        </FormControl>
+      );
+
+    case 'amount':
+      // Formatted number: live thousands separators, emits the bare number.
+      return (
+        <FormControl>
+          <NumberInput
+            placeholder={field.placeholder}
+            disabled={field.disabled}
+            value={rhf.value as number | string | null | undefined}
+            onValueChange={(v) => rhf.onChange(v ?? undefined)}
+          />
         </FormControl>
       );
 

@@ -6,7 +6,7 @@
  */
 export type FieldType =
   | 'text' | 'email' | 'password' | 'tel' | 'url' | 'search'
-  | 'textarea' | 'number' | 'range'
+  | 'textarea' | 'number' | 'amount' | 'range'
   | 'date' | 'time' | 'datetime-local' | 'month' | 'week'
   | 'select' | 'radio' | 'checkbox' | 'switch'
   | 'color' | 'hidden'

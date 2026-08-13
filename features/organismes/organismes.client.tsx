@@ -12,6 +12,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { ManageTypeOrganismesButton } from '@/features/type-organismes/type-organismes.client';
 import { useTypeOrganismes } from '@/features/type-organismes/type-organismes.hooks';
@@ -97,7 +98,7 @@ export function OrganismesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Organisme>
           data={organismes ?? []}
           columns={columns}
