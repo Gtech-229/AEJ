@@ -42,6 +42,16 @@ export interface User {
   /** NB: the API returns 0/1, not a boolean. */
   is_active: number;
   /**
+   * Organisme this user is attached to — required for a user to access the
+   * `organismes` space (AEJ-20). Some organisme users are scoped to a single
+   * agence within their organisme instead, hence `agence_id` below; a user
+   * needs at least one of the two to be granted access.
+   * TODO(backend): confirm both field names once `/organismes/auth/me` is live.
+   */
+  organisme_id?: number | null;
+  /** See `organisme_id`. TODO(backend): confirm once `/organismes/auth/me` is live. */
+  agence_id?: number | null;
+  /**
    * Resolved server-side decision: may this user use the app during
    * maintenance? Optional until the backend ships it — see
    * `canBypassMaintenance`, which falls back to a local role allow-list.
