@@ -39,9 +39,9 @@ export interface Budget {
   budgets_remboursement?: unknown | null;
 }
 
-// TODO(backend): the create body documented `montant_accorde` as a number and
-// `deblocage` as a string ("NON"), while GET returns a decimal string + boolean.
-// Confirm the create shape when building the form.
+// Create shape verified live (2026-08): `montant_accorde` is a number, and
+// `deblocage` is the OUI/NON enum on write (GET returns it as a boolean).
+// `micro_projet_id` is UNIQUE → at most one budget per dossier.
 export type CreateBudgetPayload = {
   micro_projet_id: number;
   intitule: string;
@@ -50,7 +50,7 @@ export type CreateBudgetPayload = {
   source?: string | null;
   statut: BudgetStatut;
   devise: string;
-  deblocage: boolean;
+  deblocage: OuiNon;
   date_deblocage?: string | null;
   signature_convention: ConventionEtat;
   date_signature?: string | null;
@@ -61,7 +61,9 @@ export type CreateBudgetPayload = {
 export type UpdateBudgetPayload = CreateBudgetPayload & { id: number };
 
 // ── compte-financements ───────────────────────────────────────────────────────
-export type EtatOuverture = 'NON_OUVERT' | 'OUVERT';
+// Enum values from backend_schema.md (§14 compte_financements). `avis_partenaire`
+// is nullable (no default) — a compte can exist before the partner rules.
+export type EtatOuverture = 'NON_OUVERT' | 'OUVERT' | 'FERME';
 export type AvisPartenaire = 'ACCORDE' | 'AJOURNE' | 'REJETE';
 
 export interface CompteFinancement {
@@ -69,9 +71,9 @@ export interface CompteFinancement {
   organisme_id: number;
   micro_projet_id: number;
   etat_ouverture: EtatOuverture;
-  localite_ouverture: string;
+  localite_ouverture: string | null;
   date_ouverture: string | null;
-  avis_partenaire: AvisPartenaire;
+  avis_partenaire: AvisPartenaire | null;
   observation: string | null;
   created_at?: string;
   updated_at?: string;
@@ -79,6 +81,18 @@ export interface CompteFinancement {
   organisme?: Organisme;
   micro_projet?: Projet;
 }
+
+export type CreateComptePayload = {
+  organisme_id: number;
+  micro_projet_id: number;
+  etat_ouverture: EtatOuverture;
+  localite_ouverture?: string | null;
+  date_ouverture?: string | null;
+  avis_partenaire?: AvisPartenaire | null;
+  observation?: string | null;
+};
+
+export type UpdateComptePayload = CreateComptePayload & { id: number };
 
 // ── plan-decaissements ────────────────────────────────────────────────────────
 export interface PlanDecaissement {

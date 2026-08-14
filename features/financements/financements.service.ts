@@ -5,6 +5,8 @@ import type {
   CategorieTransaction,
   CompteFinancement,
   CreateBudgetPayload,
+  CreateComptePayload,
+  UpdateComptePayload,
   Decaissement,
   DecaissementDeclaration,
   PlanDecaissement,
@@ -44,6 +46,31 @@ export const budgetsService = {
 export const comptesService = {
   getAll: (client: ApiClient = apiClient) =>
     getList<CompteFinancement>('/compte-financements', client),
+
+  create: async (
+    payload: CreateComptePayload,
+    client: ApiClient = apiClient,
+  ): Promise<CompteFinancement> => {
+    const res = await client.request<{ data: CompteFinancement }>('/compte-financements', {
+      method: 'POST',
+      body: payload,
+    });
+    return res.data;
+  },
+
+  update: async (
+    { id, ...body }: UpdateComptePayload,
+    client: ApiClient = apiClient,
+  ): Promise<CompteFinancement> => {
+    const res = await client.request<{ data: CompteFinancement }>(`/compte-financements/${id}`, {
+      method: 'PUT',
+      body,
+    });
+    return res.data;
+  },
+
+  remove: (id: number, client: ApiClient = apiClient): Promise<void> =>
+    client.request<void>(`/compte-financements/${id}`, { method: 'DELETE' }),
 };
 
 export const decaissementsService = {

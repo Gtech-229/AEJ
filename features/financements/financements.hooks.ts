@@ -2,7 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { CreateBudgetPayload, UpdateBudgetPayload } from './financements.dto';
+import type {
+  CreateBudgetPayload,
+  CreateComptePayload,
+  UpdateBudgetPayload,
+  UpdateComptePayload,
+} from './financements.dto';
 import {
   budgetsKeys,
   categoriesTransactionsKeys,
@@ -67,10 +72,48 @@ export function useDeleteBudget() {
   });
 }
 
-// ── Read-only lists (write hooks to be added with their forms) ────────────────
+// ── Comptes de financement (read + write) ────────────────────────────────────
 export function useComptes() {
   return useQuery({ queryKey: comptesKeys.lists(), queryFn: () => comptesService.getAll() });
 }
+
+export function useCreateCompte() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateComptePayload) => comptesService.create(payload),
+    onSuccess: () => {
+      toast.success('Compte créé');
+      queryClient.invalidateQueries({ queryKey: comptesKeys.all });
+    },
+    onError: () => toast.error('Échec de la création du compte'),
+  });
+}
+
+export function useUpdateCompte() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateComptePayload) => comptesService.update(payload),
+    onSuccess: () => {
+      toast.success('Compte mis à jour');
+      queryClient.invalidateQueries({ queryKey: comptesKeys.all });
+    },
+    onError: () => toast.error('Échec de la mise à jour du compte'),
+  });
+}
+
+export function useDeleteCompte() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => comptesService.remove(id),
+    onSuccess: () => {
+      toast.success('Compte supprimé');
+      queryClient.invalidateQueries({ queryKey: comptesKeys.all });
+    },
+    onError: () => toast.error('Échec de la suppression du compte'),
+  });
+}
+
+// ── Read-only lists (write hooks to be added with their forms) ────────────────
 
 export function useDecaissements() {
   return useQuery({

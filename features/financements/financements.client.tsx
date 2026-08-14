@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Banknote,
@@ -20,6 +21,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { EmptyState } from '@/components/generic/empty-state';
 import { LoadingState } from '@/components/generic/loader';
 import { cn } from '@/lib/utils';
@@ -38,11 +46,13 @@ import type {
 import type { Promoteur } from '@/features/promoteurs/promoteurs.dto';
 import {
   AVIS_PARTENAIRE_LABELS,
+  AVIS_PARTENAIRE_OPTIONS,
   BUDGET_STATUT_LABELS,
   CONVENTION_LABELS,
   DECAISSEMENT_STATUT_LABELS,
   DECLARATION_STATUT_LABELS,
   ETAT_OUVERTURE_LABELS,
+  ETAT_OUVERTURE_OPTIONS,
   OUI_NON_LABELS,
   REMBOURSEMENT_STATUT_LABELS,
   financementTone,
@@ -57,6 +67,10 @@ import {
   useRemboursementDeclarations,
   useRemboursements,
 } from './financements.hooks';
+
+// Filter sentinels for the Comptes tab (Select can't hold an empty value).
+const FILTER_ALL = '__all__';
+const FILTER_PENDING = '__pending__';
 
 // ── Presentational helpers ────────────────────────────────────────────────────
 const TONE_CLASS: Record<FinancementTone, string> = {
@@ -249,6 +263,9 @@ const remboursementColumns = (formatMontant: MontantFormatter): Col<Remboursemen
   { header: 'Statut', cell: (r) => <StatusBadge value={r.statut} label={REMBOURSEMENT_STATUT_LABELS[r.statut]} /> },
 ];
 
+// Read-only in the backoffice: the account opening + avis is the partner's
+// action (procédure E05 · PF) — it's managed from the organisme espace, the
+// backoffice only traces it.
 const compteColumns: Col<CompteFinancement>[] = [
   {
     header: 'Projet',
@@ -259,11 +276,19 @@ const compteColumns: Col<CompteFinancement>[] = [
     header: 'Ouverture',
     cell: (c) => <StatusBadge value={c.etat_ouverture} label={ETAT_OUVERTURE_LABELS[c.etat_ouverture]} />,
   },
-  { header: 'Localité', cell: (c) => <span className="text-muted-foreground">{c.localite_ouverture}</span> },
+  {
+    header: 'Localité',
+    cell: (c) => <span className="text-muted-foreground">{c.localite_ouverture ?? '—'}</span>,
+  },
   { header: 'Date', cell: (c) => formatDate(c.date_ouverture) },
   {
     header: 'Avis partenaire',
-    cell: (c) => <StatusBadge value={c.avis_partenaire} label={AVIS_PARTENAIRE_LABELS[c.avis_partenaire]} />,
+    cell: (c) =>
+      c.avis_partenaire ? (
+        <StatusBadge value={c.avis_partenaire} label={AVIS_PARTENAIRE_LABELS[c.avis_partenaire]} />
+      ) : (
+        <span className="text-muted-foreground">En attente</span>
+      ),
   },
 ];
 
@@ -340,10 +365,24 @@ export function FinancementsClient() {
   const remboursementDecls = useRemboursementDeclarations();
   const formatMontant = useFormatMontant();
 
+  // Comptes de financement: read-only traçabilité (the write is the partner's,
+  // in the organisme espace). Only the état/avis filter is kept here.
+  const [compteEtat, setCompteEtat] = useState(FILTER_ALL);
+  const [compteAvis, setCompteAvis] = useState(FILTER_ALL);
+
   const budgetRows = budgets.data ?? [];
   const compteRows = comptes.data ?? [];
   const decaissementRows = decaissements.data ?? [];
   const remboursementRows = remboursements.data ?? [];
+
+  const filteredComptes = compteRows.filter(
+    (c) =>
+      (compteEtat === FILTER_ALL || c.etat_ouverture === compteEtat) &&
+      (compteAvis === FILTER_ALL ||
+        (compteAvis === FILTER_PENDING
+          ? c.avis_partenaire == null
+          : c.avis_partenaire === compteAvis)),
+  );
 
   const sum = <T,>(rows: T[], pick: (row: T) => string | number | null | undefined) =>
     rows.reduce((s, row) => s + (toNumber(pick(row)) ?? 0), 0);
@@ -413,14 +452,45 @@ export function FinancementsClient() {
       label: 'Comptes',
       icon: Landmark,
       content: (
-        <TabTable
-          isLoading={comptes.isLoading}
-          rows={compteRows}
-          columns={compteColumns}
-          emptyIcon={Landmark}
-          emptyTitle="Aucun compte"
-          emptyDescription="Aucun compte de financement n'est enregistré pour le moment."
-        />
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={compteEtat} onValueChange={setCompteEtat}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="État d'ouverture" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={FILTER_ALL}>Tous les états</SelectItem>
+                {ETAT_OUVERTURE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={compteAvis} onValueChange={setCompteAvis}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Avis partenaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={FILTER_ALL}>Tous les avis</SelectItem>
+                <SelectItem value={FILTER_PENDING}>En attente</SelectItem>
+                {AVIS_PARTENAIRE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <TabTable
+            isLoading={comptes.isLoading}
+            rows={filteredComptes}
+            columns={compteColumns}
+            emptyIcon={Landmark}
+            emptyTitle="Aucun compte"
+            emptyDescription="Aucun compte ne correspond à ces critères."
+          />
+        </div>
       ),
     },
     {

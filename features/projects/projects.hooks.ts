@@ -23,18 +23,3 @@ export function useProject(id: number | undefined) {
     staleTime: 5 * 60 * 1000,
   });
 }
-
-/**
- * A promoteur's micro-projets. `/projets` doesn't honor `?promoteur_id=` yet, so
- * we fetch a page of the list (shared cache key) and filter client-side. Swap for
- * a scoped fetch once the backend wires it (see the service + backend-asks).
- */
-export function useProjectsByPromoteur(promoteurId: number | undefined) {
-  return useQuery({
-    queryKey: projectsKeys.lists(),
-    queryFn: () => projectsService.getAll(),
-    enabled: !!promoteurId,
-    staleTime: 5 * 60 * 1000,
-    select: (all) => all.filter((p) => p.promoteur_id === promoteurId),
-  });
-}

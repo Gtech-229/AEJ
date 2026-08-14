@@ -5,7 +5,11 @@
  * client-side guard in `AuthProvider` — if these drift apart you get redirect
  * loops (the guard bouncing you to a page the guard then bounces you off).
  */
-export const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/otp'] as const;
+export const PUBLIC_AUTH_PATHS = [
+  '/auth/login',
+  '/auth/otp',
+  '/auth/mot-de-passe-oublie',
+] as const;
 
 export function isPublicAuthPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
