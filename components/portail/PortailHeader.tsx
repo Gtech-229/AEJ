@@ -5,8 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
+  Activity,
+  Boxes,
+  Briefcase,
   Building2,
   ChevronDown,
+  ClipboardList,
   FolderKanban,
   Gauge,
   Handshake,
@@ -19,6 +23,7 @@ import {
   SlidersHorizontal,
   Users,
   Wallet,
+  Workflow,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/auth.context';
@@ -66,9 +71,11 @@ const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
   { label: 'Micro-projets', href: '/dashboard/projets', icon: FolderKanban },
+  { label: 'Exécutions', href: '/dashboard/executions', icon: Activity },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
   { label: 'Organismes', href: '/dashboard/parametrage/organismes', icon: Handshake },
   { label: 'Financements', href: '/dashboard/financements', icon: Wallet },
+  { label: 'Emplois', href: '/dashboard/emplois', icon: Briefcase },
   { label: 'Indicateurs', href: '/dashboard/indicateurs', icon: Gauge },
   {
     label: 'Paramétrage',
@@ -76,6 +83,13 @@ const NAV: NavItem[] = [
     children: [
       { label: 'Personnel', href: '/dashboard/parametrage/personnels', icon: Users },
       { label: 'Rôles & permissions', href: '/dashboard/parametrage/roles', icon: ShieldCheck },
+      { label: 'Projets & dispositifs', href: '/dashboard/parametrage/projets', icon: Boxes },
+      { label: 'Workflows', href: '/dashboard/parametrage/workflows', icon: Workflow },
+      {
+        label: "Formulaires d'évaluation",
+        href: '/dashboard/parametrage/formulaires-evaluation',
+        icon: ClipboardList,
+      },
       { label: 'Système', href: '/dashboard/configurations', icon: SlidersHorizontal },
       { label: 'Autres paramètres', href: '/dashboard/parametrage/autres', icon: Layers },
     ],

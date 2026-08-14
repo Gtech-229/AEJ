@@ -128,13 +128,15 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
         </FormControl>
       );
 
-    case 'select':
+    case 'select': {
+      const raw = rhf.value != null ? String(rhf.value) : '';
+      // Normalize a value that matches no option (e.g. a `0`/empty default) to ''
+      // so Radix shows the placeholder instead of a blank trigger.
+      const current = field.options?.some((o) => String(o.value) === raw) ? raw : '';
       return (
-        <Select
-          value={rhf.value != null ? String(rhf.value) : ''}
-          onValueChange={rhf.onChange}
-          disabled={field.disabled}
-        >
+        // Native SelectValue: the trigger CSS-truncates the SELECTED label to its
+        // width (line-clamp-1); the dropdown options keep their full label.
+        <Select value={current} onValueChange={rhf.onChange} disabled={field.disabled}>
           <FormControl>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={field.placeholder ?? 'Sélectionner…'} />
@@ -149,6 +151,7 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
           </SelectContent>
         </Select>
       );
+    }
 
     case 'combobox':
       // Searchable single-select for long option lists (e.g. communes). Emits the

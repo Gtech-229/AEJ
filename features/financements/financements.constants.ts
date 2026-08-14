@@ -25,12 +25,21 @@ export const OUI_NON_LABELS: Record<OuiNon, string> = { OUI: 'Reçu', NON: 'Non 
 export const ETAT_OUVERTURE_LABELS: Record<EtatOuverture, string> = {
   NON_OUVERT: 'Non ouvert',
   OUVERT: 'Ouvert',
+  FERME: 'Fermé',
 };
 export const AVIS_PARTENAIRE_LABELS: Record<AvisPartenaire, string> = {
   ACCORDE: 'Accordé',
   AJOURNE: 'Ajourné',
   REJETE: 'Rejeté',
 };
+
+export const ETAT_OUVERTURE_OPTIONS = (
+  Object.keys(ETAT_OUVERTURE_LABELS) as EtatOuverture[]
+).map((value) => ({ value, label: ETAT_OUVERTURE_LABELS[value] }));
+
+export const AVIS_PARTENAIRE_OPTIONS = (
+  Object.keys(AVIS_PARTENAIRE_LABELS) as AvisPartenaire[]
+).map((value) => ({ value, label: AVIS_PARTENAIRE_LABELS[value] }));
 export const DECAISSEMENT_STATUT_LABELS: Record<DecaissementStatut, string> = {
   EN_ATTENTE: 'En attente',
   VALIDE: 'Validé',

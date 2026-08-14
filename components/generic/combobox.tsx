@@ -72,6 +72,7 @@ export function Combobox({
         >
           <span className="flex min-w-0 items-center gap-1.5">
             {selected?.icon}
+            {/* Trigger CSS-truncates the selected label to its width; options full. */}
             <span className="truncate">{selected ? selected.label : placeholder}</span>
           </span>
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
@@ -108,7 +109,7 @@ export function Combobox({
                     className={cn('size-4', value === o.value ? 'opacity-100' : 'opacity-0')}
                   />
                   {o.icon}
-                  <span className="truncate">{o.label}</span>
+                  <span>{o.label}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

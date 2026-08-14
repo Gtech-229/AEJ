@@ -6,6 +6,8 @@
  *
  * This screen is **read-only** (a public list) — no create/edit/delete.
  */
+import type { Projet } from '@/features/projects/projects.dto';
+
 export interface Promoteur {
   id: number;
   profile: string | null;
@@ -39,6 +41,8 @@ export interface Promoteur {
   paysnationalite_id: number | null;
   /** 0/1. */
   statut: number;
+  /** Embedded by `POST /promoteurs/filter-with-projects` — the promoteur's micro-projets. */
+  micro_projets?: Projet[];
   created_at?: string;
   updated_at?: string;
 }

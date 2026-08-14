@@ -8,7 +8,6 @@ import {
   type PromoteurQuery,
 } from './promoteurs.dto';
 
-const LIST_URL = '/promoteurs';
 const FILTER_URL = '/promoteurs/filter-with-projects';
 
 /** `?page=&per_page=` — pagination is carried in the query string on both routes. */
@@ -51,14 +50,13 @@ export const promoteursService = {
     query: PromoteurQuery,
     client: ApiClient = apiClient,
   ): Promise<Paginated<Promoteur>> => {
-    const body = buildFilterBody(query);
-    const raw =
-      Object.keys(body).length > 0
-        ? await client.request<unknown>(`${FILTER_URL}?${pageQuery(query)}`, {
-            method: 'POST',
-            body,
-          })
-        : await client.request<unknown>(`${LIST_URL}?${pageQuery(query)}`);
+    // Always POST `filter-with-projects` (empty body = full list) so every row
+    // embeds the promoteur's `micro_projets` — the detail sheet reads them directly,
+    // no per-promoteur fetch needed.
+    const raw = await client.request<unknown>(`${FILTER_URL}?${pageQuery(query)}`, {
+      method: 'POST',
+      body: buildFilterBody(query),
+    });
     return toPaginated<Promoteur>(raw, { page: query.page, perPage: query.perPage });
   },
 };

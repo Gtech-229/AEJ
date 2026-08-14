@@ -11,11 +11,9 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/generic/empty-state';
-import { LoadingState } from '@/components/generic/loader';
 import { CountryFlag } from '@/components/generic/country-flag';
 import { cn } from '@/lib/utils';
 import { formatDate, getAge } from '@/lib/date';
-import { useProjectsByPromoteur } from '@/features/projects/projects.hooks';
 import { ProjetCard } from '@/features/projects/projet-card';
 import { refLabel } from '@/features/referentials/referentials.types';
 import { usePromoteurReferentials } from './promoteurs.referentials';
@@ -51,9 +49,9 @@ function Section({
 }
 
 /**
- * Promoteur detail panel — general information from the row data, plus a
- * Projets section that is a TEMPLATE for now (fetching a promoteur's projects
- * isn't available yet). Controlled by a nullable `promoteur`: non-null = open.
+ * Promoteur detail panel — general information from the row data, plus the
+ * promoteur's micro-projets (embedded on the row by `filter-with-projects`).
+ * Controlled by a nullable `promoteur`: non-null = open.
  */
 export function PromoteurDetailSheet({
   promoteur,
@@ -65,7 +63,8 @@ export function PromoteurDetailSheet({
   const actif = (promoteur?.statut ?? 1) !== 0;
   const age = getAge(promoteur?.datenaissance);
   const refs = usePromoteurReferentials();
-  const { data: projets, isLoading: projetsLoading } = useProjectsByPromoteur(promoteur?.id);
+  // Projects are embedded on the promoteur row (filter-with-projects).
+  const projets = promoteur?.micro_projets ?? [];
   return (
     <Sheet open={!!promoteur} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col sm:max-w-xl">
@@ -172,9 +171,7 @@ export function PromoteurDetailSheet({
               </Section>
 
               <Section title="Projets" icon={FolderKanban}>
-                {projetsLoading ? (
-                  <LoadingState label="Chargement des projets…" size="default" className="py-6" />
-                ) : projets && projets.length > 0 ? (
+                {projets.length > 0 ? (
                   <div className="space-y-2">
                     {projets.map((projet) => (
                       <ProjetCard key={projet.id} projet={projet} />
