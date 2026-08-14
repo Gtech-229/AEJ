@@ -1,10 +1,12 @@
 import type { FieldConfig, FormConfig } from '@/components/forms';
 import { refOptions, type RefItem } from '@/features/referentials/referentials.types';
 
-/** Referential lists backing the role/fonction selects. */
+/** Referential lists backing the role/fonction + scope selects. */
 export interface PersonnelFormRefs {
   roles: RefItem[];
   fonctions: RefItem[];
+  organismes: RefItem[];
+  agences: RefItem[];
 }
 
 /** Field config for the create/edit personnel form. Names match the API 1:1. */
@@ -40,6 +42,22 @@ export function getPersonnelFormConfig(
       required: true,
       placeholder: 'Sélectionner une fonction…',
       options: refOptions(refs.fonctions),
+    },
+    {
+      name: 'organisme_id',
+      label: 'Organisme (point focal)',
+      type: 'combobox',
+      placeholder: 'Aucun — laisser vide si non concerné',
+      helperText: 'À renseigner pour un point focal rattaché à un organisme.',
+      options: refOptions(refs.organismes, 'nom'),
+    },
+    {
+      name: 'agence_regionale_id',
+      label: 'Agence régionale',
+      type: 'combobox',
+      placeholder: 'Aucune — laisser vide si non concerné',
+      helperText: 'À renseigner pour un agent rattaché à une agence régionale.',
+      options: refOptions(refs.agences, 'nom'),
     },
     { name: 'adresse', label: 'Adresse', type: 'text', required: true, colSpan: 'full' },
   ];

@@ -4,6 +4,7 @@ import type {
   WorkflowInstance,
   WorkflowInstanceComment,
   WorkflowInstanceDeliverable,
+  WorkflowInstanceDetail,
   WorkflowInstanceHistory,
 } from './workflow-instances.dto';
 
@@ -23,6 +24,12 @@ async function getList<T>(url: string, client: ApiClient): Promise<T[]> {
 export const workflowInstancesService = {
   getInstances: (client: ApiClient = apiClient) =>
     getList<WorkflowInstance>(`${BASE}/instances`, client),
+
+  /** Single instance WITH embedded history / deliverables / comments. */
+  getInstance: async (id: number, client: ApiClient = apiClient): Promise<WorkflowInstanceDetail> => {
+    const res = await client.request<{ data: WorkflowInstanceDetail }>(`${BASE}/instances/${id}`);
+    return res.data;
+  },
   getHistories: (client: ApiClient = apiClient) =>
     getList<WorkflowInstanceHistory>(`${BASE}/histories`, client),
   getDeliverables: (client: ApiClient = apiClient) =>

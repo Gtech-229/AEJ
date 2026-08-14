@@ -11,6 +11,15 @@ export function useWorkflowInstances() {
   });
 }
 
+/** Single instance with embedded history / deliverables / comments. */
+export function useWorkflowInstance(id: number | undefined) {
+  return useQuery({
+    queryKey: workflowInstancesKeys.instance(id ?? 0),
+    queryFn: () => workflowInstancesService.getInstance(id as number),
+    enabled: id != null,
+  });
+}
+
 export function useWorkflowInstanceHistories() {
   return useQuery({
     queryKey: workflowInstancesKeys.histories(),

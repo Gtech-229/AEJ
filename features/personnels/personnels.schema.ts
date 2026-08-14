@@ -12,6 +12,11 @@ export const createPersonnelSchema = z.object({
     .number({ message: 'La fonction est requise' })
     .int()
     .positive('La fonction est requise'),
+  // Scope FKs — optional (a point focal has an organisme, an agence agent an
+  // agence; DIRECTION/national staff have neither). Comboboxes emit undefined
+  // when cleared → coerce keeps a chosen id numeric.
+  organisme_id: z.coerce.number().int().positive().optional(),
+  agence_regionale_id: z.coerce.number().int().positive().optional(),
 });
 
 /**

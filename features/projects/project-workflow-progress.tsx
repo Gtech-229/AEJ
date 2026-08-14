@@ -11,6 +11,7 @@ import { formatDate, formatDateTime } from '@/lib/date';
 import type { Projet } from './projects.dto';
 import type { WorkflowEtape } from '@/features/workflows/workflow.dto';
 import {
+  useWorkflowDeliverables,
   useWorkflowEtapeDeliverables,
   useWorkflowEtapeRoles,
   useWorkflowEtapes,
@@ -24,9 +25,7 @@ import type {
   WorkflowInstanceStatus,
 } from '@/features/workflow-instances/workflow-instances.dto';
 import {
-  useWorkflowInstanceComments,
-  useWorkflowInstanceDeliverables,
-  useWorkflowInstanceHistories,
+  useWorkflowInstance,
   useWorkflowInstances,
 } from '@/features/workflow-instances/workflow-instances.hooks';
 
@@ -55,10 +54,9 @@ function stepDateRange(
   deliverables: WorkflowInstanceDeliverable[],
   comments: WorkflowInstanceComment[],
 ): string {
-  const entered = history.map((h) => h.entered_at).filter(Boolean).sort() as string[];
-  const exited = history.map((h) => h.exited_at).filter(Boolean).sort() as string[];
-  let start = entered[0];
-  let end = exited[exited.length - 1];
+  const acted = history.map((h) => h.acted_at).filter(Boolean).sort() as string[];
+  let start = acted[0];
+  let end = acted[acted.length - 1];
   if (!start && !end) {
     const acts = [
       ...deliverables.map((d) => d.produced_at),
@@ -105,7 +103,7 @@ const STEP_TONE: Record<StepStatus, { ring: string; badge: string }> = {
 const etapeVersionCode = (e: WorkflowEtape) =>
   typeof e.workflow_version === 'string' ? e.workflow_version : e.workflow_version?.code;
 
-function DeliverableRow({ d }: { d: WorkflowInstanceDeliverable }) {
+function DeliverableRow({ d, name }: { d: WorkflowInstanceDeliverable; name?: string }) {
   const href = fileHref(d.file_path);
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-2.5">
@@ -113,7 +111,7 @@ function DeliverableRow({ d }: { d: WorkflowInstanceDeliverable }) {
         <Paperclip className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-foreground">
-            {d.deliverable?.name ?? d.deliverable_code}
+            {d.deliverable?.name ?? name ?? d.deliverable_code}
           </p>
           <p className="truncate text-xs text-muted-foreground">
             {d.file_name ?? '—'}
@@ -167,6 +165,7 @@ function StepRow({
   comments,
   deliverables,
   defaultOpen,
+  resolveName,
 }: {
   etape: WorkflowEtape;
   status: StepStatus;
@@ -175,6 +174,7 @@ function StepRow({
   comments: WorkflowInstanceComment[];
   deliverables: WorkflowInstanceDeliverable[];
   defaultOpen: boolean;
+  resolveName?: (code: string) => string | undefined;
 }) {
   const tone = STEP_TONE[status];
   const dates = stepDateRange(history, deliverables, comments);
@@ -220,15 +220,19 @@ function StepRow({
 
         {history.length > 0 && (
           <div className="space-y-1.5">
-            {history.map((h) => (
-              <div key={h.id} className="text-xs text-muted-foreground">
-                {h.role_code ? <span className="font-medium text-foreground">{h.role_code}</span> : null}
-                {h.performed_by ? ` · ${h.performed_by.prenom} ${h.performed_by.nom}` : ''}
-                {h.entered_at ? ` · ${formatDate(h.entered_at)}` : ''}
-                {h.exited_at ? ` → ${formatDate(h.exited_at)}` : ''}
-                {h.comments ? <p className="mt-0.5 text-foreground">{h.comments}</p> : null}
-              </div>
-            ))}
+            {history.map((h) => {
+              const note = h.comments || h.comment || h.observation;
+              return (
+                <div key={h.id} className="text-xs text-muted-foreground">
+                  {h.role_code ? (
+                    <span className="font-mono font-medium text-foreground">{h.role_code}</span>
+                  ) : null}
+                  {h.action ? ` · ${h.action}` : ''}
+                  {h.acted_at ? ` · ${formatDate(h.acted_at)}` : ''}
+                  {note ? <p className="mt-0.5 text-foreground">{note}</p> : null}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -237,7 +241,7 @@ function StepRow({
             <SubHeading icon={FileCheck2} label={`Livrables (${deliverables.length})`} />
             <ul className="space-y-2">
               {deliverables.map((d) => (
-                <DeliverableRow key={d.id} d={d} />
+                <DeliverableRow key={d.id} d={d} name={resolveName?.(d.deliverable_code)} />
               ))}
             </ul>
           </div>
@@ -274,13 +278,11 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
   const etapeDeliverables = useWorkflowEtapeDeliverables();
   const etapeRoles = useWorkflowEtapeRoles();
   const roles = useWorkflowRoles();
-  const histories = useWorkflowInstanceHistories();
-  const deliverables = useWorkflowInstanceDeliverables();
-  const comments = useWorkflowInstanceComments();
+  const deliverableDefs = useWorkflowDeliverables();
 
   // A dossier can carry several instances — prefer the active one (EN_COURS),
-  // then the most recently started.
-  const instance: WorkflowInstance | undefined = useMemo(() => {
+  // then the most recently started. The list only maps projet → instance id.
+  const listInstance: WorkflowInstance | undefined = useMemo(() => {
     const mine = (instances.data ?? []).filter((i) => i.micro_projet_id === projet.id);
     if (mine.length === 0) return undefined;
     const byRecent = [...mine].sort((a, b) =>
@@ -288,6 +290,17 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
     );
     return byRecent.find((i) => i.status === 'EN_COURS') ?? byRecent[0];
   }, [instances.data, projet.id]);
+
+  // The detail endpoint carries history / deliverables / comments in one call.
+  const detailQuery = useWorkflowInstance(listInstance?.id);
+  const instance = detailQuery.data ?? listInstance;
+
+  // deliverable_code → name (§8.1 config — the detail endpoint doesn't embed it).
+  const deliverableNameByCode = useMemo(() => {
+    const m = new Map<string, string>();
+    (deliverableDefs.data ?? []).forEach((d) => d.code && m.set(d.code, d.name));
+    return m;
+  }, [deliverableDefs.data]);
 
   // Responsible role(s) for the current étape (§8.1 etape-roles config).
   const responsibleRoles = useMemo(() => {
@@ -304,18 +317,9 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
       .sort((a, b) => a.order - b.order);
   }, [etapes.data, instance]);
 
-  const instanceHistory = useMemo(
-    () => (histories.data ?? []).filter((h) => h.workflow_instance_id === instance?.id),
-    [histories.data, instance?.id],
-  );
-  const instanceDeliverables = useMemo(
-    () => (deliverables.data ?? []).filter((d) => d.workflow_instance_id === instance?.id),
-    [deliverables.data, instance?.id],
-  );
-  const instanceComments = useMemo(
-    () => (comments.data ?? []).filter((c) => c.workflow_instance_id === instance?.id),
-    [comments.data, instance?.id],
-  );
+  const instanceHistory = detailQuery.data?.history ?? [];
+  const instanceDeliverables = detailQuery.data?.deliverables ?? [];
+  const instanceComments = detailQuery.data?.comments ?? [];
 
   // deliverable_code → the étape(s) that expect it (§8.1 config mapping).
   const stepForDeliverableCode = useMemo(() => {
@@ -407,6 +411,7 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
                 comments={instanceComments.filter((c) => c.etape_code === etape.code)}
                 deliverables={stepDeliverables}
                 defaultOpen={status === 'current'}
+                resolveName={(code) => deliverableNameByCode.get(code)}
               />
             );
           })}
@@ -428,7 +433,7 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
           </h3>
           <ul className="space-y-2">
             {orphanDeliverables.map((d) => (
-              <DeliverableRow key={d.id} d={d} />
+              <DeliverableRow key={d.id} d={d} name={deliverableNameByCode.get(d.deliverable_code)} />
             ))}
           </ul>
         </section>

@@ -20,6 +20,13 @@ export interface Personnel {
   adresse: string;
   role_id: number;
   fonction_id: number;
+  /**
+   * Scope FKs (nullable) — set for a point focal (organisme) or an agence agent;
+   * null for national/DIRECTION staff. Confirmed on /personnel/me + create.
+   * NB: entreprise scoping is NOT a personnel field — it's the entreprise space.
+   */
+  organisme_id?: number | null;
+  agence_regionale_id?: number | null;
   /** NB: the API returns 0/1, not a boolean (confirmed on /personnel/me). */
   is_active?: number;
 }
