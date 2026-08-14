@@ -25,13 +25,15 @@ export type CreateIndicateurPayload = {
 
 export type UpdateIndicateurPayload = CreateIndicateurPayload & { id: number };
 
-/** A dated measurement for an indicateur (`indicateurs_suivi`). */
+/** A dated measurement for an indicateur (`/indicateur-suivis`). */
 export interface IndicateurSuivi {
   id: number;
   indicateur_id: number;
   valeur: string;
   created_at?: string;
   updated_at?: string;
+  /** Embedded on the list response. */
+  indicateur?: Indicateur;
 }
 
-export type CreateIndicateurSuiviPayload = { valeur: string };
+export type CreateIndicateurSuiviPayload = { indicateur_id: number; valeur: string };
