@@ -8,9 +8,10 @@ import type {
   UpdateIndicateurPayload,
 } from './indicateurs.dto';
 
-// TODO(backend): confirm routes (assumed /indicateurs, values nested under
-// /indicateurs/{id}/suivi) + the { Message, data } envelope.
 const BASE_URL = '/indicateurs';
+// Values live under a FLAT resource `/indicateur-suivis` (verified live 2026-08):
+// create takes `{ indicateur_id, valeur }`; the list isn't filtered server-side.
+const SUIVI_URL = '/indicateur-suivis';
 
 /** Responses are enveloped: { Message, data: … } — methods unwrap `data`. */
 export const indicateursService = {
@@ -44,18 +45,20 @@ export const indicateursService = {
   remove: (id: number, client: ApiClient = apiClient): Promise<void> =>
     client.request<void>(`${BASE_URL}/${id}`, { method: 'DELETE' }),
 
-  // ── Renseignement (indicateurs_suivi) ─────────────────────────────────────
+  // ── Renseignement (indicateur-suivis) ─────────────────────────────────────
+  // The list endpoint returns all values (no server-side filter), so scope to
+  // the indicateur client-side.
   listSuivi: async (indicateurId: number, client: ApiClient = apiClient): Promise<IndicateurSuivi[]> => {
-    const res = await client.request<{ data: IndicateurSuivi[] }>(`${BASE_URL}/${indicateurId}/suivi`);
-    return Array.isArray(res?.data) ? res.data : [];
+    const res = await client.request<{ data: IndicateurSuivi[] }>(SUIVI_URL);
+    const all = Array.isArray(res?.data) ? res.data : [];
+    return all.filter((s) => s.indicateur_id === indicateurId);
   },
 
   addValeur: async (
-    indicateurId: number,
     payload: CreateIndicateurSuiviPayload,
     client: ApiClient = apiClient,
   ): Promise<IndicateurSuivi> => {
-    const res = await client.request<{ data: IndicateurSuivi }>(`${BASE_URL}/${indicateurId}/suivi`, {
+    const res = await client.request<{ data: IndicateurSuivi }>(SUIVI_URL, {
       method: 'POST',
       body: payload,
     });
