@@ -20,9 +20,23 @@ export interface WorkflowInstance {
   status: WorkflowInstanceStatus;
   started_at: string | null;
   completed_at: string | null;
+  /** Forward hint toward the transition target (null until resolved). */
+  next_etape_code?: string | null;
   // Embeds on read.
   micro_projet?: Projet;
   current_etape?: WorkflowEtape | null;
+  next_etape?: WorkflowEtape | null;
+}
+
+/**
+ * `GET /workflow-instances/instances/{id}` — the instance WITH its history,
+ * deliverables and comments embedded in one call (the separate list endpoints
+ * are unfiltered + `/histories` is empty, so this is the source of truth).
+ */
+export interface WorkflowInstanceDetail extends WorkflowInstance {
+  history: WorkflowInstanceHistory[];
+  deliverables: WorkflowInstanceDeliverable[];
+  comments: WorkflowInstanceComment[];
 }
 
 export interface WorkflowInstanceHistory {
@@ -30,10 +44,14 @@ export interface WorkflowInstanceHistory {
   workflow_instance_id: number;
   etape_code: string;
   role_code: string | null;
-  performed_by_id: number | null;
-  entered_at: string | null;
-  exited_at: string | null;
+  acted_by: number | null;
+  acted_at: string | null;
+  /** Free-text notes on the step (the detail endpoint uses `comments`). */
   comments: string | null;
+  action: string | null;
+  comment: string | null;
+  observation: string | null;
+  // Optional embeds (present on the list endpoint, absent on the detail one).
   etape?: WorkflowEtape | null;
   performed_by?: Personnel | null;
 }
@@ -48,7 +66,8 @@ export interface WorkflowInstanceDeliverable {
   file_type: string | null;
   produced_at: string | null;
   produced_by_id: number | null;
-  /** The livrable definition (§8.1). */
+  observation?: string | null;
+  /** The livrable definition (§8.1) — embedded only on the list endpoint. */
   deliverable?: WorkflowDeliverable | null;
   produced_by?: Personnel | null;
 }
