@@ -63,8 +63,10 @@ main() {
 
   echo "▶ [5/6] Atomic swap + reload …"
   ln -sfn "$REL" "$CURRENT"                                   # ← the only prod-facing step
-  pm2 reload "$APP" --update-env 2>/dev/null \
-    || pm2 start "$ECOSYSTEM" --update-env                    # first run: boot from ecosystem
+  # Re-read the ecosystem (cwd = the aej-current symlink) so pm2 RE-RESOLVES it to
+  # the new release. `pm2 reload <name>` reuses the old resolved cwd and would keep
+  # serving the previous release — the symlink-deploy gotcha.
+  pm2 startOrReload "$ECOSYSTEM" --update-env
   pm2 save
 
   echo "▶ [6/6] Pruning old releases (keeping $KEEP) …"
