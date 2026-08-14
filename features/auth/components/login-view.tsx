@@ -91,7 +91,7 @@ export function LoginView({
             placeholder="prenom.nom@exemple.ci"
             disabled={chargement}
             aria-invalid={!!errors.email}
-            className="h-11 focus-visible:border-[#00AC22] focus-visible:ring-[#00AC22]/20"
+            className="h-11 focus-visible:border-[#00AC22] focus-visible:ring-[#00AC22]/20 text-foreground"
             {...register('email')}
           />
           {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
@@ -114,7 +114,7 @@ export function LoginView({
               autoComplete="current-password"
               disabled={chargement}
               aria-invalid={!!errors.mot_de_passe}
-              className="h-11 pr-11 focus-visible:border-[#00AC22] focus-visible:ring-[#00AC22]/20"
+              className="h-11 pr-11 focus-visible:border-[#00AC22] focus-visible:ring-[#00AC22]/20 text-foreground"
               {...register('mot_de_passe')}
             />
             <button
