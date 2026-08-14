@@ -57,7 +57,9 @@ main() {
   true
 
   echo "▶ [4/6] Installing + building IN THE RELEASE (live app untouched) …"
-  ( cd "$REL" && npm ci --no-audit --no-fund && npm run build )
+  # `npm install` (not `npm ci`): the committed package-lock.json drifts from
+  # package.json, which `npm ci` rejects. install reconciles it in the release.
+  ( cd "$REL" && npm install --no-audit --no-fund && npm run build )
 
   echo "▶ [5/6] Atomic swap + reload …"
   ln -sfn "$REL" "$CURRENT"                                   # ← the only prod-facing step
