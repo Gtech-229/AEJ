@@ -1,21 +1,14 @@
-import { Suspense } from 'react';
-import { AuthShell } from '@/features/auth/components/auth-shell';
 import { LoginForm } from '@/features/auth/components/login-form';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+export const metadata = {
+  title: 'Connexion — Agence Emploi Jeunes',
+};
+
+export default function Page() {
   return (
-    // <AuthShell
-    //   title="Connexion"
-    //   subtitle="Accédez à votre espace de gestion"
-    //   stats={[
-    //     { value: 12723, label: 'Jeunes accompagnés' },
-    //     { value: 5933, suffix: '+', label: 'Emplois obtenus' },
-    //     { value: 84, suffix: '%', label: "Taux d'insertion" },
-    //   ]}
-    // >
-      <Suspense fallback={null}>
-        <LoginForm />
-      </Suspense>
-    // </AuthShell>
+    <Suspense fallback={<div className="min-h-svh flex items-center justify-center text-sm text-muted-foreground">Chargement…</div>}>
+      <LoginForm space="agence" />
+    </Suspense>
   );
 }

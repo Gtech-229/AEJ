@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Construction, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { getApiErrorMessage } from '@/lib/api/errors';
 import { loginSchema, type LoginInput } from '../auth.schema';
-import type { SpaceKey } from '../auth.spaces';
+import { SPACES, type SpaceKey } from '../auth.spaces';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { AuthIllustration, FloatingParticles } from './auth-background';
 import { StatCard } from './stat-card';
@@ -22,6 +22,7 @@ const PARTNER_LOGOS = [
   { name: 'Ecobank', src: '/partenaire/ecobank_ci_0.jpg' },
 ];
 
+
 interface StatItem {
   value: number;
   suffix?: string;
@@ -30,7 +31,6 @@ interface StatItem {
 
 export interface LoginFormProps {
   space: SpaceKey;
-  homeRoute: string;
   brandTitle?: string;
   brandTagline?: string;
   stats?: StatItem[];
@@ -51,13 +51,13 @@ const DEFAULT_STATS: StatItem[] = [
 
 export function LoginForm({
   space,
-  homeRoute,
   brandTitle = 'AGENCE EMPLOI JEUNES',
   brandTagline = "Le Guichet Unique de l'Emploi en Côte d'Ivoire",
   stats = DEFAULT_STATS,
   showPartnerLogos = true,
 }: LoginFormProps) {
-  const login = useLogin(space, homeRoute);
+  const login = useLogin(space);
+  const { authLive } = SPACES[space];
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [greeting, setGreeting] = useState('Bonjour');
@@ -92,14 +92,11 @@ export function LoginForm({
     } else {
       localStorage.removeItem(rememberMeKey);
     }
-    // ⚠️ Suppose que LoginPayload (auth.dto) a la même forme que LoginInput
-    // ({ email, mot_de_passe }). Ajuste le mapping ici si ce n'est pas le cas.
     login.mutate(values);
   }
 
   return (
     <div className="min-h-svh flex flex-row bg-[#F5F6F8]">
-      {/* ── Panneau branding — bande étroite sur mobile, s'élargit jusqu'à 50% à partir de lg ── */}
       <div
         className="relative overflow-hidden flex flex-col justify-between gap-4 w-20 p-3 sm:w-56 sm:p-5 lg:w-1/2 lg:p-8 xl:p-10"
         style={{ background: 'linear-gradient(135deg, #1a7a3c 0%, #0f5228 100%)' }}
@@ -161,6 +158,16 @@ export function LoginForm({
             <p className="text-sm text-gray-500 mt-1">Connectez-vous pour accéder à votre espace.</p>
           </div>
 
+          {!authLive && (
+            <div className="mb-5 flex items-start gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
+              <Construction size={15} className="shrink-0 mt-0.5" />
+              <span>
+                Cet espace est en aperçu — l'authentification réelle n'est pas encore branchée côté serveur pour{' '}
+                {SPACES[space].label}.
+              </span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-gray-600 mb-1.5">
@@ -215,7 +222,7 @@ export function LoginForm({
                 />
                 Se souvenir de moi
               </label>
-              <a href="/auth/mot-de-passe-oublie" className="text-xs font-medium text-green-700 hover:underline">
+              <a href="/auth/components/ResetPassword" className="text-xs font-medium text-green-700 hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>
