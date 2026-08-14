@@ -39,12 +39,6 @@ main() {
   local BRANCH="${1:-main}"
   mkdir -p "$RELEASES"
 
-  # Pre-flight: shared config must exist BEFORE we build anything.
-  if [[ ! -f "$SHARED/.env.production" ]]; then
-    echo "✖ Missing $SHARED/.env.production — do the one-time setup first." >&2
-    exit 1
-  fi
-
   echo "▶ [1/6] Fetching origin/$BRANCH …"
   git -C "$REPO" fetch --prune origin
 
@@ -55,8 +49,12 @@ main() {
   echo "▶ [2/6] Creating release $STAMP (out-of-place) …"
   git -C "$REPO" worktree add --force --detach "$REL" "origin/$BRANCH"
 
-  echo "▶ [3/6] Linking shared config …"
-  ln -sfn "$SHARED/.env.production" "$REL/.env.production"
+  echo "▶ [3/6] Linking shared config (if any) …"
+  # Only if you keep a server-only env in $SHARED. If the app runs on the
+  # committed .env, this is skipped and each release uses that .env from git.
+  [[ -f "$SHARED/.env.production" ]] && ln -sfn "$SHARED/.env.production" "$REL/.env.production"
+  [[ -f "$SHARED/.env.local" ]] && ln -sfn "$SHARED/.env.local" "$REL/.env.local"
+  true
 
   echo "▶ [4/6] Installing + building IN THE RELEASE (live app untouched) …"
   ( cd "$REL" && npm ci --no-audit --no-fund && npm run build )
