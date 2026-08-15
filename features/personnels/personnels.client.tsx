@@ -13,9 +13,12 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { useRoles } from '@/features/roles/roles.hooks';
 import { useFonctions } from '@/features/fonctions/fonctions.hooks';
+import { useOrganismes } from '@/features/organismes/organismes.hooks';
+import { useAgencesRegionales } from '@/features/referentials/referentials.hooks';
 import type { Personnel } from './personnels.dto';
 import { createPersonnelSchema, updatePersonnelSchema } from './personnels.schema';
 import { getPersonnelFormConfig } from './personnels.form';
@@ -31,16 +34,25 @@ export function PersonnelsClient() {
   const { data: personnels, isLoading } = usePersonnels();
   const { data: roles } = useRoles();
   const { data: fonctions } = useFonctions();
+  const { data: organismes } = useOrganismes();
+  const { data: agences } = useAgencesRegionales();
   const createPersonnel = useCreatePersonnel();
   const updatePersonnel = useUpdatePersonnel();
   const deletePersonnel = useDeletePersonnel();
   const dialog = useDialogState<Personnel>();
 
-  // Referentials backing the role/fonction selects and the table labels.
+  // Referentials backing the role/fonction + scope selects and the table labels.
   const formRefs = useMemo(
-    () => ({ roles: roles ?? [], fonctions: fonctions ?? [] }),
-    [roles, fonctions],
+    () => ({
+      roles: roles ?? [],
+      fonctions: fonctions ?? [],
+      organismes: organismes ?? [],
+      agences: agences ?? [],
+    }),
+    [roles, fonctions, organismes, agences],
   );
+
+
 
   const columns: ColumnDef<Personnel>[] = useMemo(
     () => [
@@ -88,6 +100,34 @@ export function PersonnelsClient() {
         },
       },
       {
+        id: 'rattachement',
+        meta: { label: 'Rattachement' },
+        header: 'Rattachement',
+        cell: ({ row }) => {
+          const org = row.original.organisme_id
+            ? organismes?.find((o) => o.id === row.original.organisme_id)
+            : null;
+          const ag = row.original.agence_regionale_id
+            ? agences?.find((a) => a.id === row.original.agence_regionale_id)
+            : null;
+          if (!org && !ag) return <span className="text-muted-foreground">—</span>;
+          return (
+            <div className="flex flex-wrap gap-1">
+              {org && (
+                <Badge variant="outline" className="font-normal">
+                  {org.nom}
+                </Badge>
+              )}
+              {ag && (
+                <Badge variant="outline" className="font-normal">
+                  {ag.nom}
+                </Badge>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         id: 'is_active',
         // Normalize to "1"/"0" so it works whether the value is 1/0 or true/false.
         accessorFn: (p) => String(Number(p.is_active ?? 0)),
@@ -116,7 +156,7 @@ export function PersonnelsClient() {
         onDelete: dialog.openDelete,
       }),
     ],
-    [dialog.openEdit, dialog.openDelete, roles, fonctions],
+    [dialog.openEdit, dialog.openDelete, roles, fonctions, organismes, agences],
   );
 
   return (
@@ -128,7 +168,7 @@ export function PersonnelsClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Personnel>
           data={personnels ?? []}
           columns={columns}
@@ -141,7 +181,7 @@ export function PersonnelsClient() {
           toolbarEndSlot={
             <Button size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />
-              Ajouter
+              Nouveau personnel
             </Button>
           }
         />

@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { CreatePersonnelPayload, UpdatePersonnelPayload } from './personnels.dto';
 import { personnelsKeys } from './personnels.keys';
 import { personnelsService } from './personnels.service';
+import type { CreatePersonnelPayload, UpdatePersonnelPayload } from './personnels.dto';
 
 export function usePersonnels() {
   return useQuery({

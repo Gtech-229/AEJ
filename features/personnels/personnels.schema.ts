@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-/** Shared fields between create and edit forms. */
-const basePersonnelFields = {
+/** Create form — all fields required. */
+export const createPersonnelSchema = z.object({
   nom: z.string().min(1, 'Le nom est requis'),
   prenom: z.string().min(1, 'Le prénom est requis'),
   email: z.email('Adresse email invalide'),
@@ -12,16 +12,17 @@ const basePersonnelFields = {
     .number({ message: 'La fonction est requise' })
     .int()
     .positive('La fonction est requise'),
-};
-
-/** Create form — mot_de_passe required (min 8, matches API expectations). */
-export const createPersonnelSchema = z.object({
-  ...basePersonnelFields,
-  mot_de_passe: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+  // Scope FKs — optional (a point focal has an organisme, an agence agent an
+  // agence; DIRECTION/national staff have neither). Comboboxes emit undefined
+  // when cleared → coerce keeps a chosen id numeric.
+  organisme_id: z.coerce.number().int().positive().optional(),
+  agence_regionale_id: z.coerce.number().int().positive().optional(),
 });
 
-/** Edit form — no mot_de_passe field (the API's PUT payload excludes it). */
-export const updatePersonnelSchema = z.object(basePersonnelFields);
+/**
+ * Edit form — same fields, all optional so a PUT can send only what changed.
+ */
+export const updatePersonnelSchema = createPersonnelSchema.partial();
 
 export type CreatePersonnelInput = z.infer<typeof createPersonnelSchema>;
 export type UpdatePersonnelInput = z.infer<typeof updatePersonnelSchema>;

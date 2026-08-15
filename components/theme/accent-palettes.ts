@@ -2,8 +2,9 @@
  * Runtime accent palettes for the brand-color switcher (plain data — usable
  * from server or client).
  *
- * PROVISIONAL. This is a Côte d'Ivoire project; the final accent set (likely
- * CI orange / white / green) is TBD. For now: default AEJ green + red.
+ * This is a Côte d'Ivoire project — the accent set is AEJ green (default) and
+ * the official CI flag orange (#FF8200, per the République de Côte d'Ivoire
+ * signalétique sheet). Replaces the earlier placeholder red.
  *
  * `DEFAULT_ACCENT` maps to the CSS tokens in globals.css (which carry the
  * light/dark OKLCH variants), so selecting it clears the runtime override and
@@ -12,7 +13,7 @@
  */
 export const ACCENT_PALETTES = {
   aej_green: { label: 'AEJ Vert', primary: '#1a7a3c', ring: '#1a7a3c' },
-  rouge: { label: 'Rouge', primary: '#CE1126', ring: '#CE1126' },
+  orange_ci: { label: 'Orange CI', primary: '#FF8200', ring: '#FF8200' },
   slate: { label: 'Slate', primary: '#1e293b', ring: '#1e293b' },
 } as const;
 

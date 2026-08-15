@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatNumber } from '@/lib/number';
 
 export interface Credit {
     id: number;
@@ -61,7 +62,7 @@ export default function CreditsWidget({ total, credits, pageSize = 6 }: CreditsW
             </div>
 
             <p className="text-2xl font-bold text-gray-900 mb-4">
-                {total.toLocaleString('fr-FR')} <span className="text-base font-normal text-gray-400">Crédits</span>
+                {formatNumber(total)} <span className="text-base font-normal text-gray-400">Crédits</span>
             </p>
 
             <div className="grid grid-cols-[1fr_1.3fr_1fr_1.1fr] gap-x-3 text-xs text-gray-400 font-medium pb-2 border-b border-gray-100 mb-2">
@@ -75,7 +76,7 @@ export default function CreditsWidget({ total, credits, pageSize = 6 }: CreditsW
                     <div key={c.id} className="grid grid-cols-[1fr_1.3fr_1fr_1.1fr] gap-x-3 items-center py-1 border-b border-gray-50 last:border-0">
                         <span className="text-xs font-bold text-gray-700 leading-tight">{c.code}</span>
                         <span className="text-xs text-gray-600 leading-tight truncate">{c.beneficiaire}</span>
-                        <span className="text-xs text-gray-500">{c.montant.toLocaleString('fr-FR')}</span>
+                        <span className="text-xs text-gray-500">{formatNumber(c.montant)}</span>
                         <StatusBadge statut={c.statut} />
                     </div>
                 ))}

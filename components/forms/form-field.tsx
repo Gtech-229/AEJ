@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from './number-input';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Combobox } from '@/components/generic/combobox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -126,13 +128,15 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
         </FormControl>
       );
 
-    case 'select':
+    case 'select': {
+      const raw = rhf.value != null ? String(rhf.value) : '';
+      // Normalize a value that matches no option (e.g. a `0`/empty default) to ''
+      // so Radix shows the placeholder instead of a blank trigger.
+      const current = field.options?.some((o) => String(o.value) === raw) ? raw : '';
       return (
-        <Select
-          value={rhf.value != null ? String(rhf.value) : ''}
-          onValueChange={rhf.onChange}
-          disabled={field.disabled}
-        >
+        // Native SelectValue: the trigger CSS-truncates the SELECTED label to its
+        // width (line-clamp-1); the dropdown options keep their full label.
+        <Select value={current} onValueChange={rhf.onChange} disabled={field.disabled}>
           <FormControl>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={field.placeholder ?? 'Sélectionner…'} />
@@ -146,6 +150,26 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
             ))}
           </SelectContent>
         </Select>
+      );
+    }
+
+    case 'combobox':
+      // Searchable single-select for long option lists (e.g. communes). Emits the
+      // option value as a string; `undefined` when cleared. `modal` keeps the
+      // search input focused inside a Dialog.
+      return (
+        <FormControl>
+          <Combobox
+            options={(field.options ?? []).map((o) => ({ value: String(o.value), label: o.label }))}
+            value={rhf.value != null && rhf.value !== '' ? String(rhf.value) : ''}
+            onValueChange={(v) => rhf.onChange(v === '' ? undefined : v)}
+            placeholder={field.placeholder ?? 'Sélectionner…'}
+            searchPlaceholder="Rechercher…"
+            allLabel={field.required ? undefined : 'Aucune sélection'}
+            disabled={field.disabled}
+            modal
+          />
+        </FormControl>
       );
 
     case 'radio':
@@ -196,6 +220,19 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
               </button>
             )}
           </div>
+        </FormControl>
+      );
+
+    case 'amount':
+      // Formatted number: live thousands separators, emits the bare number.
+      return (
+        <FormControl>
+          <NumberInput
+            placeholder={field.placeholder}
+            disabled={field.disabled}
+            value={rhf.value as number | string | null | undefined}
+            onValueChange={(v) => rhf.onChange(v ?? undefined)}
+          />
         </FormControl>
       );
 

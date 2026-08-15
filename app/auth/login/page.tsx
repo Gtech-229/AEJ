@@ -1,13 +1,11 @@
 import { Suspense } from 'react';
-import { AuthShell } from '@/features/auth/components/auth-shell';
-import { LoginForm } from '@/features/auth/components/login-form';
+import { LoginView } from '@/features/auth/components/login-view';
 
 export default function LoginPage() {
+  // useLogin() reads `?redirect=` via useSearchParams → needs a Suspense boundary.
   return (
-    <AuthShell title="Connexion" subtitle="Accédez à votre espace de gestion">
-      <Suspense fallback={null}>
-        <LoginForm />
-      </Suspense>
-    </AuthShell>
+    <Suspense fallback={null}>
+      <LoginView espace="AEJ" />
+    </Suspense>
   );
 }

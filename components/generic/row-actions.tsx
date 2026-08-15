@@ -73,7 +73,9 @@ export function buildEditDeleteActionsColumn<T>({
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (
-      <div className="flex justify-end">
+      // Stop propagation so the row-menu never triggers a row-level onClick (e.g.
+      // a clickable row that navigates).
+      <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
         <GenericRowActions
           item={row.original}
           onEdit={onEdit}
