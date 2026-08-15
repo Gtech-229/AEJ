@@ -11,6 +11,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { Can } from '@/features/permissions/permissions.access';
 import type { Role } from './roles.dto';
@@ -66,7 +67,7 @@ export function RolesClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 px-[2.5%] py-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Rôles &amp; permissions</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -74,7 +75,7 @@ export function RolesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Role>
           data={roles ?? []}
           columns={columns}
@@ -86,9 +87,9 @@ export function RolesClient() {
           emptyDescription="Créez un premier rôle pour organiser les accès du backoffice."
           toolbarEndSlot={
             <Can module="roles" action="write">
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouveau rôle
               </Button>
             </Can>
           }

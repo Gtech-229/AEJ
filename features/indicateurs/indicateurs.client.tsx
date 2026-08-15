@@ -13,6 +13,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import type { Indicateur } from './indicateurs.dto';
 import { indicateurSchema, type IndicateurInput } from './indicateurs.schema';
@@ -106,7 +107,7 @@ export function IndicateursClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 px-[2.5%] py-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Indicateurs</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -114,7 +115,7 @@ export function IndicateursClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Indicateur>
           data={indicateurs ?? []}
           columns={columns}
@@ -125,7 +126,7 @@ export function IndicateursClient() {
           emptyTitle="Aucun indicateur"
           emptyDescription="Créez un premier indicateur pour mesurer l'impact du programme."
           toolbarEndSlot={
-            <Button size="sm" onClick={dialog.openCreate}>
+            <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
               <Plus className="size-4" />
               Ajouter
             </Button>

@@ -1,3 +1,5 @@
+import { formatNumber } from '@/lib/number';
+
 interface ListWidgetRow {
     label: string;
     value: string | number;
@@ -20,7 +22,7 @@ export default function ListWidget({ title, rows }: ListWidgetProps) {
                     <div key={row.label} className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">{row.label}</span>
                         <span className="font-semibold" style={{ color: '#1F2937' }}>
-                            {typeof row.value === 'number' ? row.value.toLocaleString('fr-FR') : row.value}
+                            {typeof row.value === 'number' ? formatNumber(row.value) : row.value}
                         </span>
                     </div>
                 ))}

@@ -1,7 +1,9 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { formatMontant } from '@/features/projects/projects.constants';
 import type { Configuration } from './configurations.dto';
 import { configurationsKeys } from './configurations.keys';
 import { configurationsService } from './configurations.service';
@@ -12,6 +14,24 @@ export function useConfigurations() {
     queryKey: configurationsKeys.detail(),
     queryFn: () => configurationsService.getConfigurations(),
   });
+}
+
+/**
+ * `formatMontant` bound to the system-configured currency (`sigle_monnaie_pays`,
+ * default FCFA). Use this in components instead of the raw `formatMontant` when
+ * the amount should reflect the configured currency — the config is fetched once
+ * and shared via the query cache. Usage:
+ *
+ *   const formatMontant = useFormatMontant();
+ *   …formatMontant(b.montant_accorde)   // unchanged call site
+ */
+export function useFormatMontant() {
+  const { data } = useConfigurations();
+  const currency = data?.sigle_monnaie_pays || 'FCFA';
+  return useCallback(
+    (value: string | number | null | undefined) => formatMontant(value, currency),
+    [currency],
+  );
 }
 
 /**

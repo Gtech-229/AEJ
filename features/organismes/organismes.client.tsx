@@ -12,6 +12,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { ManageTypeOrganismesButton } from '@/features/type-organismes/type-organismes.client';
 import { useTypeOrganismes } from '@/features/type-organismes/type-organismes.hooks';
@@ -62,7 +63,7 @@ export function OrganismesClient() {
       header: 'Type',
       cell: ({ row }) => (
         <Badge variant="secondary" className="font-normal">
-          {typeName(row.original.type)}
+          {row.original.type_organisme?.libelle ?? typeName(row.original.type)}
         </Badge>
       ),
     },
@@ -89,7 +90,7 @@ export function OrganismesClient() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 px-[2.5%] py-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Organismes financeurs</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
@@ -97,7 +98,7 @@ export function OrganismesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Organisme>
           data={organismes ?? []}
           columns={columns}
@@ -110,9 +111,9 @@ export function OrganismesClient() {
           toolbarEndSlot={
             <div className="flex items-center gap-2">
               <ManageTypeOrganismesButton />
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouvel Organisme
               </Button>
             </div>
           }

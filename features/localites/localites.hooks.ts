@@ -1,50 +1,36 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import type { CreateLocalitePayload, Localite } from './localites.dto';
+import { useQuery } from '@tanstack/react-query';
 import { localitesKeys } from './localites.keys';
 import { localitesService } from './localites.service';
 
-export function useLocalites() {
-  return useQuery({
-    queryKey: localitesKeys.lists(),
-    queryFn: () => localitesService.getAll(),
-  });
-}
+// Geographic referentials change rarely → keep them warm across the session.
+const STALE = 30 * 60 * 1000;
 
-export function useCreateLocalite() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: CreateLocalitePayload) => localitesService.create(payload),
-    onSuccess: () => {
-      toast.success('Localité créée');
-      queryClient.invalidateQueries({ queryKey: localitesKeys.all });
-    },
-    onError: () => toast.error('Échec de la création de la localité'),
+export const useDivisionsRegionales = () =>
+  useQuery({
+    queryKey: localitesKeys.divisionsRegionales(),
+    queryFn: () => localitesService.divisionsRegionales(),
+    staleTime: STALE,
   });
-}
 
-export function useUpdateLocalite() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Localite) => localitesService.update(payload),
-    onSuccess: () => {
-      toast.success('Localité mise à jour');
-      queryClient.invalidateQueries({ queryKey: localitesKeys.all });
-    },
-    onError: () => toast.error('Échec de la mise à jour de la localité'),
+export const useVilles = () =>
+  useQuery({
+    queryKey: localitesKeys.villes(),
+    queryFn: () => localitesService.villes(),
+    staleTime: STALE,
   });
-}
 
-export function useDeleteLocalite() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => localitesService.remove(id),
-    onSuccess: () => {
-      toast.success('Localité supprimée');
-      queryClient.invalidateQueries({ queryKey: localitesKeys.all });
-    },
-    onError: () => toast.error('Échec de la suppression de la localité'),
+export const useCommunes = () =>
+  useQuery({
+    queryKey: localitesKeys.communes(),
+    queryFn: () => localitesService.communes(),
+    staleTime: STALE,
   });
-}
+
+export const useLieuxHabitation = () =>
+  useQuery({
+    queryKey: localitesKeys.lieuxHabitation(),
+    queryFn: () => localitesService.lieuxHabitation(),
+    staleTime: STALE,
+  });
