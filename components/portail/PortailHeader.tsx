@@ -84,6 +84,7 @@ const NAV: NavItem[] = [
     ],
   },
   { label: 'Exécutions', href: '/dashboard/executions', icon: Activity },
+  { label: 'Agence', href: '/dashboard/agences', icon: Landmark },
   {
     label: 'Paramétrage',
     icon: Settings,
