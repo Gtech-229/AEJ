@@ -278,16 +278,27 @@ export function GenericTable<TData>({
         </div>
       )}
 
-      <div className={cn('rounded-md border border-border', tableContainerClassName)}>
+      <div
+        className={cn(
+          'overflow-hidden rounded-2xl border border-border/60 bg-card shadow-md shadow-black/[0.03]',
+          tableContainerClassName,
+        )}
+      >
+        {/* Slim brand accent — ties every table back to the AEJ identity without
+            repeating a heavy header bar. */}
+        <div className="h-[3px] w-full bg-gradient-to-r from-primary via-primary/70 to-transparent" />
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="sticky top-0 z-10 bg-muted hover:bg-muted"
+                className="sticky top-0 z-10 border-b border-border/80 bg-muted/50 backdrop-blur-sm hover:bg-muted/50"
               >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="h-11 px-4 text-[11px] font-semibold tracking-wider text-muted-foreground/80 uppercase"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -299,9 +310,9 @@ export function GenericTable<TData>({
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={`skeleton-${i}`}>
+                <TableRow key={`skeleton-${i}`} className="border-border/60">
                   {table.getVisibleFlatColumns().map((col) => (
-                    <TableCell key={col.id}>
+                    <TableCell key={col.id} className="px-4 py-3.5">
                       <Skeleton className="h-5 w-full" />
                     </TableCell>
                   ))}
@@ -314,19 +325,19 @@ export function GenericTable<TData>({
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   className={cn(
-                    'hover:bg-primary/5 data-[state=selected]:bg-primary/10',
+                    'border-border/60 transition-colors last:border-0 hover:bg-muted/40 data-[state=selected]:bg-primary/10',
                     onRowClick && 'cursor-pointer',
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="px-4 py-3.5">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
-              <TableRow className="hover:bg-transparent">
+              <TableRow className="border-0 hover:bg-transparent">
                 <TableCell colSpan={table.getVisibleFlatColumns().length} className="p-0">
                   <EmptyState
                     variant="bare"

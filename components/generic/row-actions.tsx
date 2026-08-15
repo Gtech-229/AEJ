@@ -70,6 +70,7 @@ export function buildEditDeleteActionsColumn<T>({
 }): ColumnDef<T> {
   return {
     id: 'actions',
+    header: 'Action',
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (

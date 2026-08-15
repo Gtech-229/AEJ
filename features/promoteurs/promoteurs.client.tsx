@@ -6,9 +6,9 @@ import { Eye, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAge } from '@/lib/date';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { DataTableColumnHeader } from '@/components/data-table';
-import { GenericTable, usePageParams } from '@/components/generic';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { GenericTable, GenericRowActions, AvatarInitials, usePageParams } from '@/components/generic';
 import type { Promoteur } from './promoteurs.dto';
 import { DEFAULT_PER_PAGE } from './promoteurs.dto';
 import { usePromoteurs } from './promoteurs.hooks';
@@ -42,11 +42,15 @@ export function PromoteursClient() {
         accessorFn: (p) => `${p.prenom} ${p.nom}`,
         meta: { label: 'Nom complet' },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Nom complet" />,
-        cell: ({ row }) => (
-          <span className="font-medium">
-            {row.original.prenom} {row.original.nom}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const fullName = `${row.original.prenom} ${row.original.nom}`;
+          return (
+            <div className="flex items-center gap-3">
+              <AvatarInitials name={fullName} />
+              <span className="font-medium">{fullName}</span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'telephone',
@@ -100,18 +104,20 @@ export function PromoteursClient() {
       },
       {
         id: 'actions',
-        header: '',
+        header: 'Action',
+        enableSorting: false,
+        enableHiding: false,
         cell: ({ row }) => (
-          <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 cursor-pointer"
-              aria-label="Voir le promoteur"
-              onClick={() => setSelected(row.original)}
-            >
-              <Eye className="size-4" />
-            </Button>
+          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+            <GenericRowActions
+              item={row.original}
+              extraActions={(promoteur) => (
+                <DropdownMenuItem onClick={() => setSelected(promoteur)}>
+                  <Eye className="mr-2 size-3.5 text-muted-foreground/70" />
+                  Voir le détail
+                </DropdownMenuItem>
+              )}
+            />
           </div>
         ),
       },
@@ -120,13 +126,24 @@ export function PromoteursClient() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Promoteurs</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Liste des promoteurs du programme
-          {typeof data?.total === 'number' && ` — ${data.total.toLocaleString('fr-FR')} au total`}.
-        </p>
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 px-[2.5%] py-6">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Users className="size-5" />
+        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Promoteurs</h1>
+            {typeof data?.total === 'number' && (
+              <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                {data.total.toLocaleString('fr-FR')}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Liste des promoteurs du programme
+          </p>
+        </div>
       </div>
 
       <PromoteursFilters />

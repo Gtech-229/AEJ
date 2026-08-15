@@ -1,4 +1,5 @@
 export { GenericTable, type GenericTableProps } from './generic-table';
+export { AvatarInitials } from './avatar-initials';
 export {
   GenericRowActions,
   buildEditDeleteActionsColumn,

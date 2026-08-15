@@ -439,7 +439,7 @@ const TABS = [
  */
 export function ProjetsParametrageClient() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 px-[2.5%] py-6">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
           <Layers className="size-6 text-primary" /> Projets & dispositifs
