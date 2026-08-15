@@ -61,6 +61,11 @@ const ACTIONS = [
 
 export default function DashboardPage() {
   const { user, loading, allowed } = useActeurGuard('agence');
+  // Called unconditionally, before the early return below — moving this after
+  // it (as it was) meant the hook only ran once `loading`/`allowed` settled,
+  // changing the hook count between renders and tripping React's Rules of
+  // Hooks ("Rendered more hooks than during the previous render").
+  const { data: stats } = useDashboardStats();
 
   if (loading || !allowed) {
     return (
@@ -80,7 +85,6 @@ export default function DashboardPage() {
   // Real KPI values computed from list endpoints (see dashboard.service). The
   // trend/variation still has no interim source, so it stays as-is. `taux_insertion`
   // has no source either → keeps its placeholder until the stats endpoint lands.
-  const { data: stats } = useDashboardStats();
   const realKpiValue = (id: KpiId): string | number | undefined => {
     if (!stats) return undefined;
     switch (id) {
