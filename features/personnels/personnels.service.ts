@@ -32,9 +32,10 @@ export const personnelsService = {
     payload: UpdatePersonnelPayload,
     client: ApiClient = apiClient,
   ): Promise<Personnel> => {
-    const res = await client.request<{ data: Personnel }>(`${BASE_URL}/${payload.id}`, {
+    const { id, ...body } = payload;
+    const res = await client.request<{ data: Personnel }>(`${BASE_URL}/${id}`, {
       method: 'PUT',
-      body: payload,
+      body,
     });
     return res.data;
   },
