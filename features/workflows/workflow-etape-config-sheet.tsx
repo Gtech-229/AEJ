@@ -61,6 +61,11 @@ import {
   useWorkflowEtapeSlas,
   useWorkflowRoles,
 } from './workflow.hooks';
+import {
+  WORKFLOW_ACTION_CODES,
+  WORKFLOW_ACTION_OPTIONS,
+  humanizeAction,
+} from './workflow-actions';
 
 const DURATION_UNITS = ['JOURS', 'HEURES', 'SEMAINES', 'MOIS'];
 /** Verified live (2026-08): the backend only accepts these `delay_type` values. */
@@ -526,6 +531,12 @@ function RoleForm({
 
   const canSubmit = !!code && !!action.trim();
 
+  // Known actions + any legacy value not in the list (so editing never drops it).
+  const actionOptions =
+    item?.action && !WORKFLOW_ACTION_CODES.includes(item.action as never)
+      ? [{ value: item.action, label: humanizeAction(item.action) }, ...WORKFLOW_ACTION_OPTIONS]
+      : WORKFLOW_ACTION_OPTIONS;
+
   return (
     <form
       onSubmit={(e) => {
@@ -549,11 +560,18 @@ function RoleForm({
         </Select>
       </FieldRow>
       <FieldRow label="Action *">
-        <Input
-          value={action}
-          placeholder="ex: VALIDATION, TRANSMISSION, CONSULTATION…"
-          onChange={(e) => setAction(e.target.value)}
-        />
+        <Select value={action || undefined} onValueChange={setAction}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choisir une action…" />
+          </SelectTrigger>
+          <SelectContent>
+            {actionOptions.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </FieldRow>
       <FormActions item={item} isSaving={isSaving} onCancel={onCancel} disabled={!canSubmit} />
     </form>
