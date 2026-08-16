@@ -92,9 +92,9 @@ export function ManageTypeOrganismesButton() {
             emptyTitle="Aucun type"
             emptyDescription="Créez un premier type d'organisme."
             toolbarEndSlot={
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button size="sm" className="cursor-pointer" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouveau type
               </Button>
             }
           />

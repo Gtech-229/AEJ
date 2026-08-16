@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
+import { LoadingState } from '@/components/generic/loader';
 import { AutresParametresClient } from './autres.client';
 
 export default function AutresParametragePage() {
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Chargement…</div>}>
+    <Suspense fallback={<LoadingState />}>
       <AutresParametresClient />
     </Suspense>
   );

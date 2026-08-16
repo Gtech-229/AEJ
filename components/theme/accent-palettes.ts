@@ -12,7 +12,7 @@
  */
 export const ACCENT_PALETTES = {
   aej_green: { label: 'AEJ Vert', primary: '#1a7a3c', ring: '#1a7a3c' },
-  rouge: { label: 'Rouge', primary: '#CE1126', ring: '#CE1126' },
+  orange_ci: { label: 'Orange CI', primary: '#FF8200', ring: '#FF8200' },
   slate: { label: 'Slate', primary: '#1e293b', ring: '#1e293b' },
 } as const;
 

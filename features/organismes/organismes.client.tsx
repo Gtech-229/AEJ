@@ -12,6 +12,7 @@ import {
   useDialogState,
   buildEditDeleteActionsColumn,
 } from '@/components/generic';
+import { LoadingState } from '@/components/generic/loader';
 import { DynamicForm } from '@/components/forms';
 import { ManageTypeOrganismesButton } from '@/features/type-organismes/type-organismes.client';
 import { useTypeOrganismes } from '@/features/type-organismes/type-organismes.hooks';
@@ -62,7 +63,7 @@ export function OrganismesClient() {
       header: 'Type',
       cell: ({ row }) => (
         <Badge variant="secondary" className="font-normal">
-          {typeName(row.original.type)}
+          {row.original.type_organisme?.libelle ?? typeName(row.original.type)}
         </Badge>
       ),
     },
@@ -97,7 +98,7 @@ export function OrganismesClient() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+      <Suspense fallback={<LoadingState />}>
         <GenericTable<Organisme>
           data={organismes ?? []}
           columns={columns}
@@ -110,9 +111,9 @@ export function OrganismesClient() {
           toolbarEndSlot={
             <div className="flex items-center gap-2">
               <ManageTypeOrganismesButton />
-              <Button size="sm" onClick={dialog.openCreate}>
+              <Button className='cursor-pointer' size="sm" onClick={dialog.openCreate}>
                 <Plus className="size-4" />
-                Ajouter
+                Nouvel Organisme
               </Button>
             </div>
           }

@@ -2,11 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type {
-  CreateIndicateurPayload,
-  CreateIndicateurSuiviPayload,
-  UpdateIndicateurPayload,
-} from './indicateurs.dto';
+import type { CreateIndicateurPayload, UpdateIndicateurPayload } from './indicateurs.dto';
 import { indicateursKeys } from './indicateurs.keys';
 import { indicateursService } from './indicateurs.service';
 
@@ -66,8 +62,8 @@ export function useIndicateurSuivi(indicateurId: number, enabled = true) {
 export function useAddIndicateurValeur(indicateurId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateIndicateurSuiviPayload) =>
-      indicateursService.addValeur(indicateurId, payload),
+    mutationFn: (input: { valeur: string }) =>
+      indicateursService.addValeur({ indicateur_id: indicateurId, valeur: input.valeur }),
     onSuccess: () => {
       toast.success('Valeur enregistrée');
       queryClient.invalidateQueries({ queryKey: indicateursKeys.suivi(indicateurId) });

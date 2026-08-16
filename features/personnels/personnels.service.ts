@@ -21,6 +21,8 @@ export const personnelsService = {
     payload: CreatePersonnelPayload,
     client: ApiClient = apiClient,
   ): Promise<Personnel> => {
+
+    console.log("Details de payload personnel ", payload)
     const res = await client.request<{ data: Personnel }>(BASE_URL, {
       method: 'POST',
       body: payload,
@@ -32,9 +34,10 @@ export const personnelsService = {
     payload: UpdatePersonnelPayload,
     client: ApiClient = apiClient,
   ): Promise<Personnel> => {
-    const res = await client.request<{ data: Personnel }>(`${BASE_URL}/${payload.id}`, {
+    const { id, ...body } = payload;
+    const res = await client.request<{ data: Personnel }>(`${BASE_URL}/${id}`, {
       method: 'PUT',
-      body: payload,
+      body,
     });
     return res.data;
   },

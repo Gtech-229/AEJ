@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import { MoreHorizontal } from 'lucide-react';
+import { formatNumber } from '@/lib/number';
 
 interface FinancementChartProps {
   totalBudget: number;
@@ -24,7 +25,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="font-semibold text-gray-700 mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.fill }} className="font-medium">
-          {p.name} : {p.value.toLocaleString('fr-FR')}
+          {p.name} : {formatNumber(p.value)}
         </p>
       ))}
     </div>
@@ -48,11 +49,11 @@ export default function FinancementChart({
 
       <div className="flex items-baseline gap-2 mb-5">
         <span className="text-2xl font-bold text-green-primary">
-          {totalBudget.toLocaleString('fr-FR')}
+          {formatNumber(totalBudget)}
         </span>
         <span className="text-gray-300 font-light">/</span>
         <span className="text-xl font-bold text-orange-primary">
-          {totalDecaisse.toLocaleString('fr-FR')}
+          {formatNumber(totalDecaisse)}
         </span>
       </div>
 

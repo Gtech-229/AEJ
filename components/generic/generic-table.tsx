@@ -282,7 +282,10 @@ export function GenericTable<TData>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-muted hover:bg-muted">
+              <TableRow
+                key={headerGroup.id}
+                className="sticky top-0 z-10 bg-muted hover:bg-muted"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder

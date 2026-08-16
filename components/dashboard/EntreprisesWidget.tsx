@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatNumber } from '@/lib/number';
 
 interface Entreprise {
   id:       number;
@@ -64,7 +65,7 @@ export default function EntreprisesWidget({
       </div>
 
       <p className="text-2xl font-bold text-gray-900 mb-4">
-        {total.toLocaleString('fr-FR')}{' '}
+        {formatNumber(total)}{' '}
         <span className="text-base font-normal text-gray-400">Entreprises</span>
       </p>
 
