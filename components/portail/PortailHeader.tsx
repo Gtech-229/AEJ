@@ -17,6 +17,7 @@ import {
   Landmark,
   Layers,
   LayoutDashboard,
+  List,
   Menu,           // ← nouveau (icône hamburger)
   Settings,
   ShieldCheck,
@@ -69,7 +70,11 @@ interface NavItem {
 // ─── Navigation config ────────────────────────────────────────────────────────
 const NAV: NavItem[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
+  { label: 'Guichets', href: '/dashboard/guichets', icon: Landmark },
+  {label : "Listes",
+     icon : List,
+     children : [
+        { label: 'Promoteurs', href: '/dashboard/promoteurs', icon: Users },
   { label: 'Micro-projets', href: '/dashboard/projets', icon: FolderKanban },
   { label: 'Exécutions', href: '/dashboard/executions', icon: Activity },
   { label: 'Entreprises', href: '/dashboard/parametrage/entreprises', icon: Building2 },
@@ -77,6 +82,9 @@ const NAV: NavItem[] = [
   { label: 'Financements', href: '/dashboard/financements', icon: Wallet },
   { label: 'Emplois', href: '/dashboard/emplois', icon: Briefcase },
   { label: 'Indicateurs', href: '/dashboard/indicateurs', icon: Gauge },
+     ]
+     },
+
   {
     label: 'Paramétrage',
     icon: Settings,

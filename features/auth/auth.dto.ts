@@ -38,6 +38,12 @@ export interface User {
    * dashboard routing (see `getActeurTypeForUser`) — preferred over `role_id`.
    */
   role?: Role;
+  /**
+   * Agence régionale the user is attached to — used for **agence-scoped** step
+   * gating: agence-linked roles (CIP / CAR) require this to match the dossier's
+   * `agence_id`. See `canActOnCurrentStep` / `AGENCE_SCOPED_ROLE_CODES`.
+   */
+  agence_regionale_id?: number | null;
   fonction_id: number;
   /** NB: the API returns 0/1, not a boolean. */
   is_active: number;
