@@ -44,10 +44,12 @@ export class AuthError extends Error {
 /**
  * Human-readable message from an API error.
  *
- * `ApiError.message` holds the raw response body, and Laravel answers with JSON
- * like `{"message":"..."}` (or `{"Message":"..."}`), so showing it as-is would
- * surface raw JSON to the user. This digs out the message, falling back to a
- * caller-provided default.
+ * `ApiError.message` holds the raw response body. Laravel answers validation
+ * failures (422) as `{"message":"Validation failed","errors":{"field":["…"]}}`
+ * — the top-level `message` is generic, so the first field-level message
+ * under `errors` is far more useful when present (e.g. "The email has
+ * already been taken." instead of "Validation failed"). Falls back to
+ * `message`/`Message`/`error`, then the caller-provided default.
  */
 export function getApiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) {
@@ -56,8 +58,10 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
         message?: string;
         Message?: string;
         error?: string;
+        errors?: Record<string, string[]>;
       };
-      return body.message ?? body.Message ?? body.error ?? fallback;
+      const firstFieldError = body.errors && Object.values(body.errors)[0]?.[0];
+      return firstFieldError ?? body.message ?? body.Message ?? body.error ?? fallback;
     } catch {
       return err.message?.trim() || fallback;
     }

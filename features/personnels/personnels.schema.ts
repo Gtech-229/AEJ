@@ -7,8 +7,11 @@ export const createPersonnelSchema = z.object({
   email: z.email('Adresse email invalide'),
   telephone: z.string().min(1, 'Le téléphone est requis'),
   adresse: z.string().min(1, "L'adresse est requise"),
-  role_id: z.number({ message: 'Le rôle est requis' }).int().positive('Le rôle est requis'),
-  fonction_id: z
+  role_id: z.coerce
+    .number({ message: 'Le rôle est requis' })
+    .int()
+    .positive('Le rôle est requis'),
+  fonction_id: z.coerce
     .number({ message: 'La fonction est requise' })
     .int()
     .positive('La fonction est requise'),

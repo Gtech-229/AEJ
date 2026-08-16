@@ -189,7 +189,7 @@ export function PersonnelsClient() {
 
       <GenericDialogs<Personnel>
         state={dialog}
-        dialogSize="lg"
+        dialogSize="2xl"
         titles={{
           create: 'Ajouter un membre',
           edit: 'Modifier le membre',
