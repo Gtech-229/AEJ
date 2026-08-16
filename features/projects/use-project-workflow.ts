@@ -8,6 +8,7 @@ import {
   useWorkflowEtapes,
   useWorkflowRoles,
 } from '@/features/workflows/workflow.hooks';
+import { humanizeAction } from '@/features/workflows/workflow-actions';
 import type { WorkflowInstance } from '@/features/workflow-instances/workflow-instances.dto';
 import {
   useWorkflowInstance,
@@ -21,12 +22,6 @@ import type { Projet } from './projects.dto';
 
 const etapeVersionCode = (e: WorkflowEtape) =>
   typeof e.workflow_version === 'string' ? e.workflow_version : e.workflow_version?.code;
-
-/** De-case an action code for display: "AJOUT_PLAN_AFFAIRES" → "Ajout plan affaires". */
-const humanizeAction = (code: string) => {
-  const s = code.replace(/_/g, ' ').trim().toLowerCase();
-  return s.charAt(0).toUpperCase() + s.slice(1);
-};
 
 /**
  * Resolves a dossier's live workflow state: the active instance, its current
