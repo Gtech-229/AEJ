@@ -33,6 +33,7 @@ SHARED="$BASE/aej-shared"
 CURRENT="$BASE/aej-current"
 APP="app"                                 # pm2 process name
 ECOSYSTEM="$SHARED/ecosystem.config.js"   # pm2 config; its `cwd` must be $CURRENT
+PORT="${PORT:-3100}"                       # port the app listens on (health check)
 KEEP=5                                     # releases to retain
 
 main() {
@@ -61,15 +62,30 @@ main() {
   # package.json, which `npm ci` rejects. install reconciles it in the release.
   ( cd "$REL" && npm install --no-audit --no-fund && npm run build )
 
-  echo "▶ [5/6] Atomic swap + reload …"
+  echo "▶ [5/6] Atomic swap + hard restart …"
   ln -sfn "$REL" "$CURRENT"                                   # ← the only prod-facing step
-  # Re-read the ecosystem (cwd = the aej-current symlink) so pm2 RE-RESOLVES it to
-  # the new release. `pm2 reload <name>` reuses the old resolved cwd and would keep
-  # serving the previous release — the symlink-deploy gotcha.
-  pm2 startOrReload "$ECOSYSTEM" --update-env
+  # pm2 caches a process's RESOLVED cwd (the real release path) at start time, so
+  # `reload`/`startOrReload` keep serving the OLD release even after the symlink
+  # moves — the new version is never picked up. A full delete + start forces pm2
+  # to re-resolve the aej-current symlink to the new release. (A few seconds of
+  # restart; run the ecosystem in cluster mode with ≥2 instances if you need HA.)
+  pm2 delete "$APP" 2>/dev/null || true
+  pm2 start "$ECOSYSTEM" --update-env
   pm2 save
 
-  echo "▶ [6/6] Pruning old releases (keeping $KEEP) …"
+  echo "▶ [6/7] Health check (localhost:$PORT) …"
+  # Confirm the NEW release actually answers before we call it a success. Give
+  # next a moment to boot, then poll a few times. Non-fatal (warns) so a slow
+  # boot or a different port doesn't abort — see the commit that's live below.
+  ( for i in 1 2 3 4 5 6; do
+      if curl -fsS -o /dev/null "http://localhost:$PORT"; then
+        echo "   ✓ responding on $PORT"; break
+      fi
+      [[ $i -eq 6 ]] && echo "   ⚠ no response on $PORT yet — check 'pm2 logs $APP'"
+      sleep 2
+    done ) || true
+
+  echo "▶ [7/7] Pruning old releases (keeping $KEEP) …"
   ls -1dt "$RELEASES"/*/ 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r old; do
     git -C "$REPO" worktree remove --force "${old%/}" 2>/dev/null || rm -rf "$old"
   done
@@ -83,7 +99,10 @@ main() {
 #   ./deploy.sh --rollback <release-dir-name>
 if [[ "${1:-}" == "--rollback" ]]; then
   ln -sfn "$RELEASES/${2:?usage: ./deploy.sh --rollback <release>}" "$CURRENT"
-  pm2 reload "$APP" --update-env && pm2 save && pm2 list
+  # Same pm2 cwd-cache gotcha as the deploy — hard restart so the symlink
+  # re-resolves to the rolled-back release (a plain `reload` keeps the old one).
+  pm2 delete "$APP" 2>/dev/null || true
+  pm2 start "$ECOSYSTEM" --update-env && pm2 save && pm2 list
   exit 0
 fi
 
