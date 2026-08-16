@@ -155,12 +155,18 @@ export interface WorkflowEtapeRole {
   id: number;
   etape_code: string;
   role_code: string;
-  responsibility: string | null;
+  /**
+   * The coded action this role performs at the étape — **required** (free text,
+   * not enum-validated). E.g. VALIDATION, TRANSMISSION, CONSULTATION,
+   * AJOUT_PLAN_AFFAIRES, VERIFICATION. (The API field is `action`, not the
+   * `responsibility` this used to assume — that column doesn't exist.)
+   */
+  action: string;
 }
 export type CreateWorkflowEtapeRolePayload = {
   etape_code: string;
   role_code: string;
-  responsibility?: string;
+  action: string;
 };
 export type UpdateWorkflowEtapeRolePayload = CreateWorkflowEtapeRolePayload & { id: number };
 

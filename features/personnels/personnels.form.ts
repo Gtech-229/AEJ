@@ -14,6 +14,7 @@ export function getPersonnelFormConfig(
   mode: 'create' | 'edit',
   refs: PersonnelFormRefs,
 ): FormConfig {
+
   const fields: FieldConfig[] = [
     { name: 'nom', label: 'Nom', type: 'text', required: true, placeholder: 'Koné' },
     { name: 'prenom', label: 'Prénom', type: 'text', required: true, placeholder: 'Awa' },
@@ -34,6 +35,7 @@ export function getPersonnelFormConfig(
       required: true,
       placeholder: 'Sélectionner un rôle…',
       options: refOptions(refs.roles, 'libelle'),
+      colSpan : 'half'
     },
     {
       name: 'fonction_id',
@@ -42,22 +44,23 @@ export function getPersonnelFormConfig(
       required: true,
       placeholder: 'Sélectionner une fonction…',
       options: refOptions(refs.fonctions),
+      colSpan : 'half'
     },
     {
       name: 'organisme_id',
-      label: 'Organisme (point focal)',
+      label: 'Organisme',
       type: 'combobox',
-      placeholder: 'Aucun — laisser vide si non concerné',
-      helperText: 'À renseigner pour un point focal rattaché à un organisme.',
+      placeholder: 'Sélectionner un organisme', 
       options: refOptions(refs.organismes, 'nom'),
+      colSpan : 'half'
     },
     {
       name: 'agence_regionale_id',
       label: 'Agence régionale',
       type: 'combobox',
-      placeholder: 'Aucune — laisser vide si non concerné',
-      helperText: 'À renseigner pour un agent rattaché à une agence régionale.',
+      placeholder: 'Sélectionner une agence',
       options: refOptions(refs.agences, 'nom'),
+      colSpan : 'half'
     },
     { name: 'adresse', label: 'Adresse', type: 'text', required: true, colSpan: 'full' },
   ];

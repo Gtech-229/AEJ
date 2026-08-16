@@ -1,11 +1,12 @@
 'use client';
 
-import { toast } from 'sonner';
-import { CheckCircle2, Lock, ShieldAlert } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Projet } from './projects.dto';
 import { useProjectWorkflow } from './use-project-workflow';
+import { StepTransitionDialog } from './step-transition-dialog';
 
 const TERMINAL_LABEL: Record<string, string> = {
   TERMINE: 'terminé',
@@ -22,11 +23,9 @@ const TERMINAL_LABEL: Record<string, string> = {
  */
 export function ProjectActionBar({ projet }: { projet: Projet }) {
   const wf = useProjectWorkflow(projet);
-
+  const [open, setOpen] = useState(false);
 
   if (wf.isLoading || !wf.instance) return null;
-
-  console.log("About the workflow", wf)
 
   const terminal = wf.status !== 'EN_COURS';
   const gate = wf.gate;
@@ -72,22 +71,30 @@ export function ProjectActionBar({ projet }: { projet: Projet }) {
                   {reason}
                 </span>
               )} */}
-              {/* Enabled by the authorization gate. The transition WRITE endpoint
-                  is still pending (backend P0), so an allowed click explains that
-                  rather than posting — swap the handler in once it ships. */}
+              {/* Gated by `canActOnCurrentStep`. Opens the interim transition
+                  dialog (PUT current_etape_code) until the decision-driven
+                  endpoint ships. */}
               <Button
                 disabled={!allowed}
                 className="cursor-pointer"
-                // onClick={() =>
-                //   toast.info("Le traitement de l'étape sera bientôt disponible.")
-                // }
+                onClick={() => setOpen(true)}
               >
-                Traiter l'étape
+                {wf.ctaLabel}
               </Button>
             </>
           )}
         </div>
       </div>
+
+      {!terminal && (
+        <StepTransitionDialog
+          open={open}
+          onOpenChange={setOpen}
+          instanceId={wf.instance.id}
+          workflowVersion={wf.instance.workflow_version}
+          currentEtapeCode={wf.instance.current_etape_code}
+        />
+      )}
     </div>
   );
 }

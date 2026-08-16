@@ -83,6 +83,16 @@ export interface WorkflowInstanceComment {
   commented_by?: Personnel | null;
 }
 
+/**
+ * `PUT /workflow-instances/instances/{id}` — **interim** step transition: sets
+ * the current étape directly (no decision/outcome/history yet). Replaced by the
+ * real decision-driven transition endpoint when it ships.
+ */
+export interface UpdateWorkflowInstancePayload {
+  current_etape_code?: string;
+  statut?: WorkflowInstanceStatus;
+}
+
 /** `POST /workflow-instances/comments`. `created_at`/`commented_by_id` are
  *  usually filled from the session + now by the hook. */
 export interface CreateWorkflowInstanceCommentPayload {

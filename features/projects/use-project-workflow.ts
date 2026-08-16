@@ -22,6 +22,12 @@ import type { Projet } from './projects.dto';
 const etapeVersionCode = (e: WorkflowEtape) =>
   typeof e.workflow_version === 'string' ? e.workflow_version : e.workflow_version?.code;
 
+/** De-case an action code for display: "AJOUT_PLAN_AFFAIRES" → "Ajout plan affaires". */
+const humanizeAction = (code: string) => {
+  const s = code.replace(/_/g, ' ').trim().toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 /**
  * Resolves a dossier's live workflow state: the active instance, its current
  * étape, the role(s) that étape expects, and — crucially — whether the current
@@ -79,6 +85,19 @@ export function useProjectWorkflow(projet: Projet) {
     [responsibleRoleCodes, roles.data],
   );
 
+  // CTA label from the step's `action` — the connected user's etape-role action
+  // when it matches, else the step's first action. Just de-cased (no map).
+  const ctaLabel = useMemo(() => {
+    if (!instance?.current_etape_code) return "Traiter l'étape";
+    const stepRoles = (etapeRoles.data ?? []).filter(
+      (r) => r.etape_code === instance.current_etape_code,
+    );
+    const myRole = user?.role?.code;
+    const mine = myRole ? stepRoles.find((r) => r.role_code === myRole) : undefined;
+    const action = (mine ?? stepRoles[0])?.action;
+    return action ? humanizeAction(action) : "Traiter l'étape";
+  }, [etapeRoles.data, instance?.current_etape_code, user?.role?.code]);
+
   // Gating only makes sense for a live (EN_COURS) step.
   const gate: StepActionGate | null = useMemo(() => {
     if (!instance || instance.statut !== 'EN_COURS') return null;
@@ -97,6 +116,7 @@ export function useProjectWorkflow(projet: Projet) {
     currentEtape,
     responsibleRoleCodes,
     responsibleRoleLabels,
+    ctaLabel,
     gate,
   };
 }

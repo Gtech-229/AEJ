@@ -528,7 +528,7 @@ export function ProjectWorkflowProgress({ projet }: { projet: Projet }) {
       const label = roles.data?.find((x) => x.code === r.role_code)?.name ?? r.role_code;
       const entry = m.get(r.etape_code) ?? { labels: [] };
       entry.labels.push(label);
-      if (!entry.responsibility && r.responsibility) entry.responsibility = r.responsibility;
+      if (!entry.responsibility && r.action) entry.responsibility = r.action;
       m.set(r.etape_code, entry);
     });
     return m;

@@ -205,6 +205,7 @@ export function PersonnelsClient() {
               onCancel={close}
               submitText="Modifier"
               onSubmit={(data) => {
+              
                 updatePersonnel.mutate({ ...data, id: item.id }, { onSuccess: close });
               }}
             />
@@ -217,6 +218,7 @@ export function PersonnelsClient() {
               onCancel={close}
               submitText="Ajouter"
               onSubmit={(data) => {
+                 
                 createPersonnel.mutate(data, { onSuccess: close });
               }}
             />

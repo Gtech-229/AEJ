@@ -21,6 +21,8 @@ export const personnelsService = {
     payload: CreatePersonnelPayload,
     client: ApiClient = apiClient,
   ): Promise<Personnel> => {
+
+    console.log("Details de payload personnel ", payload)
     const res = await client.request<{ data: Personnel }>(BASE_URL, {
       method: 'POST',
       body: payload,

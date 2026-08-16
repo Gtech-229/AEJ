@@ -72,8 +72,10 @@ export function Combobox({
         >
           <span className="flex min-w-0 items-center gap-1.5">
             {selected?.icon}
-            {/* Trigger CSS-truncates the selected label to its width; options full. */}
-            <span className="truncate">{selected ? selected.label : placeholder}</span>
+            {/* Trigger CSS-truncates the selected label to its width; options full.
+                `min-w-0` lets this flex child shrink so `truncate` can clip (a
+                flex item's default `min-width:auto` blocks it → it overflows). */}
+            <span className="max-w-[150px] truncate">{selected ? selected.label : placeholder}</span>
           </span>
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
         </Button>

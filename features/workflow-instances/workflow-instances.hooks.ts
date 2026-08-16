@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/auth.context';
 import type {
   CreateWorkflowInstanceCommentPayload,
   CreateWorkflowInstanceDeliverablePayload,
+  UpdateWorkflowInstancePayload,
 } from './workflow-instances.dto';
 import { workflowInstancesKeys } from './workflow-instances.keys';
 import { workflowInstancesService } from './workflow-instances.service';
@@ -52,6 +53,19 @@ export function useWorkflowInstanceComments() {
 // ── Writes ────────────────────────────────────────────────────────────────
 type NewComment = Omit<CreateWorkflowInstanceCommentPayload, 'commented_by_id' | 'created_at'>;
 type NewDeliverable = Omit<CreateWorkflowInstanceDeliverablePayload, 'produced_by_id' | 'produced_at'>;
+
+/** Interim step transition — PUT the instance's `current_etape_code`. */
+export function useUpdateWorkflowInstance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }: { id: number } & UpdateWorkflowInstancePayload) =>
+      workflowInstancesService.updateInstance(id, payload),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: workflowInstancesKeys.instance(id) });
+      qc.invalidateQueries({ queryKey: workflowInstancesKeys.instances() });
+    },
+  });
+}
 
 /** Add a comment to a step. Fills author from the session + date = today. */
 export function useAddWorkflowInstanceComment() {

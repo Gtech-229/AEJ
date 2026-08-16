@@ -138,16 +138,18 @@ function FieldControl({ field, rhf }: { field: FieldConfig; rhf: Rhf }) {
         // width (line-clamp-1); the dropdown options keep their full label.
         <Select value={current} onValueChange={rhf.onChange} disabled={field.disabled}>
           <FormControl>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full truncate">
               <SelectValue placeholder={field.placeholder ?? 'Sélectionner…'} />
             </SelectTrigger>
           </FormControl>
           <SelectContent>
-            {field.options?.map((o) => (
-              <SelectItem key={String(o.value)} value={String(o.value)} disabled={o.disabled}>
+          {field.options?.map((o) => (
+            <SelectItem key={String(o.value)} value={String(o.value)} disabled={o.disabled}>
+              <span className="block max-w-[200px]">
                 {o.label}
-              </SelectItem>
-            ))}
+              </span>
+            </SelectItem>
+          ))}
           </SelectContent>
         </Select>
       );

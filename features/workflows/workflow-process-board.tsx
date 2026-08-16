@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import type { WorkflowEtape } from './workflow.dto';
 import {
   useWorkflowDecisionOutcomes,
+  useWorkflowDeliverables,
   useWorkflowEtapeDecisions,
   useWorkflowEtapeDeliverables,
   useWorkflowEtapeRoles,
@@ -43,11 +44,15 @@ export function WorkflowProcessBoard({
   const { data: etapeDecisions } = useWorkflowEtapeDecisions();
   const { data: etapeSlas } = useWorkflowEtapeSlas();
   const { data: etapeDeliverables } = useWorkflowEtapeDeliverables();
+  const { data: deliverables } = useWorkflowDeliverables();
   const { data: roles } = useWorkflowRoles();
   const { data: outcomes } = useWorkflowDecisionOutcomes();
 
   const roleName = (code: string) => roles?.find((r) => r.code === code)?.name ?? code;
   const outcomeLabel = (code: string) => outcomes?.find((o) => o.code === code)?.label ?? code;
+  /** Deliverable libellé from the referential (by code), falling back to the code. */
+  const deliverableName = (code: string | null | undefined) =>
+    (code && deliverables?.find((d) => d.code === code)?.name) || code || '—';
 
   if (ordered.length === 0) {
     return (
@@ -106,8 +111,8 @@ export function WorkflowProcessBoard({
                       {stepRoles.map((r) => (
                         <li key={r.id} className="text-sm">
                           <span className="font-medium text-foreground">{roleName(r.role_code)}</span>
-                          {r.responsibility && (
-                            <span className="text-muted-foreground"> — {r.responsibility}</span>
+                          {r.action && (
+                            <span className="text-muted-foreground"> — {r.action}</span>
                           )}
                         </li>
                       ))}
@@ -147,7 +152,9 @@ export function WorkflowProcessBoard({
                     <ul className="space-y-1">
                       {stepDeliverables.map((d) => (
                         <li key={d.id} className="flex items-center gap-2 text-sm text-foreground">
-                          <span>{d.name ?? d.deliverable_code}</span>
+                          <span>
+                            {d.deliverable_code ? deliverableName(d.deliverable_code) : (d.name ?? '—')}
+                          </span>
                           <Badge
                             variant="outline"
                             className={cn(
