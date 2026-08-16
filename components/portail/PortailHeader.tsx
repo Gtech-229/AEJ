@@ -231,7 +231,7 @@ export function PortailHeader() {
 
         {/* Right controls */}
         <div className="flex shrink-0 items-center gap-2">
-          <ContextSelector />
+          {/* <ContextSelector /> */}
 
           <AccentSwitch className="hidden md:flex" />
 

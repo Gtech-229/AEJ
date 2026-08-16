@@ -346,14 +346,16 @@ function DeliverablesSection({ etape }: { etape: WorkflowEtape }) {
     },
     {
       id: 'required',
-      header: 'Requis',
+      header: () => null,
       cell: ({ row }) =>
         row.original.is_required ? (
           <Badge variant="outline" className="text-success">
             Requis
           </Badge>
         ) : (
-          <span className="text-muted-foreground">Optionnel</span>
+          <Badge variant="outline" className='text-muted-foreground'>
+            optionel
+          </Badge>
         ),
     },
   ];
@@ -406,23 +408,25 @@ function DeliverableForm({
   onCancel: () => void;
   onSubmit: (v: { name: string; deliverable_code: string; is_required: boolean }) => void;
 }) {
-  const [name, setName] = useState(item?.name ?? '');
   const [code, setCode] = useState(item?.deliverable_code ?? '');
   const [required, setRequired] = useState(!!item?.is_required);
+
+  // The join's `name` (NOT NULL label) is derived from the chosen catalog
+  // deliverable, so there's no separate Libellé field to fill. Falls back to the
+  // item's existing name for a legacy row that has no code.
+  const derivedName = options.find((o) => o.value === code)?.label ?? item?.name ?? '';
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (name.trim()) onSubmit({ name: name.trim(), deliverable_code: code, is_required: required });
+        if (derivedName.trim())
+          onSubmit({ name: derivedName.trim(), deliverable_code: code, is_required: required });
       }}
       className="space-y-4"
     >
       <FieldRow label="Livrable">
-        <Select value={code || undefined} onValueChange={(val) => {
-          setCode(val);
-          if (!name.trim()) setName(options.find((o) => o.value === val)?.label ?? '');
-        }}>
+        <Select value={code || undefined} onValueChange={setCode}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choisir un livrable…" />
           </SelectTrigger>
@@ -435,14 +439,11 @@ function DeliverableForm({
           </SelectContent>
         </Select>
       </FieldRow>
-      <FieldRow label="Nom affiché *">
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
-      </FieldRow>
       <div className="flex items-center gap-2">
         <Switch checked={required} onCheckedChange={setRequired} />
         <Label className="font-normal">Livrable requis</Label>
       </div>
-      <FormActions item={item} isSaving={isSaving} onCancel={onCancel} disabled={!name.trim()} />
+      <FormActions item={item} isSaving={isSaving} onCancel={onCancel} disabled={!derivedName.trim()} />
     </form>
   );
 }
@@ -465,10 +466,10 @@ function RolesSection({ etape }: { etape: WorkflowEtape }) {
       cell: ({ row }) => <span className="font-medium">{roleName(row.original.role_code)}</span>,
     },
     {
-      accessorKey: 'responsibility',
-      header: 'Responsabilité',
+      accessorKey: 'action',
+      header: 'Action',
       cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.original.responsibility ?? '—'}</span>
+        <span className="font-mono text-xs text-muted-foreground">{row.original.action ?? '—'}</span>
       ),
     },
   ];
@@ -496,7 +497,7 @@ function RolesSection({ etape }: { etape: WorkflowEtape }) {
             const payload = {
               etape_code: etape.code,
               role_code: v.role_code,
-              responsibility: v.responsibility || undefined,
+              action: v.action,
             };
             if (item) update.mutate({ ...payload, id: item.id }, { onSuccess: close });
             else create.mutate(payload, { onSuccess: close });
@@ -518,16 +519,18 @@ function RoleForm({
   options: { value: string; label: string }[];
   isSaving: boolean;
   onCancel: () => void;
-  onSubmit: (v: { role_code: string; responsibility: string }) => void;
+  onSubmit: (v: { role_code: string; action: string }) => void;
 }) {
   const [code, setCode] = useState(item?.role_code ?? '');
-  const [resp, setResp] = useState(item?.responsibility ?? '');
+  const [action, setAction] = useState(item?.action ?? '');
+
+  const canSubmit = !!code && !!action.trim();
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (code) onSubmit({ role_code: code, responsibility: resp });
+        if (canSubmit) onSubmit({ role_code: code, action: action.trim() });
       }}
       className="space-y-4"
     >
@@ -545,14 +548,14 @@ function RoleForm({
           </SelectContent>
         </Select>
       </FieldRow>
-      <FieldRow label="Responsabilité">
+      <FieldRow label="Action *">
         <Input
-          value={resp}
-          placeholder="ex: AJOUT_PLAN_AFFAIRES"
-          onChange={(e) => setResp(e.target.value)}
+          value={action}
+          placeholder="ex: VALIDATION, TRANSMISSION, CONSULTATION…"
+          onChange={(e) => setAction(e.target.value)}
         />
       </FieldRow>
-      <FormActions item={item} isSaving={isSaving} onCancel={onCancel} disabled={!code} />
+      <FormActions item={item} isSaving={isSaving} onCancel={onCancel} disabled={!canSubmit} />
     </form>
   );
 }

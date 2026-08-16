@@ -456,8 +456,9 @@ export function GuichetDetailClient({ guichetId }: { guichetId: number }) {
       </div>
 
       {/* Campagne — high driver + per-statut summary */}
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-        <label className="text-xs font-medium text-muted-foreground">Campagne</label>
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5 flex  justify-between ">
+       <div>
+         <label className="text-xs font-medium text-muted-foreground">Campagne</label>
         <div className="mt-1 flex flex-wrap items-center gap-3">
           <Select value={activeCampagne} onValueChange={setCampagne} disabled={campagnes.length === 0}>
             <SelectTrigger className="w-full sm:w-72">
@@ -476,6 +477,7 @@ export function GuichetDetailClient({ guichetId }: { guichetId: number }) {
             {allRows.length} micro-projet{allRows.length > 1 ? 's' : ''}
           </span>
         </div>
+       </div>
 
         {activeCampagne && statutCounts.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">

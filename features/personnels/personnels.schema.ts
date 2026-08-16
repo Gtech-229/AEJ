@@ -7,8 +7,10 @@ export const createPersonnelSchema = z.object({
   email: z.email('Adresse email invalide'),
   telephone: z.string().min(1, 'Le téléphone est requis'),
   adresse: z.string().min(1, "L'adresse est requise"),
-  role_id: z.number({ message: 'Le rôle est requis' }).int().positive('Le rôle est requis'),
-  fonction_id: z
+  // `select` emits a string ("3") — coerce so a chosen id validates as a number
+  // (a plain `z.number()` rejects the string → false "required" error).
+  role_id: z.coerce.number({ message: 'Le rôle est requis' }).int().positive('Le rôle est requis'),
+  fonction_id: z.coerce
     .number({ message: 'La fonction est requise' })
     .int()
     .positive('La fonction est requise'),

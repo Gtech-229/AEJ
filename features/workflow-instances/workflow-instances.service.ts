@@ -3,6 +3,7 @@ import type { ApiClient } from '@/lib/api/types';
 import type {
   CreateWorkflowInstanceCommentPayload,
   CreateWorkflowInstanceDeliverablePayload,
+  UpdateWorkflowInstancePayload,
   WorkflowInstance,
   WorkflowInstanceComment,
   WorkflowInstanceDeliverable,
@@ -40,6 +41,18 @@ export const workflowInstancesService = {
     getList<WorkflowInstanceComment>(`${BASE}/comments`, client),
 
   // ── Writes (runtime) ──────────────────────────────────────────────────────
+  /** Interim step transition — PUTs `current_etape_code` (see DTO). */
+  updateInstance: async (
+    id: number,
+    payload: UpdateWorkflowInstancePayload,
+    client: ApiClient = apiClient,
+  ): Promise<WorkflowInstance> => {
+    const res = await client.request<{ data: WorkflowInstance }>(`${BASE}/instances/${id}`, {
+      method: 'PUT',
+      body: payload,
+    });
+    return res.data;
+  },
   createComment: async (
     payload: CreateWorkflowInstanceCommentPayload,
     client: ApiClient = apiClient,
