@@ -1,82 +1,77 @@
 'use client';
 
-import { Users, FolderKanban, Wallet, RefreshCcw, BriefcaseBusiness, ChartColumnIncreasing } from 'lucide-react';
+import { Users, FolderKanban, Wallet, BriefcaseBusiness } from 'lucide-react';
 import KpiCardV2 from '@/components/dashboard/KpiCard';
-import SimpleBarChart from '@/components/dashboard/SimpleBarChart';
-import ListWidget from '@/components/dashboard/ListWidget';
-import LegendWidget from '@/components/dashboard/LegendWidget';
 import ActionsWidget from '@/components/dashboard/ActionsWidget';
-import TableWidget from '@/components/dashboard/TableWidget';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
-import { COLORS, ACCENTS, type AccentName } from '@/lib/design/tokens';
+import LegendWidget from '@/components/dashboard/LegendWidget';
+// Mock-only widgets, commented out below until their agence breakdown returns data:
+// import SimpleBarChart from '@/components/dashboard/SimpleBarChart';
+// import ListWidget from '@/components/dashboard/ListWidget';
+// import TableWidget from '@/components/dashboard/TableWidget';
+import { ACCENTS, COLORS, type AccentName } from '@/lib/design/tokens';
 import { useActeurGuard } from '@/hooks/useActeurGuard';
 import { getUserDisplayName } from '@/features/auth/auth.dto';
 import { getRoleSlug } from '@/lib/auth/acteur';
 import { getDashboardConfig, type KpiId } from '@/features/dashboard/dashboard.config';
+import {
+  useDashboardAlertes,
+  useDashboardKpis,
+  useDashboardProjetsStatut,
+} from '@/features/dashboard/dashboard.hooks';
+import { projetStatutLabel } from '@/features/projects/projects.constants';
 import type { UserRole } from '@/lib/auth/roles';
 
-// ─── Placeholder data (en attendant l'API) ───────────────────────────────────
+/** Compact FCFA for KPI cards: 4 150 000 000 → "4,15 Mrd". */
+function compactFcfa(n: number): string {
+  if (n >= 1e9) return `${(n / 1e9).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} Mrd`;
+  if (n >= 1e6) return `${(n / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M`;
+  return n.toLocaleString('fr-FR');
+}
+
+// ─── KPI config (id / icon / label / accent). Values are computed from the API
+//     in the component (see dashboard.service). Anything without a real source is
+//     commented out until `GET /dashboard/stats` exists. ────────────────────────
 
 const KPI_DATA: Array<{
   id: KpiId;
   icon: typeof Users;
   label: string;
-  value: string | number;
-  variation: number;
   accent: AccentName;
 }> = [
-    { id: 'jeunes', icon: Users, label: 'Jeunes bénéficiaires', value: 12723, variation: 8.4, accent: 'green' },
-    { id: 'micro_projets', icon: FolderKanban, label: 'Micro-projets financés', value: 3820, variation: 12.1, accent: 'blue' },
-    { id: 'montant_finance', icon: Wallet, label: 'Montant financé (FCFA)', value: '4,15 Mrd', variation: 15.0, accent: 'violet' },
-    { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', value: '87%', variation: 2.3, accent: 'teal' },
-    { id: 'emplois_crees', icon: BriefcaseBusiness, label: 'Emplois créés', value: 5933, variation: 9.6, accent: 'orange' },
-    { id: 'taux_insertion', icon: ChartColumnIncreasing, label: "Taux d'insertion", value: '84%', variation: 3.8, accent: 'green' },
+    { id: 'jeunes', icon: Users, label: 'Jeunes bénéficiaires', accent: 'green' },
+    { id: 'micro_projets', icon: FolderKanban, label: 'Micro-projets', accent: 'blue' },
+    { id: 'montant_finance', icon: Wallet, label: 'Montant financé (FCFA)', accent: 'violet' },
+    { id: 'emplois_crees', icon: BriefcaseBusiness, label: 'Emplois créés', accent: 'orange' },
+    // Pas de source dans /dashboard/agences/kpis → masqués :
+    // { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', accent: 'teal' },
+    // { id: 'taux_insertion', icon: ChartColumnIncreasing, label: "Taux d'insertion", accent: 'green' },
   ];
 
-const EVOLUTION_FINANCEMENTS = [
-  { label: 'Jan', value: 320 }, { label: 'Fév', value: 410 }, { label: 'Mar', value: 480 },
-  { label: 'Avr', value: 560 }, { label: 'Mai', value: 640 }, { label: 'Jun', value: 720 },
-  { label: 'Jul', value: 810 },
-];
-
-const REGIONS = [
-  { label: 'Abidjan', value: 1245 },
-  { label: 'Bouaké', value: 820 },
-  { label: 'Korhogo', value: 610 },
-  { label: 'Daloa', value: 540 },
-  { label: 'Autres', value: 605 },
-];
-
-const SECTEURS = [
-  { label: 'Agriculture', pourcentage: 28, color: COLORS.green },
-  { label: 'BTP', pourcentage: 24, color: COLORS.blue },
-  { label: 'Commerce', pourcentage: 20, color: COLORS.orange },
-  { label: 'Services', pourcentage: 18, color: COLORS.violet },
-  { label: 'Industrie', pourcentage: 10, color: COLORS.teal },
-];
+// ─── Données maquette SANS source réelle — à réactiver avec l'endpoint stats
+// (séries temporelles / regroupements non calculables efficacement côté client) :
+// const EVOLUTION_FINANCEMENTS = [ { label: 'Jan', value: 320 }, … ];
+// const REGIONS = [ { label: 'Abidjan', value: 1245 }, … ];
+// const SECTEURS = [ { label: 'Agriculture', pourcentage: 28, color: COLORS.green }, … ];
 
 const ACTIONS = [
-  { label: 'Ajouter un jeune', href: '/dashboard/jeunes', accentBg: ACCENTS.green.bg, accentDot: ACCENTS.green.fg },
-  { label: 'Nouveau financement', href: '/dashboard/financements/projets', accentBg: ACCENTS.blue.bg, accentDot: ACCENTS.blue.fg },
+  { label: 'Gérer les promoteurs', href: '/dashboard/promoteurs', accentBg: ACCENTS.green.bg, accentDot: ACCENTS.green.fg },
+  { label: 'Nouveau financement', href: '/dashboard/financements', accentBg: ACCENTS.blue.bg, accentDot: ACCENTS.blue.fg },
   { label: 'Gérer le personnel', href: '/dashboard/parametrage/personnels', accentBg: ACCENTS.violet.bg, accentDot: ACCENTS.violet.fg },
 ];
 
-const TOP_ORGANISMES = [
-  { id: 1, nom: 'Banque Mondiale', projets: 3, montant: '1,20 Mrd' },
-  { id: 2, nom: 'BAD', projets: 2, montant: '0,85 Mrd' },
-  { id: 3, nom: 'Union Européenne', projets: 1, montant: '0,60 Mrd' },
-];
-
-const ALERTES = [
-  { label: '18 échéances de remboursement en retard', severity: 'critique' as const },
-  { label: '7 dossiers de financement à valider', severity: 'attention' as const },
-  { label: '3 rapports mensuels à générer', severity: 'info' as const },
-];
+// const TOP_ORGANISMES = [ { id: 1, nom: 'Banque Mondiale', projets: 3, montant: '1,20 Mrd' }, … ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { user, loading, allowed } = useActeurGuard('agence');
+
+  // Hooks run unconditionally (before any early return) — the dedicated
+  // `/dashboard/agences/*` endpoints drive the KPIs, statut split, and alertes.
+  const { data: kpis } = useDashboardKpis();
+  const { data: statutData } = useDashboardProjetsStatut();
+  const { data: alertesData } = useDashboardAlertes();
 
   if (loading || !allowed) {
     return (
@@ -92,6 +87,42 @@ export default function DashboardPage() {
   const roleSlug = (getRoleSlug(user) as UserRole | undefined) ?? 'admin_general';
   const config = getDashboardConfig(roleSlug);
   const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
+
+  const realKpiValue = (id: KpiId): string | number | undefined => {
+    if (!kpis) return undefined;
+    switch (id) {
+      case 'jeunes': return kpis.nombrePromoteurs;
+      case 'micro_projets': return kpis.nombreProjets;
+      case 'montant_finance': return compactFcfa(kpis.montantFinance);
+      case 'emplois_crees': return kpis.emploisCrees;
+      default: return undefined; // taux_remboursement / taux_insertion: no source
+    }
+  };
+
+  // Statut split → single-hue magnitude bars, sorted desc (répartition).
+  const total = (statutData ?? []).reduce((s, r) => s + r.count, 0) || 1;
+  const statutRows = [...(statutData ?? [])]
+    .sort((a, b) => b.count - a.count)
+    .map((r) => ({
+      label: projetStatutLabel(r.statut),
+      pourcentage: Math.round((r.count / total) * 100),
+      color: COLORS.green,
+    }));
+
+  const alertes = [
+    {
+      label: `${alertesData?.projets_en_retard ?? '…'} projet(s) en retard`,
+      severity: 'critique' as const,
+    },
+    {
+      label: `${alertesData?.dossiers_en_attente ?? '…'} dossier(s) en attente`,
+      severity: 'attention' as const,
+    },
+    {
+      label: `${alertesData?.financements_non_decaisses ?? '…'} financement(s) non décaissé(s)`,
+      severity: 'info' as const,
+    },
+  ];
 
   return (
     <div className="max-w-[1400px] space-y-5 p-6">
@@ -109,14 +140,23 @@ export default function DashboardPage() {
               key={kpi.id}
               icon={kpi.icon}
               label={kpi.label}
-              value={kpi.value}
-              variation={kpi.variation}
+              value={realKpiValue(kpi.id) ?? '…'}
+              // variation: pas de source (comparaison période/période) → masqué
               accent={kpi.accent}
             />
           ))}
         </div>
       )}
 
+      {/* Répartition des micro-projets par statut — /dashboard/agences/projets-statut */}
+      {statutRows.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <LegendWidget title="Répartition par statut" rows={statutRows} showBar />
+        </div>
+      )}
+
+      {/* Évolution / Régions / Secteurs — pas de source réelle (séries temporelles /
+          regroupements sur ~10k projets). À réactiver avec GET /dashboard/stats :
       {(config.widgets.includes('evolution') ||
         config.widgets.includes('regions') ||
         config.widgets.includes('secteurs')) && (
@@ -131,7 +171,7 @@ export default function DashboardPage() {
               <LegendWidget title="Répartition par secteur" rows={SECTEURS} showBar />
             )}
           </div>
-        )}
+        )} */}
 
       {(config.widgets.includes('actions_rapides') ||
         config.widgets.includes('top_organismes') ||
@@ -141,6 +181,8 @@ export default function DashboardPage() {
               <ActionsWidget title="Actions rapides" items={ACTIONS} />
             )}
 
+            {/* Top organismes financeurs — pas de source réelle (agrégat par organisme).
+                À réactiver avec GET /dashboard/stats :
             {config.widgets.includes('top_organismes') && (
               <TableWidget
                 title="Top organismes financeurs"
@@ -164,9 +206,9 @@ export default function DashboardPage() {
                   },
                 ]}
               />
-            )}
+            )} */}
 
-            {config.widgets.includes('alertes') && <AlertsWidget title="Alertes & tâches" items={ALERTES} />}
+            {config.widgets.includes('alertes') && <AlertsWidget title="Alertes & tâches" items={alertes} />}
           </div>
         )}
     </div>

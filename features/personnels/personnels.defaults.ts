@@ -8,9 +8,10 @@ export function getCreatePersonnelDefaults(): CreatePersonnelInput {
     email: '',
     telephone: '',
     adresse: '',
-    mot_de_passe: '',
     role_id: 0,
     fonction_id: 0,
+    organisme_id: undefined,
+    agence_regionale_id: undefined,
   };
 }
 
@@ -23,5 +24,7 @@ export function getUpdatePersonnelDefaults(personnel: Personnel): UpdatePersonne
     adresse: personnel.adresse,
     role_id: personnel.role_id,
     fonction_id: personnel.fonction_id,
+    organisme_id: personnel.organisme_id ?? undefined,
+    agence_regionale_id: personnel.agence_regionale_id ?? undefined,
   };
 }
