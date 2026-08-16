@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Boxes, FolderGit2, Landmark, MapPin, Plus, Layers } from 'lucide-react';
+import { Boxes, FolderGit2, MapPin, Plus, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -52,17 +52,6 @@ import {
 import { getZoneFormConfig } from '@/features/zones-intervention/zones-intervention.form';
 import { zoneSchema, type ZoneInput } from '@/features/zones-intervention/zones-intervention.schema';
 import { getZoneDefaults, toZonePayload } from '@/features/zones-intervention/zones-intervention.defaults';
-// Guichets
-import type { Guichet } from '@/features/guichets/guichets.dto';
-import {
-  useGuichets,
-  useCreateGuichet,
-  useUpdateGuichet,
-  useDeleteGuichet,
-} from '@/features/guichets/guichets.hooks';
-import { guichetFormConfig } from '@/features/guichets/guichets.form';
-import { guichetSchema, type GuichetInput } from '@/features/guichets/guichets.schema';
-import { getGuichetDefaults, toGuichetPayload } from '@/features/guichets/guichets.defaults';
 
 function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
@@ -331,111 +320,16 @@ function ZonesSection() {
   );
 }
 
-// ── Guichets ──────────────────────────────────────────────────────────────────
-function GuichetsSection() {
-  const list = useGuichets();
-  const formatMontant = useFormatMontant();
-  const create = useCreateGuichet();
-  const update = useUpdateGuichet();
-  const remove = useDeleteGuichet();
-  const dialog = useDialogState<Guichet>();
-
-  const columns: ColumnDef<Guichet>[] = [
-    {
-      accessorKey: 'libelle',
-      meta: { label: 'Libellé' },
-      header: 'Libellé',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <span
-            className="size-3 shrink-0 rounded-full border border-border"
-            style={{ backgroundColor: row.original.couleur ?? 'transparent' }}
-          />
-          <div className="min-w-0">
-            <span className="font-medium">{row.original.libelle}</span>
-            <span className="block font-mono text-xs text-muted-foreground">{row.original.code}</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'montant',
-      meta: { label: 'Montant' },
-      header: 'Montant',
-      cell: ({ row }) => (
-        <span className="text-muted-foreground">
-          {formatMontant(row.original.montant_min)} – {formatMontant(row.original.montant_max)}
-        </span>
-      ),
-    },
-    {
-      id: 'actif',
-      meta: { label: 'Statut' },
-      header: 'Statut',
-      cell: ({ row }) =>
-        row.original.is_active ? (
-          <Badge variant="outline" className="border-success/30 bg-success/10 font-normal text-success">
-            Actif
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="font-normal text-muted-foreground">
-            Inactif
-          </Badge>
-        ),
-    },
-    buildEditDeleteActionsColumn<Guichet>({ onEdit: dialog.openEdit, onDelete: dialog.openDelete }),
-  ];
-
-  return (
-    <>
-      <GenericTable<Guichet>
-        data={list.data ?? []}
-        columns={columns}
-        searchKey="libelle"
-        searchPlaceholder="Rechercher un guichet…"
-        isLoading={list.isLoading}
-        emptyIcon={Landmark}
-        emptyTitle="Aucun guichet"
-        emptyDescription="Créez un guichet de financement."
-        toolbarEndSlot={<AddButton label="Nouveau guichet" onClick={dialog.openCreate} />}
-      />
-      <GenericDialogs<Guichet>
-        state={dialog}
-        titles={{ create: 'Nouveau guichet', edit: 'Modifier le guichet', delete: 'Supprimer le guichet' }}
-        renderForm={({ item, close }) => (
-          <DynamicForm<GuichetInput>
-            config={guichetFormConfig}
-            schema={guichetSchema}
-            defaultValues={getGuichetDefaults(item ?? undefined)}
-            isLoading={create.isPending || update.isPending}
-            onCancel={close}
-            submitText={item ? 'Modifier' : 'Créer'}
-            onSubmit={(data) => {
-              const payload = toGuichetPayload(data);
-              if (item) update.mutate({ id: item.id, ...payload }, { onSuccess: close });
-              else create.mutate(payload, { onSuccess: close });
-            }}
-          />
-        )}
-        isDeleting={remove.isPending}
-        onDelete={(item) => remove.mutate(item.id, { onSuccess: () => dialog.close() })}
-        deleteDescription={(item) => `Supprimer le guichet "${item.libelle}" ? Cette action est irréversible.`}
-      />
-    </>
-  );
-}
-
 const TABS = [
   { value: 'programmes', label: 'Projets', icon: FolderGit2, content: <ProgrammesSection /> },
   { value: 'dispositifs', label: 'Dispositifs', icon: Boxes, content: <DispositifsSection /> },
   { value: 'zones', label: "Zones d'intervention", icon: MapPin, content: <ZonesSection /> },
-  { value: 'guichets', label: 'Guichets', icon: Landmark, content: <GuichetsSection /> },
 ];
 
 /**
- * Paramétrage du cadre de financement : programmes (mega-projets), leurs
- * dispositifs (budget + emplois/bénéficiaires/micro-projets prévus), zones
- * d'intervention et guichets.
+ * Paramétrage du cadre de financement : projets (mega-projets), leurs dispositifs
+ * (budget + emplois/bénéficiaires/micro-projets prévus) et zones d'intervention.
+ * (Les guichets sont désormais un module dédié — /dashboard/guichets.)
  */
 export function ProjetsParametrageClient() {
   return (
@@ -445,7 +339,7 @@ export function ProjetsParametrageClient() {
           <Layers className="size-6 text-primary" /> Projets & dispositifs
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Paramétrez les projets, dispositifs, zones d'intervention et guichets de financement.
+          Paramétrez les projets, dispositifs et zones d'intervention.
         </p>
       </div>
 

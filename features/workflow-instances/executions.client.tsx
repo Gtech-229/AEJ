@@ -99,7 +99,7 @@ export function WorkflowExecutionsClient() {
   const rows: ExecRow[] = useMemo(() => {
     if (!version) return [];
     return (instances.data ?? [])
-      .filter((i) => i.status === 'EN_COURS' && i.workflow_version === version)
+      .filter((i) => i.statut === 'EN_COURS' && i.workflow_version === version)
       .map((i) => {
         const code = i.micro_projet?.code ?? `#${i.micro_projet_id}`;
         const intitule = i.micro_projet?.intitule ?? '';

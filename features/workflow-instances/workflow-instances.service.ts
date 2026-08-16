@@ -1,6 +1,8 @@
 import { apiClient } from '@/lib/api/client';
 import type { ApiClient } from '@/lib/api/types';
 import type {
+  CreateWorkflowInstanceCommentPayload,
+  CreateWorkflowInstanceDeliverablePayload,
   WorkflowInstance,
   WorkflowInstanceComment,
   WorkflowInstanceDeliverable,
@@ -36,4 +38,26 @@ export const workflowInstancesService = {
     getList<WorkflowInstanceDeliverable>(`${BASE}/deliverables`, client),
   getComments: (client: ApiClient = apiClient) =>
     getList<WorkflowInstanceComment>(`${BASE}/comments`, client),
+
+  // ── Writes (runtime) ──────────────────────────────────────────────────────
+  createComment: async (
+    payload: CreateWorkflowInstanceCommentPayload,
+    client: ApiClient = apiClient,
+  ): Promise<WorkflowInstanceComment> => {
+    const res = await client.request<{ data: WorkflowInstanceComment }>(`${BASE}/comments`, {
+      method: 'POST',
+      body: payload,
+    });
+    return res.data;
+  },
+  createDeliverable: async (
+    payload: CreateWorkflowInstanceDeliverablePayload,
+    client: ApiClient = apiClient,
+  ): Promise<WorkflowInstanceDeliverable> => {
+    const res = await client.request<{ data: WorkflowInstanceDeliverable }>(`${BASE}/deliverables`, {
+      method: 'POST',
+      body: payload,
+    });
+    return res.data;
+  },
 };

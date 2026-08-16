@@ -16,6 +16,7 @@ export const guichetSchema = z
     montant_max: optionalNumber,
     is_active: z.boolean().optional(),
     is_form_active: z.boolean().optional(),
+    workflow_code: z.string().optional(),
   })
   .refine(
     (v) =>

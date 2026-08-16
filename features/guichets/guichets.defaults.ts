@@ -11,6 +11,7 @@ export function getGuichetDefaults(item?: Guichet): GuichetInput {
     montant_max: item ? Number(item.montant_max) : undefined,
     is_active: item?.is_active ?? true,
     is_form_active: item?.is_form_active ?? true,
+    workflow_code: item?.workflow_code ?? undefined,
   };
 }
 
@@ -24,5 +25,6 @@ export function toGuichetPayload(data: GuichetInput): CreateGuichetPayload {
     montant_max: data.montant_max ?? 0,
     is_active: data.is_active ?? true,
     is_form_active: data.is_form_active ?? true,
+    workflow_code: data.workflow_code || null,
   };
 }

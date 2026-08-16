@@ -69,11 +69,63 @@ export const workflowVersionsService = crud<
   UpdateWorkflowVersionPayload
 >('/workflow/versions');
 
-export const workflowRolesService = crud<
-  WorkflowRole,
-  CreateWorkflowRolePayload,
-  UpdateWorkflowRolePayload
->('/workflow/roles');
+/**
+ * Roles were unified into a single table, served from `/roles` (was
+ * `/workflow/roles`) — `role.code` is the one source for RBAC + workflow. The
+ * canonical row labels with `libelle`, while all the workflow code/UI reads
+ * `name`, so this service maps `libelle`⇄`name` at the boundary and leaves the
+ * `WorkflowRole` type and every consumer unchanged.
+ */
+type RawRole = {
+  id: number;
+  code: string;
+  name?: string | null;
+  libelle?: string | null;
+  description?: string | null;
+  is_active?: boolean;
+};
+const toWorkflowRole = (r: RawRole): WorkflowRole => ({
+  id: r.id,
+  code: r.code,
+  name: r.name ?? r.libelle ?? r.code,
+  description: r.description ?? null,
+  is_active: r.is_active ?? true,
+});
+const toRolePayload = (p: { code: string; name: string; description?: string }) => ({
+  code: p.code,
+  libelle: p.name,
+  description: p.description,
+});
+
+export const workflowRolesService = {
+  getAll: async (client: ApiClient = apiClient): Promise<WorkflowRole[]> => {
+    const res = await client.request<{ data: RawRole[] }>('/roles');
+    return (Array.isArray(res?.data) ? res.data : []).map(toWorkflowRole);
+  },
+  create: async (
+    payload: CreateWorkflowRolePayload,
+    client: ApiClient = apiClient,
+  ): Promise<WorkflowRole> => {
+    const res = await client.request<{ data: RawRole }>('/roles', {
+      method: 'POST',
+      body: toRolePayload(payload),
+    });
+    return toWorkflowRole(res.data);
+  },
+  update: async (
+    payload: UpdateWorkflowRolePayload,
+    client: ApiClient = apiClient,
+  ): Promise<WorkflowRole> => {
+    const { id, ...rest } = payload;
+    const res = await client.request<{ data: RawRole }>(`/roles/${id}`, {
+      method: 'PUT',
+      body: toRolePayload(rest),
+    });
+    return toWorkflowRole(res.data);
+  },
+  remove: (id: number, client: ApiClient = apiClient): Promise<void> =>
+    client.request<void>(`/roles/${id}`, { method: 'DELETE' }),
+};
 
 export const workflowDeliverablesService = crud<
   WorkflowDeliverable,

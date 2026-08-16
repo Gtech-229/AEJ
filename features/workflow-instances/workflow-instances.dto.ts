@@ -17,7 +17,7 @@ export interface WorkflowInstance {
   /** The version code (e.g. "AGR_CLASSIQUE_2026"). */
   workflow_version: string;
   current_etape_code: string | null;
-  status: WorkflowInstanceStatus;
+  statut: WorkflowInstanceStatus;
   started_at: string | null;
   completed_at: string | null;
   /** Forward hint toward the transition target (null until resolved). */
@@ -81,4 +81,29 @@ export interface WorkflowInstanceComment {
   created_at: string | null;
   etape?: WorkflowEtape | null;
   commented_by?: Personnel | null;
+}
+
+/** `POST /workflow-instances/comments`. `created_at`/`commented_by_id` are
+ *  usually filled from the session + now by the hook. */
+export interface CreateWorkflowInstanceCommentPayload {
+  workflow_instance_id: number;
+  etape_code: string;
+  commented_by_id: number;
+  comment: string;
+  created_at?: string;
+}
+
+/** `POST /workflow-instances/deliverables`. Records a produced livrable by its
+ *  stored `file_path` (metadata, not a multipart upload). NB: the create field
+ *  is `observations` (plural) vs the read `observation`. */
+export interface CreateWorkflowInstanceDeliverablePayload {
+  workflow_instance_id: number;
+  deliverable_code: string;
+  file_path: string;
+  file_name: string;
+  file_size?: number;
+  file_type?: string;
+  observations?: string;
+  produced_at?: string;
+  produced_by_id: number;
 }

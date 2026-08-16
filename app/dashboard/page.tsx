@@ -1,20 +1,25 @@
 'use client';
 
-import { Users, FolderKanban, Wallet, RefreshCcw, BriefcaseBusiness } from 'lucide-react';
+import { Users, FolderKanban, Wallet, BriefcaseBusiness } from 'lucide-react';
 import KpiCardV2 from '@/components/dashboard/KpiCard';
 import ActionsWidget from '@/components/dashboard/ActionsWidget';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
-// Mock-only widgets, commented out below until GET /dashboard/stats exists:
+import LegendWidget from '@/components/dashboard/LegendWidget';
+// Mock-only widgets, commented out below until their agence breakdown returns data:
 // import SimpleBarChart from '@/components/dashboard/SimpleBarChart';
 // import ListWidget from '@/components/dashboard/ListWidget';
-// import LegendWidget from '@/components/dashboard/LegendWidget';
 // import TableWidget from '@/components/dashboard/TableWidget';
-import { ACCENTS, type AccentName } from '@/lib/design/tokens';
+import { ACCENTS, COLORS, type AccentName } from '@/lib/design/tokens';
 import { useActeurGuard } from '@/hooks/useActeurGuard';
 import { getUserDisplayName } from '@/features/auth/auth.dto';
 import { getRoleSlug } from '@/lib/auth/acteur';
 import { getDashboardConfig, type KpiId } from '@/features/dashboard/dashboard.config';
-import { useDashboardStats } from '@/features/dashboard/dashboard.hooks';
+import {
+  useDashboardAlertes,
+  useDashboardKpis,
+  useDashboardProjetsStatut,
+} from '@/features/dashboard/dashboard.hooks';
+import { projetStatutLabel } from '@/features/projects/projects.constants';
 import type { UserRole } from '@/lib/auth/roles';
 
 /** Compact FCFA for KPI cards: 4 150 000 000 → "4,15 Mrd". */
@@ -35,11 +40,11 @@ const KPI_DATA: Array<{
   accent: AccentName;
 }> = [
     { id: 'jeunes', icon: Users, label: 'Jeunes bénéficiaires', accent: 'green' },
-    { id: 'micro_projets', icon: FolderKanban, label: 'Micro-projets financés', accent: 'blue' },
+    { id: 'micro_projets', icon: FolderKanban, label: 'Micro-projets', accent: 'blue' },
     { id: 'montant_finance', icon: Wallet, label: 'Montant financé (FCFA)', accent: 'violet' },
-    { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', accent: 'teal' },
     { id: 'emplois_crees', icon: BriefcaseBusiness, label: 'Emplois créés', accent: 'orange' },
-    // Pas de source réelle → masqué :
+    // Pas de source dans /dashboard/agences/kpis → masqués :
+    // { id: 'taux_remboursement', icon: RefreshCcw, label: 'Taux de remboursement', accent: 'teal' },
     // { id: 'taux_insertion', icon: ChartColumnIncreasing, label: "Taux d'insertion", accent: 'green' },
   ];
 
@@ -62,6 +67,12 @@ const ACTIONS = [
 export default function DashboardPage() {
   const { user, loading, allowed } = useActeurGuard('agence');
 
+  // Hooks run unconditionally (before any early return) — the dedicated
+  // `/dashboard/agences/*` endpoints drive the KPIs, statut split, and alertes.
+  const { data: kpis } = useDashboardKpis();
+  const { data: statutData } = useDashboardProjetsStatut();
+  const { data: alertesData } = useDashboardAlertes();
+
   if (loading || !allowed) {
     return (
       <div className="flex min-h-full items-center justify-center">
@@ -77,32 +88,40 @@ export default function DashboardPage() {
   const config = getDashboardConfig(roleSlug);
   const visibleKpis = KPI_DATA.filter((kpi) => config.kpis.includes(kpi.id));
 
-  // Real KPI values computed from list endpoints (see dashboard.service). The
-  // trend/variation still has no interim source, so it stays as-is. `taux_insertion`
-  // has no source either → keeps its placeholder until the stats endpoint lands.
-  const { data: stats } = useDashboardStats();
   const realKpiValue = (id: KpiId): string | number | undefined => {
-    if (!stats) return undefined;
+    if (!kpis) return undefined;
     switch (id) {
-      case 'jeunes': return stats.jeunes;
-      case 'micro_projets': return stats.microProjets;
-      case 'montant_finance': return compactFcfa(stats.montantFinance);
-      case 'taux_remboursement': return `${stats.tauxRemboursement}%`;
-      case 'emplois_crees': return stats.emploisCrees;
-      default: return undefined;
+      case 'jeunes': return kpis.nombrePromoteurs;
+      case 'micro_projets': return kpis.nombreProjets;
+      case 'montant_finance': return compactFcfa(kpis.montantFinance);
+      case 'emplois_crees': return kpis.emploisCrees;
+      default: return undefined; // taux_remboursement / taux_insertion: no source
     }
   };
+
+  // Statut split → single-hue magnitude bars, sorted desc (répartition).
+  const total = (statutData ?? []).reduce((s, r) => s + r.count, 0) || 1;
+  const statutRows = [...(statutData ?? [])]
+    .sort((a, b) => b.count - a.count)
+    .map((r) => ({
+      label: projetStatutLabel(r.statut),
+      pourcentage: Math.round((r.count / total) * 100),
+      color: COLORS.green,
+    }));
+
   const alertes = [
     {
-      label: `${stats?.remboursementsEnRetard ?? '…'} échéance(s) de remboursement en retard`,
+      label: `${alertesData?.projets_en_retard ?? '…'} projet(s) en retard`,
       severity: 'critique' as const,
     },
     {
-      label: `${stats?.budgetsAValider ?? '…'} dossier(s) de financement à valider`,
+      label: `${alertesData?.dossiers_en_attente ?? '…'} dossier(s) en attente`,
       severity: 'attention' as const,
     },
-    // Pas de source réelle → masqué :
-    // { label: '3 rapports mensuels à générer', severity: 'info' as const },
+    {
+      label: `${alertesData?.financements_non_decaisses ?? '…'} financement(s) non décaissé(s)`,
+      severity: 'info' as const,
+    },
   ];
 
   return (
@@ -126,6 +145,13 @@ export default function DashboardPage() {
               accent={kpi.accent}
             />
           ))}
+        </div>
+      )}
+
+      {/* Répartition des micro-projets par statut — /dashboard/agences/projets-statut */}
+      {statutRows.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <LegendWidget title="Répartition par statut" rows={statutRows} showBar />
         </div>
       )}
 

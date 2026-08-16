@@ -1,3 +1,5 @@
+import type { Promoteur } from '@/features/promoteurs/promoteurs.dto';
+
 /**
  * API contract for micro-projets — hand-written from `GET /api/projects`
  * (apis.aej-ci.net), enveloped as `{ message, data: [...] }`. The FK to the
@@ -41,6 +43,8 @@ export interface Projet {
   date_transmission_partenaire: string | null;
   created_at?: string;
   updated_at?: string;
+  /** Embedded on `GET /projets/{id}`. */
+  promoteur?: Promoteur;
 }
 
 /**
